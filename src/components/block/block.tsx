@@ -1,17 +1,19 @@
 import { batch, createMemo, createSignal, Setter, Show } from "solid-js";
 import { Trash, Scaling, SquareSplitVertical, SquareSplitHorizontal, Type } from "lucide-solid";
-import { ResizeBlockProps, SizeValue } from "./type";
-import { heightInitialSizeValue, maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision, widthInitialSizeValue } from "./const";
+import { ComponentBlock, ResizeBlockProps, SizeValue } from "./type";
+import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "./const";
 import ResizeModal from "./resize";
 import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
 
 interface BlockProps {
-  id: string;
+  component: ComponentBlock;
   isResizing: ResizeBlockProps;
   setIsResizing: Setter<ResizeBlockProps>;
   isSelected: boolean;
   setSelected: Setter<string>;
+  isRootBlock: boolean;
+  handleDeleteBlock: (id: string) => void;
 }
 
 export default function Block(props: BlockProps) {
@@ -19,8 +21,8 @@ export default function Block(props: BlockProps) {
   const [showResizeModal, setShowResizeModal] = createSignal(false);
   const [showSplitPreview, setShowSplitPreview] = createSignal(false);
   const [splitDirection, setSplitDirection] = createSignal<"vertical" | "horizontal">("vertical");
-  const [width, setWidth] = createSignal<SizeValue>(widthInitialSizeValue);
-  const [height, setHeight] = createSignal<SizeValue> (heightInitialSizeValue);
+  const [width, setWidth] = createSignal<SizeValue>(props.component.widthInitialSizeValue);
+  const [height, setHeight] = createSignal<SizeValue> (props.component.heightInitialSizeValue);
   const [isLocalResizing, setIsLocalResizing] = createSignal(false);
   const [resizeDirection, setResizeDirection] = createSignal<"right" | "bottom" | "corner" | null>(null);
   const [mouseStartX, setMouseStartX] = createSignal(0);
@@ -39,7 +41,7 @@ export default function Block(props: BlockProps) {
 
     batch(() => {
       setIsLocalResizing(true);
-      props.setIsResizing({ resizing: true, resizerId: props.id, direction });
+      props.setIsResizing({ resizing: true, resizerId: props.component.id, direction });
       setResizeDirection(direction);
       setMouseStartX(e.clientX);
       setMouseStartY(e.clientY);
@@ -122,7 +124,7 @@ export default function Block(props: BlockProps) {
               break;
             case "px":
               value = fixFloatingPoint(newWidth, 10 ** pxPrecision) / 10 ** pxPrecision;
-              if (newWidth >= minPx) setWidth(prev => ({ ...prev, value: value }));
+              if (newWidth >= minPx && newWidth <= componentRef?.parentElement?.getBoundingClientRect().width!) setWidth(prev => ({ ...prev, value: value }));
               break;
           }
         }
@@ -145,7 +147,7 @@ export default function Block(props: BlockProps) {
               break;
             case "px":
               value = fixFloatingPoint(newHeight, 10 ** pxPrecision) / 10 ** pxPrecision;
-              if (newHeight >= minPx) setHeight(prev => ({ ...prev, value: value }));
+              if ((newHeight >= minPx) && (props.isRootBlock || newHeight <= componentRef?.parentElement?.getBoundingClientRect().height!)) setHeight(prev => ({ ...prev, value: value }));
               break;
           }
         }
@@ -154,7 +156,7 @@ export default function Block(props: BlockProps) {
 
     const handleMouseUp = () => {
       setIsLocalResizing(false);
-      if(props.isResizing.resizing && props.isResizing.resizerId === props.id) {
+      if(props.isResizing.resizing && props.isResizing.resizerId === props.component.id) {
         props.setIsResizing({ resizing: false, resizerId: "", direction: "right" });
       }
       window.removeEventListener("mousemove", handleMouseMove);
@@ -189,20 +191,26 @@ export default function Block(props: BlockProps) {
         setIsBlockHovered(false);
       }}
       onClick={() => {
-        props.setSelected(props.id);
+        props.setSelected(props.component.id);
       }}
     >
       <Show when={isFocused()}>
       <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
-        <button
+        <div
           class="p-1 bg-gray-200 rounded hover:bg-gray-300"
           onClick={() => setShowResizeModal(true)}
+          classList={{
+            "cursor-pointer": !props.isResizing.resizing,
+          }}
         >
           <Scaling size={16} />
-        </button>
+        </div>
 
-        <button
+        <div
           class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+          classList={{
+            "cursor-pointer": !props.isResizing.resizing,
+          }}
           onMouseEnter={() => {
             setShowSplitPreview(true);
             setSplitDirection("vertical");
@@ -212,10 +220,13 @@ export default function Block(props: BlockProps) {
           }}
         >
           <SquareSplitVertical size={16} />
-        </button>
+        </div>
 
-        <button
+        <div
           class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+          classList={{
+            "cursor-pointer": !props.isResizing.resizing,
+          }}
           onMouseEnter={() => {
             setShowSplitPreview(true);
             setSplitDirection("horizontal");
@@ -225,27 +236,44 @@ export default function Block(props: BlockProps) {
           }}
         >
           <SquareSplitHorizontal size={16} />
-        </button>
+        </div>
 
-        <button class="p-1 bg-gray-200 rounded hover:bg-gray-300">
+        <div 
+          class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+          classList={{
+            "cursor-pointer": !props.isResizing.resizing,
+          }}
+        >
           <Type size={16} />
-        </button>
+        </div>
 
-        <button class="p-1 bg-red-500 text-white rounded hover:bg-red-600">
+        <div 
+          class="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+          classList={{
+            "cursor-pointer": !props.isResizing.resizing,
+          }}
+          onClick={() => {
+            props.handleDeleteBlock(props.component.id);
+          }}
+        >
           <Trash size={16} />
-        </button>
+        </div>
       </div>
       </Show>
 
       <Show when={showSplitPreview()}>
         <div
-          class={`absolute inset-0 border-dashed border-2 border-blue-400 opacity-50 pointer-events-none`}
-          style={{
-            display: splitDirection() === "vertical" ? "grid" : "flex",
-            "grid-template-columns": splitDirection() === "horizontal" ? "1fr 1fr" : undefined,
-            "flex-direction": splitDirection() === "horizontal" ? "row" : undefined,
+          class={`absolute inset-0 opacity-50 bg-amber-100 pointer-events-none rounded-2xl p-2 grid`}
+          classList={{
+            "grid-cols-2": splitDirection() === "horizontal",
+            "grid-rows-2": splitDirection() === "vertical",
+            "space-x-2": splitDirection() === "horizontal",
+            "space-y-2": splitDirection() === "vertical",
           }}
-        />
+        >
+          <div class="border-dashed border-2 border-blue-400 rounded-2xl" />
+          <div class="border-dashed border-2 border-blue-400 rounded-2xl" />
+        </div>
       </Show> 
 
       <Show when={showResizeModal()}>
@@ -256,6 +284,7 @@ export default function Block(props: BlockProps) {
           setHeight={setHeight}
           setModal={setShowResizeModal}
           parentRef={componentRef?.parentElement!}
+          isRootBlock={props.isRootBlock}
         />
       </Show>
 

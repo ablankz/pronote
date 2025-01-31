@@ -4,6 +4,7 @@ import TopBar from "./layout/top-bar";
 import Sidebar from "./layout/side-bar";
 import Header from "./layout/header";
 import BlockSection from "./layout/block-section";
+import DragAndDrop from "./components/drag-and-drop";
 
 interface Item {
   id: number;
@@ -93,6 +94,7 @@ export default function App() {
             </div>
           </div> 
         </div>
+        
       </div>
   );
 }

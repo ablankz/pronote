@@ -13,6 +13,7 @@ interface ResizeModalProps {
     setHeight: Setter<SizeValue>
     setModal: Setter<boolean>;
     parentRef: HTMLElement;
+    isRootBlock: boolean;
 }
 
 export default function ResizeModal(props: ResizeModalProps) {
@@ -96,8 +97,8 @@ export default function ResizeModal(props: ResizeModalProps) {
                 break;
             case "px":
                 value = fixFloatingPoint(Number(rawVal), 10 ** pxPrecision) / 10 ** pxPrecision;
-                if (value < minPx) {
-                    setWidthError(`Width must be greater than ${minPx}px`);
+                if (value < minPx || value > props.parentRef.getBoundingClientRect().width) {
+                    setWidthError(`Width must be between ${minPx}px and ${props.parentRef.getBoundingClientRect().width}px`);
                     return;
                 }
                 dotIndex = rawVal.indexOf(".");
@@ -138,8 +139,8 @@ export default function ResizeModal(props: ResizeModalProps) {
                     break;
                 case "px":
                     value = fixFloatingPoint(Number(rawVal), 10 ** pxPrecision) / 10 ** pxPrecision;
-                    if (value < minPx) {
-                    setHeightError(`Height must be greater than ${minPx}px`);
+                    if ((value < minPx) || (!props.isRootBlock && value > props.parentRef.getBoundingClientRect().height)) {
+                    setHeightError(`Height must be between ${minPx}px and ${props.parentRef.getBoundingClientRect().height}px`);
                     return;
                     }
                     dotIndex = rawVal.indexOf(".");
@@ -176,15 +177,15 @@ export default function ResizeModal(props: ResizeModalProps) {
                             </svg>
                         </div>
                         <input 
-                        class="block p-2.5 w-full z-20 ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                        ref={widthInput}
-                        type="text"
-                        onInput={handleWidthChange}
+                            class="block p-2.5 w-full z-20 ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
+                            ref={widthInput}
+                            type="text"
+                            onInput={handleWidthChange}
                         />
                     </div>
-                    <button 
-                    class="relative shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
-                    onClick={() => setWidthUnitOpen(prev => !prev)}
+                    <button
+                        class="relative shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
+                        onClick={() => setWidthUnitOpen(prev => !prev)}
                     >
                         {props.width.unit}
                         <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>

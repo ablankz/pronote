@@ -20,48 +20,53 @@ export interface SizeValue {
     auto: boolean;
 }
 
-interface BlockType {
-    id: string;
-    name: string;
-    icon: string;
-    component: any;
-    defaultData: any;
-    render: any;
-}
+export const BlockTypes = {
+    EMPTY: "empty",
+    TEXT: "text",
+    IMAGE: "image",
+    VIDEO: "video",
+    BUTTON: "button",
+    SLIDER: "slider",
+    GALLERY: "gallery",
+    MAP: "map",
+    FORM: "form",
+    SOCIAL: "social",
+    FEED: "feed",
+    LIST: "list",
+    TABLE: "table",
+    FILE: "file",
+    CODE: "code",
+    HTML: "html",
+    IFRAME: "iframe",
+    EMBED: "embed",
+    NAVBAR: "navbar",
+    FOOTER: "footer",
+    HEADER: "header",
+    SECTION: "section",
+    CONTAINER: "container",
+    ROW: "row",
+    COLUMN: "column",
+    SPACER: "spacer",
+    DIVIDER: "divider",
+    ACCORDION: "accordion",
+    TABS: "tabs"
+} as const;
 
-enum BlockTypes {
-    TEXT = "text",
-    IMAGE = "image",
-    VIDEO = "video",
-    BUTTON = "button",
-    SLIDER = "slider",
-    GALLERY = "gallery",
-    MAP = "map",
-    FORM = "form",
-    SOCIAL = "social",
-    FEED = "feed",
-    LIST = "list",
-    TABLE = "table",
-    FILE = "file",
-    CODE = "code",
-    HTML = "html",
-    IFRAME = "iframe",
-    EMBED = "embed",
-    NAVBAR = "navbar",
-    FOOTER = "footer",
-    HEADER = "header",
-    SECTION = "section",
-    CONTAINER = "container",
-    ROW = "row",
-    COLUMN = "column",
-    SPACER = "spacer",
-    DIVIDER = "divider",
-    ACCORDION = "accordion",
-    TABS = "tabs"
+export type BlockType = (typeof BlockTypes)[keyof typeof BlockTypes];
+
+export type BlockComponentType = {
+    key: string;
+    type: BlockType;
+    display: string;
+    displayWithEmoji: string;
+    widthInitialSizeValue: SizeValue;
+    heightInitialSizeValue: SizeValue;
 }
 
 export interface ComponentBlock {
     id: string;
-    type: string;
+    type: BlockType;
     data: any;
+    widthInitialSizeValue: SizeValue;
+    heightInitialSizeValue: SizeValue;
 }

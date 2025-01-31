@@ -12,28 +12,27 @@ export const convertSizeUnit = (value: number, unit: SizeValue["unit"], to: Size
     return convertToPx(value, unit, max);
 }
 
-export const sizeValidator = (value: number, unit: SizeValue["unit"]) => {
+export const sizeValidator = (value: number, unit: SizeValue["unit"], maxPx: number): boolean => {
     switch (unit) {
         case "%":
         return value >= minPercentage && value <= maxPercentage;
         case "px":
-        return value >= minPx;
+        return value >= minPx && value <= maxPx;
     }
 }
 
-export const sizeValidValue = (value: number, unit: SizeValue["unit"]): number => {
+export const sizeValidValue = (value: number, unit: SizeValue["unit"], maxPx: number): number => {
     switch (unit) {
         case "%":
         return Math.min(maxPercentage, Math.max(minPercentage, value));
         case "px":
-        return Math.max(minPx, value);
+        return Math.min(maxPx, Math.max(minPx, value));
     }
 }
 
 export const safeConvertSizeUnit = (value: number, unit: SizeValue["unit"], to: SizeValue["unit"], max: number) => {
-    console.log(value, unit, to, max);
     const noValidValue = convertSizeUnit(value, unit, to, max);
-    return sizeValidValue(noValidValue, to);
+    return sizeValidValue(noValidValue, to, max);
 }
 
 export const convertToPx = (value: number, unit: SizeValue["unit"], max: number) => {
