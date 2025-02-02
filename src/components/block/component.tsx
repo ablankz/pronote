@@ -3,6 +3,7 @@ import { ComponentBlock, ResizeBlockProps } from "./type";
 import { Setter } from "solid-js";
 
 interface BlockComponentProps {
+    id: string;
     component: ComponentBlock;
     isSelected: boolean;
     setSelected: Setter<string>;
@@ -17,6 +18,7 @@ interface BlockComponentProps {
 export default function BlockComponent(props: BlockComponentProps) {
     return (
         <Block 
+            id={props.id}
             component={props.component}
             isResizing={props.isResizing} 
             setIsResizing={props.setIsResizing} 

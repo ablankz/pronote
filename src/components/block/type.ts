@@ -1,3 +1,6 @@
+import { JSXElement } from "solid-js";
+
+
 export interface ResizeBlockProps {
     resizing: boolean;
     resizerId: string;
@@ -21,42 +24,86 @@ export interface SizeValue {
 }
 
 export const BlockTypes = {
-    EMPTY: "empty",
-    TEXT: "text",
+    // BASIC
+    SUB_PAGE: "sub-page",
+    CONTAINER: "container",
+    BULLETED_LIST: "bulleted-list",
+    NUMBERED_LIST: "numbered-list",
+    CHECKBOX_LIST: "checkbox-list",
+    TABLE: "table",
+    
+    // TEXT
+    PARAGRAPH: "paragraph",
+    HEADER: "header",
+    QUOTE: "quote",
+    MATH_EQUATION: "math-equation",
+    CODE_BLOCK: "code-block",
+    
+    // MEDIA
     IMAGE: "image",
     VIDEO: "video",
-    BUTTON: "button",
-    SLIDER: "slider",
-    GALLERY: "gallery",
     MAP: "map",
-    FORM: "form",
-    SOCIAL: "social",
-    FEED: "feed",
-    LIST: "list",
-    TABLE: "table",
+    EXTERNAL_LINK: "external-link",
+    EMBED_LINK: "embed-link",
+    AUDIO: "audio",
     FILE: "file",
-    CODE: "code",
-    HTML: "html",
-    IFRAME: "iframe",
-    EMBED: "embed",
-    NAVBAR: "navbar",
-    FOOTER: "footer",
-    HEADER: "header",
-    SECTION: "section",
-    CONTAINER: "container",
-    ROW: "row",
-    COLUMN: "column",
+    SOCIAL: "social",
+    
+    // ACTION
+    BUTTON: "button",
+    FORM: "form",
+    INPUT: "input",
+    SELECT: "select",
+    CHECKBOX: "checkbox",
+    RADIO: "radio",
+    SWITCH: "switch",
+    SLIDER: "slider",
+    DATE_PICKER: "date-picker",
+    TIME_PICKER: "time-picker",
+    UPLOAD: "upload",
+    DOWNLOAD: "download",
+    DROPDOWN: "dropdown",
+
+    // LAYOUT
     SPACER: "spacer",
     DIVIDER: "divider",
+    GRID: "grid",
+    TABS: "tabs",
     ACCORDION: "accordion",
-    TABS: "tabs"
+    CAROUSEL: "carousel",
+
+    // DATA_VIEWS
+    CHART_VIEW: "chart-view",
+    TABLE_VIEW: "table-view",
+    CALENDAR_VIEW: "calendar-view",
+    KANBAN_VIEW: "kanban-view",
+
+    // COLLABORATION
+    VOTING: "voting",
+    KANBAN_BOARD: "kanban-board",
+    Q_AND_A: "q-and-a",
+    COMMENTS: "comments",
 } as const;
 
 export type BlockType = (typeof BlockTypes)[keyof typeof BlockTypes];
 
+export const BlockTypeCategories = {
+    BASIC: "Basic",
+    TEXT: "Text",
+    MEDIA: "Media",
+    ACTION: "Action",
+    LAYOUT: "Layout",
+    DATA_VIEWS: "Data Views",
+    COLLABORATION: "Collaboration",
+} as const;
+
+export type BlockTypeCategory = (typeof BlockTypeCategories)[keyof typeof BlockTypeCategories];
+
 export type BlockComponentType = {
     key: string;
     type: BlockType;
+    category: BlockTypeCategory;
+    icon: JSXElement;
     display: string;
     displayWithEmoji: string;
     widthInitialSizeValue: SizeValue;

@@ -159,41 +159,126 @@ export default function ResizeModal(props: ResizeModalProps) {
         };
 
     return (
-        <>
-        <div
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity z-20 opacity-20"
-        />
             <div class={totalClasses()} ref={modalRef}>
-            <div class="relative flex items-center justify-between flex-col">
+                <div class="relative flex items-center justify-between flex-col">
+                    <div class="flex items-center max-w-[18rem] mx-auto mb-2">
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 start-0 top-0 flex items-center ps-1 pointer-events-none">
+                                <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                    <line x1="6" y1="14" x2="30" y2="14" stroke="black" stroke-width="2"/>
+                                    <polygon points="30,12 34,14 30,16" fill="black"/>
+                                    <polygon points="6,12 2,14 6,16" fill="black"/>
+                                    <text x="4" y="28" font-size="10" fill="black">Width</text>
+                                </svg>
+                            </div>
+                            <input 
+                                class="block p-2.5 w-full ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
+                                ref={widthInput}
+                                type="text"
+                                onInput={handleWidthChange}
+                            />
+                        </div>
+                        <button
+                            class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
+                            onClick={() => setWidthUnitOpen(prev => !prev)}
+                        >
+                            {props.width.unit}
+                            <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
+                        </button>
+                    </div>
+
+                    <Show when={widthUnitOpen()}>
+                        <div class="absolute top-10 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={widthUnitModal}>
+                            <ul class="py-2 text-sm text-gray-700">
+                                <For each={SIZE_UNITS}>
+                                    {unit => (
+                                        <li>
+                                            <button 
+                                            type="button" 
+                                            class="inline-flex w-full px-4 py-2 text-sm text-gray-700"
+                                            role="menuitem"
+                                            classList={{
+                                                "bg-gray-300": props.width.unit === unit,
+                                                "cursor-pointer hover:bg-gray-100": props.width.unit !== unit,
+                                            }}
+                                            disabled={props.width.unit === unit}
+                                            onClick={() => {
+                                                const parentSize = props.parentRef.getBoundingClientRect().width;
+                                                const computedStyle = window.getComputedStyle(props.parentRef);
+                                                const paddingLeft = parseFloat(computedStyle.paddingLeft);
+                                                const paddingRight = parseFloat(computedStyle.paddingRight);
+                                                const newValue = safeConvertSizeUnit(props.width.value, props.width.unit, unit, parentSize - paddingLeft - paddingRight);
+                                                props.setWidth(prev => {
+                                                    return {
+                                                        ...prev,
+                                                        value: newValue,
+                                                        unit: unit
+                                                    }
+                                                });
+                                                setWidthUnitOpen(false);
+                                            }}
+                                            >
+                                                <div class="w-full inline-flex items-center space-x-2 justify-end">
+                                                    <Show when={props.width.unit === unit}>
+                                                        <Check size={28} class="text-green-500" />
+                                                    </Show>
+                                                    <span>{unit}</span>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    )}
+                                </For>
+                            </ul>
+                        </div>
+                    </Show>
+                    {widthError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{widthError()}</p>}
+                    <label class="inline-flex items-center mb-5 cursor-pointer">
+                    <input 
+                    type="checkbox" 
+                    class="sr-only peer" 
+                    checked={props.width.auto}
+                    onChange={() => props.setWidth(prev => {
+                        return {
+                            ...prev,
+                            auto: !prev.auto
+                        }
+                    })}
+                    />
+                    <div class="relative w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-300" />
+                    <span class="ms-3 text-sm font-medium text-gray-900">Width Auto</span>
+                    </label>
+                </div>
+
+                <div class="relative flex items-center justify-between flex-col">
 
                 <div class="flex items-center max-w-[18rem] mx-auto mb-2">
                     <div class="relative w-full">
                         <div class="absolute inset-y-0 start-0 top-0 flex items-center ps-1 pointer-events-none">
-                            <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                <line x1="6" y1="14" x2="30" y2="14" stroke="black" stroke-width="2"/>
-                                <polygon points="30,12 34,14 30,16" fill="black"/>
-                                <polygon points="6,12 2,14 6,16" fill="black"/>
-                                <text x="4" y="28" font-size="10" fill="black">Width</text>
-                            </svg>
+                        <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="18" y1="6" x2="18" y2="18" stroke="black" stroke-width="2"/>
+                            <polygon points="16,6 18,2 20,6" fill="black"/>
+                            <polygon points="16,18 18,22 20,18" fill="black"/>
+                            <text x="2" y="32" font-size="10" fill="black">Height</text>
+                        </svg>
                         </div>
                         <input 
-                            class="block p-2.5 w-full z-20 ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                            ref={widthInput}
-                            type="text"
-                            onInput={handleWidthChange}
+                        class="block p-2.5 w-full ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
+                        ref={heightInput}
+                        type="text"
+                        onInput={handleHeightChange}
                         />
                     </div>
-                    <button
-                        class="relative shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
-                        onClick={() => setWidthUnitOpen(prev => !prev)}
+                    <button 
+                    class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
+                    onClick={() => setHeightUnitOpen(prev => !prev)}
                     >
-                        {props.width.unit}
+                        {props.height.unit}
                         <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
                     </button>
                 </div>
 
-                <Show when={widthUnitOpen()}>
-                    <div class="absolute top-10 right-0 z-30 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={widthUnitModal}>
+                <Show when={heightUnitOpen()}>
+                    <div class="absolute top-10 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={heightUnitModal}>
                         <ul class="py-2 text-sm text-gray-700">
                             <For each={SIZE_UNITS}>
                                 {unit => (
@@ -203,28 +288,28 @@ export default function ResizeModal(props: ResizeModalProps) {
                                         class="inline-flex w-full px-4 py-2 text-sm text-gray-700"
                                         role="menuitem"
                                         classList={{
-                                            "bg-gray-300": props.width.unit === unit,
-                                            "cursor-pointer hover:bg-gray-100": props.width.unit !== unit,
+                                            "bg-gray-300": props.height.unit === unit,
+                                            "cursor-pointer hover:bg-gray-100": props.height.unit !== unit,
                                         }}
-                                        disabled={props.width.unit === unit}
+                                        disabled={props.height.unit === unit}
                                         onClick={() => {
-                                            const parentSize = props.parentRef.getBoundingClientRect().width;
+                                            const parentSize = props.parentRef.getBoundingClientRect().height;
                                             const computedStyle = window.getComputedStyle(props.parentRef);
-                                            const paddingLeft = parseFloat(computedStyle.paddingLeft);
-                                            const paddingRight = parseFloat(computedStyle.paddingRight);
-                                            const newValue = safeConvertSizeUnit(props.width.value, props.width.unit, unit, parentSize - paddingLeft - paddingRight);
-                                            props.setWidth(prev => {
+                                            const paddingTop = parseFloat(computedStyle.paddingTop);
+                                            const paddingBottom = parseFloat(computedStyle.paddingBottom);
+                                            const newValue = safeConvertSizeUnit(props.height.value, props.height.unit, unit, parentSize - paddingTop - paddingBottom);
+                                            props.setHeight(prev => {
                                                 return {
                                                     ...prev,
                                                     value: newValue,
                                                     unit: unit
                                                 }
                                             });
-                                            setWidthUnitOpen(false);
+                                            setHeightUnitOpen(false);
                                         }}
                                         >
                                             <div class="w-full inline-flex items-center space-x-2 justify-end">
-                                                <Show when={props.width.unit === unit}>
+                                                <Show when={props.height.unit === unit}>
                                                     <Check size={28} class="text-green-500" />
                                                 </Show>
                                                 <span>{unit}</span>
@@ -236,13 +321,13 @@ export default function ResizeModal(props: ResizeModalProps) {
                         </ul>
                     </div>
                 </Show>
-                {widthError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{widthError()}</p>}
+                {heightError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{heightError()}</p>}
                 <label class="inline-flex items-center mb-5 cursor-pointer">
                 <input 
                 type="checkbox" 
                 class="sr-only peer" 
-                checked={props.width.auto}
-                onChange={() => props.setWidth(prev => {
+                checked={props.height.auto}
+                onChange={() => props.setHeight(prev => {
                     return {
                         ...prev,
                         auto: !prev.auto
@@ -250,109 +335,18 @@ export default function ResizeModal(props: ResizeModalProps) {
                 })}
                 />
                 <div class="relative w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-300" />
-                <span class="ms-3 text-sm font-medium text-gray-900">Width Auto</span>
+                <span class="ms-3 text-sm font-medium text-gray-900">Height Auto</span>
                 </label>
-            </div>
-
-            <div class="relative flex items-center justify-between flex-col">
-
-            <div class="flex items-center max-w-[18rem] mx-auto mb-2">
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 start-0 top-0 flex items-center ps-1 pointer-events-none">
-                    <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="18" y1="6" x2="18" y2="18" stroke="black" stroke-width="2"/>
-                        <polygon points="16,6 18,2 20,6" fill="black"/>
-                        <polygon points="16,18 18,22 20,18" fill="black"/>
-                        <text x="2" y="32" font-size="10" fill="black">Height</text>
-                    </svg>
-                    </div>
-                    <input 
-                    class="block p-2.5 w-full z-20 ps-12 text-sm text-gray-900 bg-gray-50 rounded-s-lg border-e-gray-50 border-e-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500" 
-                    ref={heightInput}
-                    type="text"
-                    onInput={handleHeightChange}
-                    />
                 </div>
-                <button 
-                class="relative shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
-                onClick={() => setHeightUnitOpen(prev => !prev)}
+
+                <button
+                    class="w-full bg-green-500 text-white py-1 mt-2 rounded hover:bg-green-600 cursor-pointer"
+                    onClick={() => {
+                        props.setModal(false)
+                    }}
                 >
-                    {props.height.unit}
-                    <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
+                    Close
                 </button>
             </div>
-
-            <Show when={heightUnitOpen()}>
-                <div class="absolute top-10 right-0 z-30 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={heightUnitModal}>
-                    <ul class="py-2 text-sm text-gray-700">
-                        <For each={SIZE_UNITS}>
-                            {unit => (
-                                <li>
-                                    <button 
-                                    type="button" 
-                                    class="inline-flex w-full px-4 py-2 text-sm text-gray-700"
-                                    role="menuitem"
-                                    classList={{
-                                        "bg-gray-300": props.height.unit === unit,
-                                        "cursor-pointer hover:bg-gray-100": props.height.unit !== unit,
-                                    }}
-                                    disabled={props.height.unit === unit}
-                                    onClick={() => {
-                                        const parentSize = props.parentRef.getBoundingClientRect().height;
-                                        const computedStyle = window.getComputedStyle(props.parentRef);
-                                        const paddingTop = parseFloat(computedStyle.paddingTop);
-                                        const paddingBottom = parseFloat(computedStyle.paddingBottom);
-                                        const newValue = safeConvertSizeUnit(props.height.value, props.height.unit, unit, parentSize - paddingTop - paddingBottom);
-                                        props.setHeight(prev => {
-                                            return {
-                                                ...prev,
-                                                value: newValue,
-                                                unit: unit
-                                            }
-                                        });
-                                        setHeightUnitOpen(false);
-                                    }}
-                                    >
-                                        <div class="w-full inline-flex items-center space-x-2 justify-end">
-                                            <Show when={props.height.unit === unit}>
-                                                <Check size={28} class="text-green-500" />
-                                            </Show>
-                                            <span>{unit}</span>
-                                        </div>
-                                    </button>
-                                </li>
-                            )}
-                        </For>
-                    </ul>
-                </div>
-            </Show>
-            {heightError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{heightError()}</p>}
-            <label class="inline-flex items-center mb-5 cursor-pointer">
-            <input 
-            type="checkbox" 
-            class="sr-only peer" 
-            checked={props.height.auto}
-            onChange={() => props.setHeight(prev => {
-                return {
-                    ...prev,
-                    auto: !prev.auto
-                }
-            })}
-            />
-            <div class="relative w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-300" />
-            <span class="ms-3 text-sm font-medium text-gray-900">Height Auto</span>
-            </label>
-            </div>
-
-            <button
-                class="w-full bg-green-500 text-white py-1 mt-2 rounded hover:bg-green-600 cursor-pointer"
-                onClick={() => {
-                    props.setModal(false)
-                }}
-            >
-                Close
-            </button>
-            </div>
-            </>
     );
 }

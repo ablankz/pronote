@@ -7,6 +7,7 @@ import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
 
 interface BlockProps {
+  id: string;
   component: ComponentBlock;
   isResizing: ResizeBlockProps;
   setIsResizing: Setter<ResizeBlockProps>;
@@ -194,71 +195,72 @@ export default function Block(props: BlockProps) {
         props.setSelected(props.component.id);
       }}
     >
+      Hello WorldHello WorldHello World
       <Show when={isFocused()}>
-      <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
-        <div
-          class="p-1 bg-gray-200 rounded hover:bg-gray-300"
-          onClick={() => setShowResizeModal(true)}
-          classList={{
-            "cursor-pointer": !props.isResizing.resizing,
-          }}
-        >
-          <Scaling size={16} />
-        </div>
+        <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
+          <div
+            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            onClick={() => setShowResizeModal(true)}
+            classList={{
+              "cursor-pointer": !props.isResizing.resizing,
+            }}
+          >
+            <Scaling size={16} />
+          </div>
 
-        <div
-          class="p-1 bg-gray-200 rounded hover:bg-gray-300"
-          classList={{
-            "cursor-pointer": !props.isResizing.resizing,
-          }}
-          onMouseEnter={() => {
-            setShowSplitPreview(true);
-            setSplitDirection("vertical");
-          }}
-          onMouseLeave={() => {
-            setShowSplitPreview(false)
-          }}
-        >
-          <SquareSplitVertical size={16} />
-        </div>
+          <div
+            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            classList={{
+              "cursor-pointer": !props.isResizing.resizing,
+            }}
+            onMouseEnter={() => {
+              setShowSplitPreview(true);
+              setSplitDirection("vertical");
+            }}
+            onMouseLeave={() => {
+              setShowSplitPreview(false)
+            }}
+          >
+            <SquareSplitVertical size={16} />
+          </div>
 
-        <div
-          class="p-1 bg-gray-200 rounded hover:bg-gray-300"
-          classList={{
-            "cursor-pointer": !props.isResizing.resizing,
-          }}
-          onMouseEnter={() => {
-            setShowSplitPreview(true);
-            setSplitDirection("horizontal");
-          }}
-          onMouseLeave={() => {
-            setShowSplitPreview(false)
-          }}
-        >
-          <SquareSplitHorizontal size={16} />
-        </div>
+          <div
+            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            classList={{
+              "cursor-pointer": !props.isResizing.resizing,
+            }}
+            onMouseEnter={() => {
+              setShowSplitPreview(true);
+              setSplitDirection("horizontal");
+            }}
+            onMouseLeave={() => {
+              setShowSplitPreview(false)
+            }}
+          >
+            <SquareSplitHorizontal size={16} />
+          </div>
 
-        <div 
-          class="p-1 bg-gray-200 rounded hover:bg-gray-300"
-          classList={{
-            "cursor-pointer": !props.isResizing.resizing,
-          }}
-        >
-          <Type size={16} />
-        </div>
+          <div 
+            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            classList={{
+              "cursor-pointer": !props.isResizing.resizing,
+            }}
+          >
+            <Type size={16} />
+          </div>
 
-        <div 
-          class="p-1 bg-red-500 text-white rounded hover:bg-red-600"
-          classList={{
-            "cursor-pointer": !props.isResizing.resizing,
-          }}
-          onClick={() => {
-            props.handleDeleteBlock(props.component.id);
-          }}
-        >
-          <Trash size={16} />
+          <div 
+            class="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+            classList={{
+              "cursor-pointer": !props.isResizing.resizing,
+            }}
+            onClick={() => {
+              props.handleDeleteBlock(props.component.id);
+            }}
+          >
+            <Trash size={16} />
+          </div>
         </div>
-      </div>
       </Show>
 
       <Show when={showSplitPreview()}>
@@ -289,7 +291,7 @@ export default function Block(props: BlockProps) {
       </Show>
 
         <div
-          class="absolute left-0 top-0 w-full h-[15%] max-h-12 min-h-3 rounded-3xl
+          class="absolute left-0 top-0 w-full h-[15%] max-h-12 min-h-3 rounded-3xl opacity-50
            hover:bg-white hover:bg-[radial-gradient(#e5e7eb_3.5px,transparent_3.5px)] hover:[background-size:12px_12px]"
           classList={{
             "cursor-move": !props.isResizing.resizing,

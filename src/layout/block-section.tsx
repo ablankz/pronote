@@ -3,9 +3,8 @@ import Scrollable from "../components/scrollable";
 import { createMemo, createSignal, createUniqueId, For, onCleanup, onMount } from "solid-js";
 import { AddOpenState, BlockComponentType, BlockTypes, ComponentBlock, ResizeBlockProps } from "../components/block/type";
 import BlockComponent from "../components/block/component";
-import DragAndDrop from "../components/drag-and-drop";
 import BlockPlus from "../components/block/plus";
-import AddComponentModal from "../components/block/add-component-modal";
+import ComponentAdder from "../components/block/component-adder";
 
 interface internalBlock {
     internalId: string;
@@ -65,7 +64,7 @@ export default function BlockSection() {
         }
     };
 
-    const addComponent = (componentType: BlockComponentType) => {
+    const addComponent = (id: string, componentType: BlockComponentType) => {
         const componentBlock: ComponentBlock = {
             id: createUniqueId(),
             type: componentType.type,
@@ -74,16 +73,21 @@ export default function BlockSection() {
             heightInitialSizeValue: componentType.heightInitialSizeValue
         };
         switch (componentType.type) {
-            case BlockTypes.TEXT:
+            case BlockTypes.PARAGRAPH:
                 componentBlock.data = {
                     text: "Hello, World!"
                 };
             }
-
-        setRootBlocks([...rootBlocks(), {
-            internalId: createUniqueId(),
-            component: componentBlock
-        }]);
+        setRootBlocks(prev => {
+            const newRootBlocks = [...prev];
+            const index = newRootBlocks.findIndex((el) => el.internalId === id);
+            console.log(index);
+            newRootBlocks.splice(index + 1, 0, {
+                internalId: createUniqueId(),
+                component: componentBlock
+            });
+            return newRootBlocks;
+        });
     }
 
     const keys = createMemo(() => rootBlocks().map((el) => el.internalId));
@@ -111,7 +115,7 @@ export default function BlockSection() {
     return (
         <Scrollable class="[&::-webkit-scrollbar]:w-3 w-full relative">
                 <div 
-                    class="py-6 px-12 flex flex-col items-center space-y-4 shadow rounded mb-2 bg-gray-50 w-full max-w-[calc(100%-2rem)] pb-24"
+                    class="py-6 px-12 flex flex-col items-center space-y-4 shadow rounded mb-2 bg-gray-50 w-full max-w-[calc(100%-2rem)]"
                     ref={sectionRef}
                 >
                     <For each={keys()}>
@@ -119,15 +123,16 @@ export default function BlockSection() {
                             const item = map().get(key);
                             return (
                                 <div 
-                                    class="transition-opacity duration-300 w-full h-full flex flex-col items-center justify-center"
+                                    class="transition-transform duration-500 w-full flex flex-col items-center justify-center"
                                     classList={{
-                                        "opacity-0": deleting() === item?.component?.id,
-                                        "opacity-100": deleting() !== item?.component?.id,
+                                        "scale-0": deleting() === item?.component?.id,
+                                        // "scale-100": deleting() !== item?.component?.id, // DON'T DO THIS
                                         "pointer-events-none": deleting() === item?.component?.id
                                     }}
                                 >
                                     <Show when={item?.component}>
                                         <BlockComponent 
+                                            id={item?.internalId!}
                                             component={item?.component!}
                                             isResizing={resizeState()} 
                                             setIsResizing={setResizeState} 
@@ -143,31 +148,21 @@ export default function BlockSection() {
                                     </Show>
                                     
                                     <BlockPlus
-                                        id={`plus-${key}`}
+                                        id={item?.internalId!}
                                         handleAddBlock={(id: string) => setAddOpen({ open: true, id: id })}
-                                        addOpen={addOpen().open && addOpen().id === `plus-${key}`}
+                                        addOpen={addOpen().open && addOpen().id === item?.internalId!}
                                     />
                                 </div>
                             );
                         }}
                     </For>
-
-                    {/* <DragAndDrop /> */}
                 </div>
-                    <Show when={addOpen().open}>
-                        <div
-                            class="fixed flex items-center justify-center bg-black bg-opacity-50 transition-opacity z-20 opacity-20 rounded-2xl"
-                        />
-                        <div class="absolute flex items-center justify-center w-96 z-30 top-2/5 left-1/2 transform -translate-x-1/2 -translate-y-1/2" ref={addModalRef}>
-                            <AddComponentModal
-                                handleAddComponent={(type) => {
-                                    addComponent(type);
-                                    setAddOpen({ open: false, id: "" });
-                                }}
-                                handleClose={() => setAddOpen({ open: false, id: "" })}
-                            />
-                        </div>
-                    </Show>
+                  <ComponentAdder 
+                    addOpen={addOpen()}
+                    setAddOpen={setAddOpen}
+                    addModalRef={addModalRef}
+                    addComponent={addComponent}
+                />
         </Scrollable>
     );
 }
