@@ -8,7 +8,8 @@ import { pxPrecision } from "../components/block/const";
 import { globalCursorAction, setGlobalCursorAction } from "../store/action";
 
 interface DetailBarProps {
-    class: string;
+    class?: string;
+    classList?: Record<string, boolean>;
     selectedComponent: BlockDetailValue | null;
     defaultWidth: number;
     minWidth: number;
@@ -81,10 +82,10 @@ export default function DetailBar(props: DetailBarProps) {
 
   return (
     <div
-      class={`relative bg-gray-300 text-gray-600 transition-all duration-300 px-1.5 py-2`}
+      class={`relative bg-gray-300 text-gray-600 transition-all duration-300 px-1.5 py-2 ${props.class || ""}`}
       ref={componentRef}
       classList={{
-        [props.class]: true,
+        ...(props.classList || {}),
       }}
       style={{
         width: !props.selectedComponent ? "0" : `${width().value}${width().unit}`,
@@ -92,7 +93,7 @@ export default function DetailBar(props: DetailBarProps) {
       }}
     >
       <div
-        class="absolute top-6 right-6 z-[35] transition-opacity duration-200"
+        class="absolute top-3 right-3 z-[35] transition-opacity duration-200"
         onClick={() => setDetailSelected(null)}
         classList={{
             "cursor-pointer": !globalCursorAction(),
@@ -121,16 +122,16 @@ export default function DetailBar(props: DetailBarProps) {
           "opacity-100": !!props.selectedComponent,
         }}
         >
-          <div class="flex items-center justify-center w-full my-4">
-            <ReceiptText size={28} />
-            <div class="ml-2 text-2xl">
+          <div class="flex items-center justify-center w-full my-2">
+            <ReceiptText size={24} />
+            <div class="ml-2 text-xl">
               <span class="font-bold">
                 {props.selectedComponent?.component.type.toUpperCase()}
               </span>
             </div>
           </div>
         </div>
-        <div class="w-full h-[calc(100%-4rem)] mt-16">
+        <div class="w-full h-[calc(100%-3rem)] mt-10">
           <Scrollable class="[&::-webkit-scrollbar]:w-1.5 w-full">
             <div class="w-full">
                 <div class="flex flex-col items-center mt-1 py-2">

@@ -115,7 +115,7 @@ export default function BlockSection() {
     return (
         <Scrollable class="[&::-webkit-scrollbar]:w-3 w-full relative">
                 <div 
-                    class="py-6 px-12 flex flex-col items-center space-y-4 shadow rounded mb-2 bg-gray-50 w-full max-w-[calc(100%-2rem)]"
+                    class="pb-6 px-12 flex flex-col items-center space-y-4 shadow rounded mb-2 bg-gray-50 w-full max-w-[calc(100%-2rem)]"
                     ref={sectionRef}
                 >
                     <For each={keys()}>

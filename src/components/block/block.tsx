@@ -7,6 +7,7 @@ import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
 import { detailSelected, setDetailSelected } from "../../store/select";
 import { globalCursorAction, setGlobalCursorAction } from "../../store/action";
+import BlockContent from "./content";
 
 interface BlockProps {
   id: string;
@@ -188,11 +189,11 @@ export default function Block(props: BlockProps) {
         "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected || detailSelected()?.component.id === props.component.id,
       }}
       onMouseEnter={() => {
-        if (globalCursorAction()) return;
+        // if (globalCursorAction()) return;
         setIsBlockHovered(true)
       }}
       onMouseLeave={() => {
-        if (globalCursorAction()) return;
+        // if (globalCursorAction()) return;
         setIsBlockHovered(false);
       }}
       onClick={() => {
@@ -203,7 +204,9 @@ export default function Block(props: BlockProps) {
         })
       }}
     >
-      Hello WorldHello WorldHello World
+      <BlockContent 
+        component={props.component} 
+      />
       <Show when={isFocused()}>
         <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
           <div
