@@ -5,7 +5,7 @@ import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision }
 import ResizeModal from "./resize";
 import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
-import { setDetailSelected } from "../../store/select";
+import { detailSelected, setDetailSelected } from "../../store/select";
 import { globalCursorAction, setGlobalCursorAction } from "../../store/action";
 
 interface BlockProps {
@@ -34,7 +34,7 @@ export default function Block(props: BlockProps) {
   let componentRef: HTMLDivElement | undefined;
 
   const isFocused = createMemo(() => {
-    return isLocalResizing() || showResizeModal() || isBlockHovered() || props.isSelected;
+    return isLocalResizing() || showResizeModal() || isBlockHovered() || props.isSelected || detailSelected()?.component.id === props.component.id;
   });
 
   const handleMouseDown = (direction: "right" | "bottom" | "corner") => (e: MouseEvent) => {
@@ -185,7 +185,7 @@ export default function Block(props: BlockProps) {
       classList={{
         "outline-double outline-sky-500 outline-4 outline-offset-4": isFocused(),
         "border border-gray-300": !isFocused(),
-        "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected,
+        "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected || detailSelected()?.component.id === props.component.id,
       }}
       onMouseEnter={() => {
         if (globalCursorAction()) return;
@@ -198,6 +198,9 @@ export default function Block(props: BlockProps) {
       onClick={() => {
         if (globalCursorAction()) return;
         props.setSelected(props.component.id);
+        if (!!detailSelected()) setDetailSelected({
+          component: props.component,
+        })
       }}
     >
       Hello WorldHello WorldHello World
