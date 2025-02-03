@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import { ChevronsRight, ChevronsLeft, Home, Settings, User, CirclePlus } from "lucide-solid";
 import Scrollable from "../components/scrollable";
+import { globalCursorAction } from "../store/action";
 
 interface SidebarProps {
     collapsedClass: string;
@@ -20,20 +21,24 @@ export default function Sidebar(props: SidebarProps) {
     }}
     >
       <Scrollable>
-      <button
-        class="w-full py-3 flex justify-center hover:bg-gray-600 rounded-md cursor-pointer px-4"
+      <div
+        class="w-full py-3 flex justify-center rounded-md px-4"
+        classList={{
+            "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
+        }}
         onClick={() => {
+            if (globalCursorAction()) return;
             setIsCollapsed(prev => !prev);
             props.onCollapseToggle && props.onCollapseToggle(!isCollapsed())
         }}
       >
         {isCollapsed() ? <ChevronsRight size={24} /> : 
-          <div class="flex items-center w-full">
+          <div class="flex justify-center w-full">
             <ChevronsLeft size={24} />
-            <span class="w-full">Collapse</span>
+            <span class="ml-2">Collapse</span>
           </div>
         }
-      </button>
+      </div>
 
       <hr class="border-t border-gray-400 w-full my-2" />
 
@@ -72,7 +77,10 @@ interface NavItemProps {
 function NavItem(props: NavItemProps) {
 
     return (
-        <div class="w-full flex items-center p-2 hover:bg-gray-600 justify-center rounded-md cursor-pointer">
+        <div class="w-full flex items-center p-2 justify-center rounded-md"
+        classList={{
+          "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
+        }}>
             {props.icon}
         {!props.collapsed && <span class="ml-3">{props.label}</span>}
         </div>

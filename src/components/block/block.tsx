@@ -1,16 +1,16 @@
 import { batch, createMemo, createSignal, Setter, Show } from "solid-js";
-import { Trash, Scaling, SquareSplitVertical, SquareSplitHorizontal, Type } from "lucide-solid";
-import { ComponentBlock, ResizeBlockProps, SizeValue } from "./type";
+import { Trash, Scaling, SquareSplitVertical, SquareSplitHorizontal, ReceiptText } from "lucide-solid";
+import { ComponentBlock, SizeValue } from "./type";
 import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "./const";
 import ResizeModal from "./resize";
 import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
+import { setDetailSelected } from "../../store/select";
+import { globalCursorAction, setGlobalCursorAction } from "../../store/action";
 
 interface BlockProps {
   id: string;
   component: ComponentBlock;
-  isResizing: ResizeBlockProps;
-  setIsResizing: Setter<ResizeBlockProps>;
   isSelected: boolean;
   setSelected: Setter<string>;
   isRootBlock: boolean;
@@ -42,7 +42,6 @@ export default function Block(props: BlockProps) {
 
     batch(() => {
       setIsLocalResizing(true);
-      props.setIsResizing({ resizing: true, resizerId: props.component.id, direction });
       setResizeDirection(direction);
       setMouseStartX(e.clientX);
       setMouseStartY(e.clientY);
@@ -91,12 +90,15 @@ export default function Block(props: BlockProps) {
     switch (direction) {
       case "right":
         document.body.style.cursor = "ew-resize";
+        setGlobalCursorAction(true);
         break;
       case "bottom":
         document.body.style.cursor = "ns-resize";
+        setGlobalCursorAction(true);
         break;
       case "corner":
         document.body.style.cursor = "nwse-resize";
+        setGlobalCursorAction(true);
         break;
     }
 
@@ -156,13 +158,13 @@ export default function Block(props: BlockProps) {
     };
 
     const handleMouseUp = () => {
+      if (!isLocalResizing()) return;
+
       setIsLocalResizing(false);
-      if(props.isResizing.resizing && props.isResizing.resizerId === props.component.id) {
-        props.setIsResizing({ resizing: false, resizerId: "", direction: "right" });
-      }
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       document.body.style.cursor = "auto";
+      setGlobalCursorAction(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -186,12 +188,15 @@ export default function Block(props: BlockProps) {
         "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected,
       }}
       onMouseEnter={() => {
+        if (globalCursorAction()) return;
         setIsBlockHovered(true)
       }}
       onMouseLeave={() => {
+        if (globalCursorAction()) return;
         setIsBlockHovered(false);
       }}
       onClick={() => {
+        if (globalCursorAction()) return;
         props.setSelected(props.component.id);
       }}
     >
@@ -199,25 +204,30 @@ export default function Block(props: BlockProps) {
       <Show when={isFocused()}>
         <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
           <div
-            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
-            onClick={() => setShowResizeModal(true)}
+            class="p-1 bg-gray-200 rounded"
+            onClick={() => {
+              if (globalCursorAction()) return;
+              setShowResizeModal(true)
+            }}
             classList={{
-              "cursor-pointer": !props.isResizing.resizing,
+              "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
           >
             <Scaling size={16} />
           </div>
 
           <div
-            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            class="p-1 bg-gray-200 rounded"
             classList={{
-              "cursor-pointer": !props.isResizing.resizing,
+              "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
             onMouseEnter={() => {
+              if (globalCursorAction()) return;
               setShowSplitPreview(true);
               setSplitDirection("vertical");
             }}
             onMouseLeave={() => {
+              if (globalCursorAction()) return;
               setShowSplitPreview(false)
             }}
           >
@@ -225,15 +235,17 @@ export default function Block(props: BlockProps) {
           </div>
 
           <div
-            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            class="p-1 bg-gray-200 rounded"
             classList={{
-              "cursor-pointer": !props.isResizing.resizing,
+              "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
             onMouseEnter={() => {
+              if (globalCursorAction()) return;
               setShowSplitPreview(true);
               setSplitDirection("horizontal");
             }}
             onMouseLeave={() => {
+              if (globalCursorAction()) return;
               setShowSplitPreview(false)
             }}
           >
@@ -241,20 +253,29 @@ export default function Block(props: BlockProps) {
           </div>
 
           <div 
-            class="p-1 bg-gray-200 rounded hover:bg-gray-300"
+            class="p-1 bg-gray-200 rounded"
             classList={{
-              "cursor-pointer": !props.isResizing.resizing,
+              "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
           >
-            <Type size={16} />
+            <ReceiptText 
+              size={16}
+              on:click={() => {
+                if (globalCursorAction()) return;
+                setDetailSelected({
+                  component: props.component,
+                })
+              }}
+            />
           </div>
 
           <div 
-            class="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+            class="p-1 bg-red-500 text-white rounded"
             classList={{
-              "cursor-pointer": !props.isResizing.resizing,
+              "cursor-pointer hover:bg-red-600": !globalCursorAction(),
             }}
             onClick={() => {
+              if (globalCursorAction()) return;
               props.handleDeleteBlock(props.component.id);
             }}
           >
@@ -291,10 +312,9 @@ export default function Block(props: BlockProps) {
       </Show>
 
         <div
-          class="absolute left-0 top-0 w-full h-[15%] max-h-12 min-h-3 rounded-3xl opacity-50
-           hover:bg-white hover:bg-[radial-gradient(#e5e7eb_3.5px,transparent_3.5px)] hover:[background-size:12px_12px]"
+          class="absolute left-0 top-0 w-full h-[15%] max-h-12 min-h-3 rounded-3xl opacity-50"
           classList={{
-            "cursor-move": !props.isResizing.resizing,
+            "cursor-move hover:bg-white hover:bg-[radial-gradient(#e5e7eb_3.5px,transparent_3.5px)] hover:[background-size:12px_12px]": !globalCursorAction(),
           }}
         />
 
@@ -302,7 +322,7 @@ export default function Block(props: BlockProps) {
           class="absolute right-0 top-0 w-2 h-full"
           onMouseDown={handleMouseDown("right")}
           classList={{
-            "cursor-e-resize hover:bg-green-200": !props.isResizing.resizing,
+            "cursor-e-resize hover:bg-green-200": !globalCursorAction(),
             "bg-green-200": isLocalResizing() && resizeDirection() === "right"
           }}
         />
@@ -311,7 +331,7 @@ export default function Block(props: BlockProps) {
           class="absolute bottom-0 left-0 w-full h-2"
           onMouseDown={handleMouseDown("bottom")}
           classList={{
-            "cursor-s-resize hover:bg-green-200": !props.isResizing.resizing,
+            "cursor-s-resize hover:bg-green-200": !globalCursorAction(),
             "bg-green-200": isLocalResizing() && resizeDirection() === "bottom"
           }}
         />
@@ -320,7 +340,7 @@ export default function Block(props: BlockProps) {
           class="absolute bottom-0 right-0 w-2 h-2"
           onMouseDown={handleMouseDown("corner")}
           classList={{
-            "cursor-se-resize hover:bg-green-200": !props.isResizing.resizing,
+            "cursor-se-resize hover:bg-green-200": !globalCursorAction(),
             "bg-green-200": isLocalResizing() && resizeDirection() === "corner"
           }}
         />

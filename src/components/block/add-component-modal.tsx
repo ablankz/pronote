@@ -2,6 +2,7 @@ import { X } from "lucide-solid";
 import { BlockComponentType } from "./type";
 import { For } from "solid-js";
 import Scrollable from "../scrollable";
+import { globalCursorAction } from "../../store/action";
 
 interface AddComponentModalProps {
     handleAddComponent: (type: BlockComponentType) => void;
@@ -36,7 +37,10 @@ export default function AddComponentModal(props: AddComponentModalProps) {
                                                         if (!component) return null;
                                                         return (
                                                             <div 
-                                                                class="p-2 bg-white border border-gray-300 rounded shadow-lg mb-1 cursor-pointer transition flex items-center justify-center flex-col hover:bg-gray-100"
+                                                                class="p-2 bg-white border border-gray-300 rounded shadow-lg mb-1 transition flex items-center justify-center flex-col"
+                                                                classList={{
+                                                                    "cursor-pointer hover:bg-gray-100": !globalCursorAction(),
+                                                                }}
                                                                 onClick={() => {
                                                                     props.handleAddComponent(component);
                                                                 }}
@@ -44,7 +48,11 @@ export default function AddComponentModal(props: AddComponentModalProps) {
                                                                 <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
                                                                     {component.icon}
                                                                 </div>
-                                                                <div class="p-1 cursor-pointer text-center font-bold text-gray-800">
+                                                                <div class="p-1 text-center font-bold text-gray-800"
+                                                                classList={{
+                                                                    "cursor-pointer": !globalCursorAction(),
+                                                                }}
+                                                                >
                                                                     {component.display}
                                                                 </div>
                                                             </div>
@@ -63,7 +71,10 @@ export default function AddComponentModal(props: AddComponentModalProps) {
         </div>
 
         <div 
-            class="absolute top-6 right-6 cursor-pointer bg-black-700 opacity-40 hover:opacity-50 hover:scale-105 transition-all rounded-full p-1"
+            class="absolute top-6 right-6 bg-black-700 opacity-40 transition-all rounded-full p-1"
+            classList={{
+                "cursor-pointer hover:opacity-50 hover:scale-105": !globalCursorAction(),
+            }}
         >
             <X size={26} onClick={() => props.handleClose()} class="" />
         </div>

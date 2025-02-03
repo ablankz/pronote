@@ -1,5 +1,6 @@
 import { createMemo } from "solid-js";
 import { generateColor, generateInitials } from "../utils/generate";
+import { globalCursorAction } from "../store/action";
 
 interface ProfileAvatarProps {
     name: string;
@@ -21,6 +22,9 @@ export default function ProfileAvatar(props: ProfileAvatarProps) {
     return (
         <div
         class={totalClasses()}
+        classList={{
+            "cursor-pointer": !globalCursorAction(),
+        }}
         style={{
             width: props.size || "40px",
             height: props.size || "40px",

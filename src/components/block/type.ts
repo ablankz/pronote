@@ -117,3 +117,7 @@ export interface ComponentBlock {
     widthInitialSizeValue: SizeValue;
     heightInitialSizeValue: SizeValue;
 }
+
+export interface BlockDetailValue {
+    component: ComponentBlock;
+}

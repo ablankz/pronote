@@ -1,6 +1,7 @@
 import { createEffect, createMemo } from "solid-js";
 import { Grip, EllipsisVertical, Search } from "lucide-solid";
 import ProfileAvatar from "../components/avatar";
+import { globalCursorAction } from "../store/action";
 
 interface HeaderProps {
     class?: string;
@@ -17,6 +18,8 @@ export default function Header(props: HeaderProps) {
 
     createEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (globalCursorAction()) return;
+            
             if (e.ctrlKey && e.key === "k") {
                 e.preventDefault();
                 inputRef?.focus();
@@ -33,7 +36,11 @@ export default function Header(props: HeaderProps) {
 
   return (
     <div class={totalClasses()}>
-        <div class="flex items-center cursor-pointer">
+        <div class="flex items-center"
+        classList={{
+            "cursor-pointer": !globalCursorAction(),
+        }}
+        >
             <Grip size={24} />
         </div> 
 
@@ -48,8 +55,11 @@ export default function Header(props: HeaderProps) {
         </div>
 
         <div class="flex items-center space-x-4">
-            <EllipsisVertical size={24} class="cursor-pointer hover:bg-gray-600 rounded" />
-            <ProfileAvatar name="John Doe" size="32px" class="cursor-pointer" />
+            <EllipsisVertical size={24} class="rounded"
+            classList={{
+                "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
+            }} />
+            <ProfileAvatar name="John Doe" size="32px" />
         </div>
     </div>
   );

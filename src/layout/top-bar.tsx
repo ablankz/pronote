@@ -1,6 +1,7 @@
 import { createSignal, createEffect, createMemo } from "solid-js";
 import { Bold, Italic, PaintBucket, ALargeSmall } from "lucide-solid";
 import TopBarMode from "../components/top-bar/mode";
+import { globalCursorAction } from "../store/action";
 
 interface TopBarProps {
     onPreviewToggle?: () => void;
@@ -41,18 +42,30 @@ export default function TopBar(props: TopBarProps) {
     <div class={totalClasses()}>
         <div class="flex items-center w-11/12">
           <div class="flex items-center bg-amber-50 text-amber-900 p-2 rounded w-full">
-              <button class="p-1 mx-1 hover:bg-amber-100 rounded cursor-pointer" onClick={() => applyStyle("font-weight", "bold")}>
+              <div class="p-1 mx-1 rounded" onClick={() => applyStyle("font-weight", "bold")}
+                classList={{
+                    "cursor-pointer hover:bg-amber-100": !globalCursorAction(),
+                }}>
                   <Bold size={20} />
-              </button>
-              <button class="p-1 mx-1 hover:bg-amber-100 rounded cursor-pointer" onClick={() => applyStyle("font-style", "italic")}>
+              </div>
+              <div class="p-1 mx-1 rounded" onClick={() => applyStyle("font-style", "italic")}
+                classList={{
+                  "cursor-pointer hover:bg-amber-100": !globalCursorAction(),
+              }}>
                   <Italic size={20} />
-              </button>
-              <button class="p-1 mx-1 hover:bg-amber-100 rounded cursor-pointer" onClick={() => applyStyle("font-size", "20px")}>
+              </div>
+              <div class="p-1 mx-1 rounded" onClick={() => applyStyle("font-size", "20px")}
+                classList={{
+                  "cursor-pointer hover:bg-amber-100": !globalCursorAction(),
+              }}>
                   <ALargeSmall size={20} />
-              </button>
-              <button class="p-1 mx-1 hover:bg-amber-100 rounded cursor-pointer" onClick={() => applyStyle("background-color", "yellow")}>
+              </div>
+              <div class="p-1 mx-1 rounded" onClick={() => applyStyle("background-color", "yellow")}
+                classList={{
+                  "cursor-pointer hover:bg-amber-100": !globalCursorAction(),
+              }}>
                   <PaintBucket size={20} />
-              </button>
+              </div>
           </div>    
         </div> 
 

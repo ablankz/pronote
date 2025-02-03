@@ -4,6 +4,7 @@ import { SIZE_UNITS, SizeValue } from "./type";
 import { Check } from "lucide-solid";
 import { fixFloatingPoint } from "../../utils/calc";
 import { safeConvertSizeUnit } from "../../utils/size";
+import { globalCursorAction } from "../../store/action";
 
 interface ResizeModalProps {
     class?: string;
@@ -39,6 +40,8 @@ export default function ResizeModal(props: ResizeModalProps) {
     });
 
     const handleClickOutside = (event: MouseEvent) => {
+        if (globalCursorAction()) return;
+
         if (widthUnitOpen() && !widthUnitModal?.contains(event.target as Node)) {
             setWidthUnitOpen(false);
         } else if (heightUnitOpen() && !heightUnitModal?.contains(event.target as Node)) {
@@ -49,6 +52,8 @@ export default function ResizeModal(props: ResizeModalProps) {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
+        if (globalCursorAction()) return;
+
         if (event.key === "Escape") {
             if (widthUnitOpen()) {
                 setWidthUnitOpen(false);
@@ -71,7 +76,7 @@ export default function ResizeModal(props: ResizeModalProps) {
     });
 
     const totalClasses = createMemo(() => {
-        return `absolute top-8 right-2 w-52 cursor-auto bg-white border-1 border-green-300 shadow-lg p-4 rounded z-40 ${props.class}`;
+        return `absolute top-8 right-2 w-52 bg-white border-1 border-green-300 shadow-lg p-4 rounded z-40 ${props.class}`;
     });
 
     const handleWidthChange = (e: Event) => {
@@ -159,7 +164,10 @@ export default function ResizeModal(props: ResizeModalProps) {
         };
 
     return (
-            <div class={totalClasses()} ref={modalRef}>
+            <div class={totalClasses()} ref={modalRef} 
+            classList={{
+                "cursor-auto": !globalCursorAction(),
+            }}>
                 <div class="relative flex items-center justify-between flex-col">
                     <div class="flex items-center max-w-[18rem] mx-auto mb-2">
                         <div class="relative w-full">
@@ -178,31 +186,36 @@ export default function ResizeModal(props: ResizeModalProps) {
                                 onInput={handleWidthChange}
                             />
                         </div>
-                        <button
-                            class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
-                            onClick={() => setWidthUnitOpen(prev => !prev)}
+                        <div
+                            class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg focus:ring-4 focus:outline-none focus:ring-gray-100"
+                            classList={{
+                                "cursor-pointer hover:bg-gray-200": !globalCursorAction(),
+                            }}
+                            onClick={() => {
+                                if (globalCursorAction()) return;
+                                setWidthUnitOpen(prev => !prev)}
+                            }
                         >
                             {props.width.unit}
                             <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                        </button>
+                        </div>
                     </div>
 
                     <Show when={widthUnitOpen()}>
-                        <div class="absolute top-10 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={widthUnitModal}>
+                        <div class="absolute z-20 top-10 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={widthUnitModal}>
                             <ul class="py-2 text-sm text-gray-700">
                                 <For each={SIZE_UNITS}>
                                     {unit => (
                                         <li>
-                                            <button 
-                                            type="button" 
+                                            <div 
                                             class="inline-flex w-full px-4 py-2 text-sm text-gray-700"
                                             role="menuitem"
                                             classList={{
                                                 "bg-gray-300": props.width.unit === unit,
-                                                "cursor-pointer hover:bg-gray-100": props.width.unit !== unit,
+                                                "cursor-pointer hover:bg-gray-100": (props.width.unit !== unit) && !globalCursorAction(),
                                             }}
-                                            disabled={props.width.unit === unit}
                                             onClick={() => {
+                                                if (props.width.unit === unit || globalCursorAction()) return;
                                                 const parentSize = props.parentRef.getBoundingClientRect().width;
                                                 const computedStyle = window.getComputedStyle(props.parentRef);
                                                 const paddingLeft = parseFloat(computedStyle.paddingLeft);
@@ -224,7 +237,7 @@ export default function ResizeModal(props: ResizeModalProps) {
                                                     </Show>
                                                     <span>{unit}</span>
                                                 </div>
-                                            </button>
+                                            </div>
                                         </li>
                                     )}
                                 </For>
@@ -232,17 +245,21 @@ export default function ResizeModal(props: ResizeModalProps) {
                         </div>
                     </Show>
                     {widthError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{widthError()}</p>}
-                    <label class="inline-flex items-center mb-5 cursor-pointer">
+                    <label class="inline-flex items-center mb-5"
+                        classList={{
+                            "cursor-pointer": !globalCursorAction(),
+                        }}
+                    >
                     <input 
-                    type="checkbox" 
-                    class="sr-only peer" 
-                    checked={props.width.auto}
-                    onChange={() => props.setWidth(prev => {
-                        return {
-                            ...prev,
-                            auto: !prev.auto
-                        }
-                    })}
+                        type="checkbox" 
+                        class="sr-only peer" 
+                        checked={props.width.auto}
+                        onChange={() => props.setWidth(prev => {
+                            return {
+                                ...prev,
+                                auto: !prev.auto
+                            }
+                        })}
                     />
                     <div class="relative w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-300" />
                     <span class="ms-3 text-sm font-medium text-gray-900">Width Auto</span>
@@ -268,31 +285,36 @@ export default function ResizeModal(props: ResizeModalProps) {
                         onInput={handleHeightChange}
                         />
                     </div>
-                    <button 
-                    class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 cursor-pointer"
-                    onClick={() => setHeightUnitOpen(prev => !prev)}
+                    <div 
+                    class="relative shrink-0 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-e-lg focus:ring-4 focus:outline-none focus:ring-gray-100"
+                    classList={{
+                        "cursor-pointer hover:bg-gray-200": !globalCursorAction(),
+                    }}
+                    onClick={() => {
+                        if (globalCursorAction()) return;
+                        setHeightUnitOpen(prev => !prev)
+                    }}
                     >
                         {props.height.unit}
                         <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                    </button>
+                    </div>
                 </div>
 
                 <Show when={heightUnitOpen()}>
-                    <div class="absolute top-10 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={heightUnitModal}>
+                    <div class="absolute top-10 z-20 right-0 bg-gray-200 divide-y divide-gray-100 rounded-lg w-16 shadow-emerald-200 shadow-sm" ref={heightUnitModal}>
                         <ul class="py-2 text-sm text-gray-700">
                             <For each={SIZE_UNITS}>
                                 {unit => (
                                     <li>
-                                        <button 
-                                        type="button" 
+                                        <div 
                                         class="inline-flex w-full px-4 py-2 text-sm text-gray-700"
                                         role="menuitem"
                                         classList={{
                                             "bg-gray-300": props.height.unit === unit,
-                                            "cursor-pointer hover:bg-gray-100": props.height.unit !== unit,
+                                            "cursor-pointer hover:bg-gray-100": (props.height.unit !== unit) && !globalCursorAction(),
                                         }}
-                                        disabled={props.height.unit === unit}
                                         onClick={() => {
+                                            if (props.height.unit === unit || globalCursorAction()) return;
                                             const parentSize = props.parentRef.getBoundingClientRect().height;
                                             const computedStyle = window.getComputedStyle(props.parentRef);
                                             const paddingTop = parseFloat(computedStyle.paddingTop);
@@ -314,7 +336,7 @@ export default function ResizeModal(props: ResizeModalProps) {
                                                 </Show>
                                                 <span>{unit}</span>
                                             </div>
-                                        </button>
+                                        </div>
                                     </li>
                                 )}
                             </For>
@@ -322,7 +344,10 @@ export default function ResizeModal(props: ResizeModalProps) {
                     </div>
                 </Show>
                 {heightError() && <p class="text-red-500 text-xs mt-0.5 mb-1">{heightError()}</p>}
-                <label class="inline-flex items-center mb-5 cursor-pointer">
+                <label class="inline-flex items-center mb-5"
+                classList={{
+                    "cursor-pointer": !globalCursorAction(),
+                }}>
                 <input 
                 type="checkbox" 
                 class="sr-only peer" 
@@ -339,14 +364,18 @@ export default function ResizeModal(props: ResizeModalProps) {
                 </label>
                 </div>
 
-                <button
-                    class="w-full bg-green-500 text-white py-1 mt-2 rounded hover:bg-green-600 cursor-pointer"
+                <div
+                    class="w-full bg-green-500 text-white py-1 mt-2 rounded text-center"
+                    classList={{
+                        "cursor-pointer hover:bg-green-600": !globalCursorAction(),
+                    }}
                     onClick={() => {
+                        if (globalCursorAction()) return;
                         props.setModal(false)
                     }}
                 >
                     Close
-                </button>
+                </div>
             </div>
     );
 }

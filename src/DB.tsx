@@ -52,7 +52,7 @@ export default function DBSample() {
     return (
       <div>
         <h1>Events</h1>
-        <button onClick={() => addEvent("New Event at " + new Date().toISOString())}>Add Event</button>
+        <div onClick={() => addEvent("New Event at " + new Date().toISOString())}>Add Event</div>
         <ul>
             <For each={keys()}>
             {(key) => {

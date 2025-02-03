@@ -1,10 +1,11 @@
 import { Show } from "solid-js/web";
 import Scrollable from "../components/scrollable";
-import { createMemo, createSignal, createUniqueId, For, onCleanup, onMount } from "solid-js";
-import { AddOpenState, BlockComponentType, BlockTypes, ComponentBlock, ResizeBlockProps } from "../components/block/type";
+import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
+import { AddOpenState, BlockComponentType, BlockTypes, ComponentBlock } from "../components/block/type";
 import BlockComponent from "../components/block/component";
 import BlockPlus from "../components/block/plus";
 import ComponentAdder from "../components/block/component-adder";
+import { globalCursorAction } from "../store/action";
 
 interface internalBlock {
     internalId: string;
@@ -19,11 +20,6 @@ export default function BlockSection() {
         id: ""
     });
     const [selected, setSelected] = createSignal<string>("");
-    const [resizeState, setResizeState] = createSignal<ResizeBlockProps>({
-        resizing: false,
-        resizerId: "",
-        direction: "right"
-    });
     const [deleting, setDeleting] = createSignal<string | null>(null);
 
     const handleDeleteBlock = (id: string) => {
@@ -38,6 +34,8 @@ export default function BlockSection() {
     let sectionRef: HTMLDivElement | undefined;
     
     const handleClickOutside = (event: MouseEvent) => {
+        if (globalCursorAction()) return;
+
         if (addModalRef && !addModalRef.contains(event.target as Node)) {
             setAddOpen({ open: false, id: "" });
         }
@@ -59,6 +57,8 @@ export default function BlockSection() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
+            if (globalCursorAction()) return;
+
             setAddOpen({ open: false, id: "" });
             setSelected("");
         }
@@ -66,7 +66,7 @@ export default function BlockSection() {
 
     const addComponent = (id: string, componentType: BlockComponentType) => {
         const componentBlock: ComponentBlock = {
-            id: createUniqueId(),
+            id: crypto.randomUUID(),
             type: componentType.type,
             data: {},
             widthInitialSizeValue: componentType.widthInitialSizeValue,
@@ -83,7 +83,7 @@ export default function BlockSection() {
             const index = newRootBlocks.findIndex((el) => el.internalId === id);
             console.log(index);
             newRootBlocks.splice(index + 1, 0, {
-                internalId: createUniqueId(),
+                internalId: crypto.randomUUID(),
                 component: componentBlock
             });
             return newRootBlocks;
@@ -100,7 +100,7 @@ export default function BlockSection() {
 
     onMount(() => {
         setRootBlocks([{ 
-            internalId: createUniqueId(),
+            internalId: crypto.randomUUID(),
         }]);
 
         document.addEventListener("mousedown", handleClickOutside);
@@ -134,8 +134,6 @@ export default function BlockSection() {
                                         <BlockComponent 
                                             id={item?.internalId!}
                                             component={item?.component!}
-                                            isResizing={resizeState()} 
-                                            setIsResizing={setResizeState} 
                                             handleAddBlock={(id) => setAddOpen({ open: true, id })} 
                                             addOpen={addOpen().open && addOpen().id === item?.component?.id!}
                                             setSelected={setSelected}
