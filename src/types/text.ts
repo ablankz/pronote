@@ -9,6 +9,13 @@ export interface FlexibleText {
     fontFamily: string;
 }
 
-export interface FlexibleTextBlock {
-    text: FlexibleText[];
-}
+export const DefaultFlexibleText: FlexibleText = {
+    text: "",
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false,
+    color: "",
+    fontSize: 16,
+    fontFamily: "Arial",
+};

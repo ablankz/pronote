@@ -13,7 +13,7 @@ export default function BlockContent(props: BlockContentProps) {
 
   return (
     <div
-        class={`p-0.5 ${props.class || ""}`}
+        class={`p-0.5 w-full ${props.class || ""}`}
         ref={componentRef}
         classList={{
         ...(props.classList || {}),

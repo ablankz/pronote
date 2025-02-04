@@ -51,9 +51,9 @@ export default function App() {
             </div>
             <DetailBar
               class=""
-              defaultWidth={640}
+              defaultWidth={360}
               minWidth={360}
-              maxWidth={1280}
+              maxWidth={720}
             />
           </div> 
         </div>

@@ -190,13 +190,13 @@ export default function ComponentAdder(props: ComponentAdderProps) {
             display: "Paragraph",
             displayWithEmoji: "📝Paragraph",
             widthInitialSizeValue: {
-                value: 100,
+                value: 90,
                 unit: "%",
                 auto: false
             },
             heightInitialSizeValue: {
-                value: 100,
-                unit: "%",
+                value: 128,
+                unit: "px",
                 auto: false
             }
         },

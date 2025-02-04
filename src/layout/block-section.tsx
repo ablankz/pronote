@@ -157,7 +157,7 @@ export default function BlockSection() {
                         }}
                     </For>
                 </div>
-                  <ComponentAdder 
+                <ComponentAdder 
                     addOpen={addOpen()}
                     setAddOpen={setAddOpen}
                     addModalRef={addModalRef}
