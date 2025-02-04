@@ -1,27 +1,5 @@
 import { JSXElement } from "solid-js";
-
-
-export interface ResizeBlockProps {
-    resizing: boolean;
-    resizerId: string;
-    direction: "right" | "bottom" | "corner";
-}
-
-export interface AddOpenState {
-    open: boolean;
-    id: string;
-}
-
-const unitArray = ['%', 'px'] as const;
-
-export type SizeUnit = typeof unitArray[number];
-export const SIZE_UNITS = unitArray;
-
-export interface SizeValue {
-    value: number;
-    unit: SizeUnit;
-    auto: boolean;
-}
+import { SizeValue } from "./size";
 
 export const BlockTypes = {
     // BASIC
@@ -116,8 +94,4 @@ export interface ComponentBlock {
     data: any;
     widthInitialSizeValue: SizeValue;
     heightInitialSizeValue: SizeValue;
-}
-
-export interface BlockDetailValue {
-    component: ComponentBlock;
 }

@@ -1,4 +1,8 @@
 import { createSignal } from "solid-js";
-import { BlockDetailValue } from "../components/block/type";
+import { ComponentBlock } from "../types/block";
 
-export const [detailSelected, setDetailSelected] = createSignal<BlockDetailValue | null>(null);
+export interface SelectedBlockValue {
+    component: ComponentBlock;
+}
+
+export const [selectedBlock, setSelectedBlock] = createSignal<SelectedBlockValue | null>(null);

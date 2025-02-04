@@ -1,6 +1,6 @@
-import { batch, createSignal } from "solid-js";
-import { ReceiptText, X } from "lucide-solid";
-import { BlockDetailValue, ComponentBlock } from "./type";
+import { Match, Switch } from "solid-js";
+import { BlockTypes, ComponentBlock } from "../../types/block";
+import ParagraphContent from "./content/paragraph-content";
 
 interface BlockContentProps {
     class?: string;
@@ -19,15 +19,11 @@ export default function BlockContent(props: BlockContentProps) {
         ...(props.classList || {}),
         }}
     >
-        <div class="flex justify-between items-center">
-            <div class="flex items-center">
-                <div class="ml-2 text-xl">
-                    <span class="font-bold">
-                        {props.component?.id}
-                    </span>
-                </div>
-            </div>
-            </div>
+        <Switch>
+            <Match when={props.component?.type === BlockTypes.PARAGRAPH}>
+                <ParagraphContent data={props.component?.data} />
+            </Match>
+        </Switch>
     </div>
   );
 }

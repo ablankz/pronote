@@ -1,12 +1,9 @@
+import { selectedBlock } from "../../store/select";
+import { ComponentBlock } from "../../types/block";
 import Block from "./block";
-import { ComponentBlock } from "./type";
-import { Setter } from "solid-js";
 
 interface BlockComponentProps {
-    id: string;
     component: ComponentBlock;
-    isSelected: boolean;
-    setSelected: Setter<string>;
     handleAddBlock: (id: string) => void;
     addOpen: boolean;
     isRootBlock: boolean;
@@ -16,10 +13,8 @@ interface BlockComponentProps {
 export default function BlockComponent(props: BlockComponentProps) {
     return (
         <Block 
-            id={props.id}
             component={props.component}
-            isSelected={props.isSelected}
-            setSelected={props.setSelected}
+            isSelected={props.component.id === selectedBlock()?.component.id}
             isRootBlock={props.isRootBlock}
             handleDeleteBlock={props.handleDeleteBlock}
         />

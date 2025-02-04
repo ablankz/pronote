@@ -1,11 +1,13 @@
 import { Show } from "solid-js/web";
 import Scrollable from "../components/scrollable";
 import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
-import { AddOpenState, BlockComponentType, BlockTypes, ComponentBlock } from "../components/block/type";
 import BlockComponent from "../components/block/component";
 import BlockPlus from "../components/block/plus";
 import ComponentAdder from "../components/block/component-adder";
-import { globalCursorAction } from "../store/action";
+import { globalCursorAction, setDetailOpen } from "../store/action";
+import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
+import { AddOpenState } from "../types/state";
+import { setSelectedBlock } from "../store/select";
 
 interface internalBlock {
     internalId: string;
@@ -19,14 +21,13 @@ export default function BlockSection() {
         open: false,
         id: ""
     });
-    const [selected, setSelected] = createSignal<string>("");
     const [deleting, setDeleting] = createSignal<string | null>(null);
 
     const handleDeleteBlock = (id: string) => {
         setDeleting(id); // 削除対象を設定
         setTimeout(() => {
             setRootBlocks(rootBlocks().filter((el) => el.component?.id !== id));
-            setSelected("");
+            setSelectedBlock(null);
             setDeleting(null);
         }, 300);
     };
@@ -50,7 +51,8 @@ export default function BlockSection() {
                 }
             }
             if (!contains) {
-                setSelected("");
+                setSelectedBlock(null);
+                setDetailOpen(false);
             }
         }
     };
@@ -60,7 +62,8 @@ export default function BlockSection() {
             if (globalCursorAction()) return;
 
             setAddOpen({ open: false, id: "" });
-            setSelected("");
+            setSelectedBlock(null);
+            setDetailOpen(false);
         }
     };
 
@@ -81,7 +84,6 @@ export default function BlockSection() {
         setRootBlocks(prev => {
             const newRootBlocks = [...prev];
             const index = newRootBlocks.findIndex((el) => el.internalId === id);
-            console.log(index);
             newRootBlocks.splice(index + 1, 0, {
                 internalId: crypto.randomUUID(),
                 component: componentBlock
@@ -103,12 +105,15 @@ export default function BlockSection() {
             internalId: crypto.randomUUID(),
         }]);
 
-        document.addEventListener("mousedown", handleClickOutside);
+        // document.addEventListener("mousedown", handleClickOutside);
+        // ダブルクリック
+        document.addEventListener("dblclick", handleClickOutside);
         document.addEventListener("keydown", handleKeyDown);
     });
 
     onCleanup(() => {
-        document.removeEventListener("mousedown", handleClickOutside);
+        // document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("dblclick", handleClickOutside);
         document.removeEventListener("keydown", handleKeyDown);
     });
 
@@ -132,12 +137,9 @@ export default function BlockSection() {
                                 >
                                     <Show when={item?.component}>
                                         <BlockComponent 
-                                            id={item?.internalId!}
                                             component={item?.component!}
                                             handleAddBlock={(id) => setAddOpen({ open: true, id })} 
                                             addOpen={addOpen().open && addOpen().id === item?.component?.id!}
-                                            setSelected={setSelected}
-                                            isSelected={selected() === item?.component?.id!}
                                             isRootBlock={true}
                                             handleDeleteBlock={(id) => {
                                                 handleDeleteBlock(id);

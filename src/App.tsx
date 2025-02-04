@@ -5,7 +5,6 @@ import Sidebar from "./layout/side-bar";
 import Header from "./layout/header";
 import BlockSection from "./layout/block-section";
 import DetailBar from "./layout/detail-bar";
-import { detailSelected } from "./store/select";
 
 interface Item {
   id: number;
@@ -51,7 +50,6 @@ export default function App() {
               <BlockSection />
             </div>
             <DetailBar
-              selectedComponent={detailSelected()}
               class=""
               defaultWidth={640}
               minWidth={360}

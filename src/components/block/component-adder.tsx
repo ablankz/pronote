@@ -1,5 +1,7 @@
-import { AddOpenState, BlockComponentType, BlockTypeCategories, BlockTypes } from "./type";
 import { createMemo, Setter } from "solid-js";
+import AddComponentModal from "./add-component-modal";
+import { AddOpenState } from "../../types/state";
+import { BlockComponentType, BlockTypeCategories, BlockTypes } from "../../types/block";
 import { 
     Activity,
     BookOpen, 
@@ -48,7 +50,6 @@ import {
     Vote, 
     WrapText
 } from "lucide-solid";
-import AddComponentModal from "./add-component-modal";
 
 interface ComponentAdderProps {
     addOpen: AddOpenState;
@@ -58,7 +59,6 @@ interface ComponentAdderProps {
 }
 
 export default function ComponentAdder(props: ComponentAdderProps) {
-
     const componentLists: BlockComponentType[] = [
         {
             key: "sub-page",
@@ -984,6 +984,7 @@ export default function ComponentAdder(props: ComponentAdderProps) {
             }
         },
     ];
+
 
     const categoryKeys = createMemo(() => Object.keys(BlockTypeCategories).map((key) => BlockTypeCategories[key as keyof typeof BlockTypeCategories]));
 

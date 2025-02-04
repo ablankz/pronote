@@ -1,19 +1,18 @@
-import { batch, createMemo, createSignal, Setter, Show } from "solid-js";
+import { batch, createMemo, createSignal, Show } from "solid-js";
 import { Trash, Scaling, SquareSplitVertical, SquareSplitHorizontal, ReceiptText } from "lucide-solid";
-import { ComponentBlock, SizeValue } from "./type";
-import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "./const";
 import ResizeModal from "./resize";
 import { fixFloatingPoint } from "../../utils/calc";
 import { convertToPercentage } from "../../utils/size";
-import { detailSelected, setDetailSelected } from "../../store/select";
-import { globalCursorAction, setGlobalCursorAction } from "../../store/action";
+import { setSelectedBlock } from "../../store/select";
+import { globalCursorAction, setDetailOpen, setGlobalCursorAction } from "../../store/action";
 import BlockContent from "./content";
+import { ComponentBlock } from "../../types/block";
+import { SizeValue } from "../../types/size";
+import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "../../consts/size";
 
 interface BlockProps {
-  id: string;
   component: ComponentBlock;
   isSelected: boolean;
-  setSelected: Setter<string>;
   isRootBlock: boolean;
   handleDeleteBlock: (id: string) => void;
 }
@@ -35,7 +34,7 @@ export default function Block(props: BlockProps) {
   let componentRef: HTMLDivElement | undefined;
 
   const isFocused = createMemo(() => {
-    return isLocalResizing() || showResizeModal() || isBlockHovered() || props.isSelected || detailSelected()?.component.id === props.component.id;
+    return isLocalResizing() || showResizeModal() || isBlockHovered() || props.isSelected;
   });
 
   const handleMouseDown = (direction: "right" | "bottom" | "corner") => (e: MouseEvent) => {
@@ -186,7 +185,7 @@ export default function Block(props: BlockProps) {
       classList={{
         "outline-double outline-sky-500 outline-4 outline-offset-4": isFocused(),
         "border border-gray-300": !isFocused(),
-        "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected || detailSelected()?.component.id === props.component.id,
+        "bg-indigo-500 shadow-xl shadow-indigo-500/50": props.isSelected,
       }}
       onMouseEnter={() => {
         // if (globalCursorAction()) return;
@@ -198,10 +197,16 @@ export default function Block(props: BlockProps) {
       }}
       onClick={() => {
         if (globalCursorAction()) return;
-        props.setSelected(props.component.id);
-        if (!!detailSelected()) setDetailSelected({
+        setSelectedBlock({
           component: props.component,
-        })
+        });
+      }}
+      on:dblclick={() => {
+        if (globalCursorAction()) return;
+        setSelectedBlock({
+          component: props.component,
+        });
+        setDetailOpen(true);
       }}
     >
       <BlockContent 
@@ -263,15 +268,15 @@ export default function Block(props: BlockProps) {
             classList={{
               "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
+            on:click={() => {
+              setSelectedBlock({
+                component: props.component,
+              });
+              setDetailOpen(true);
+            }}
           >
             <ReceiptText 
               size={16}
-              on:click={() => {
-                if (globalCursorAction()) return;
-                setDetailSelected({
-                  component: props.component,
-                })
-              }}
             />
           </div>
 

@@ -1,16 +1,15 @@
-import { batch, createSignal } from "solid-js";
+import { batch, createMemo, createSignal } from "solid-js";
 import { ReceiptText, X } from "lucide-solid";
 import Scrollable from "../components/scrollable";
-import { BlockDetailValue, SizeValue } from "../components/block/type";
-import { setDetailSelected } from "../store/select";
+import { selectedBlock } from "../store/select";
 import { fixFloatingPoint } from "../utils/calc";
-import { pxPrecision } from "../components/block/const";
-import { globalCursorAction, setGlobalCursorAction } from "../store/action";
+import { detailOpen, globalCursorAction, setDetailOpen, setGlobalCursorAction } from "../store/action";
+import { SizeValue } from "../types/size";
+import { pxPrecision } from "../consts/size";
 
 interface DetailBarProps {
     class?: string;
     classList?: Record<string, boolean>;
-    selectedComponent: BlockDetailValue | null;
     defaultWidth: number;
     minWidth: number;
     maxWidth: number;
@@ -26,6 +25,7 @@ export default function DetailBar(props: DetailBarProps) {
   });
   const [initialWidth, setInitialWidth] = createSignal(0);
   const [mouseStartX, setMouseStartX] = createSignal(0);
+  const isOpen = createMemo(() => !!selectedBlock() && detailOpen());
 
   let componentRef: HTMLDivElement | undefined;
 
@@ -88,17 +88,17 @@ export default function DetailBar(props: DetailBarProps) {
         ...(props.classList || {}),
       }}
       style={{
-        width: !props.selectedComponent ? "0" : `${width().value}${width().unit}`,
+        width: isOpen() ? `${width().value}${width().unit}` : "0",
         transition: isLocalResizing() ? "none" : "width 0.2s, height 0.2s",
       }}
     >
       <div
         class="absolute top-3 right-3 z-[35] transition-opacity duration-200"
-        onClick={() => setDetailSelected(null)}
+        onClick={() => setDetailOpen(false)}
         classList={{
             "cursor-pointer": !globalCursorAction(),
-            "opacity-0": !props.selectedComponent,
-            "opacity-100": !!props.selectedComponent,
+            "opacity-0": !isOpen(),
+            "opacity-100": isOpen(),
         }}
       >
         <X size={24} />
@@ -110,23 +110,23 @@ export default function DetailBar(props: DetailBarProps) {
           classList={{
             "cursor-e-resize hover:bg-green-200": !globalCursorAction(),
             "bg-green-200": isLocalResizing() && resizeDirection() === "left",
-            "opacity-0": !props.selectedComponent,
-            "opacity-100": !!props.selectedComponent,
+            "opacity-0": !isOpen(),
+            "opacity-100": isOpen(),
           }}
         />
 
         <div 
         class="absolute left-0 w-full top-0 z-20 bg-white shadow-md transition-opacity duration-200"
         classList={{
-          "opacity-0": !props.selectedComponent,
-          "opacity-100": !!props.selectedComponent,
+          "opacity-0": !isOpen(),
+          "opacity-100": isOpen(),
         }}
         >
           <div class="flex items-center justify-center w-full my-2">
             <ReceiptText size={24} />
             <div class="ml-2 text-xl">
               <span class="font-bold">
-                {props.selectedComponent?.component.type.toUpperCase()}
+                {selectedBlock()?.component.type.toUpperCase()}
               </span>
             </div>
           </div>

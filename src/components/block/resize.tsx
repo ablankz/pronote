@@ -1,10 +1,10 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Setter, Show } from "solid-js";
-import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "./const";
-import { SIZE_UNITS, SizeValue } from "./type";
 import { Check } from "lucide-solid";
 import { fixFloatingPoint } from "../../utils/calc";
 import { safeConvertSizeUnit } from "../../utils/size";
 import { globalCursorAction } from "../../store/action";
+import { SIZE_UNITS, SizeValue } from "../../types/size";
+import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "../../consts/size";
 
 interface ResizeModalProps {
     class?: string;

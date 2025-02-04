@@ -1,5 +1,5 @@
-import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "../components/block/const";
-import { SizeValue } from "../components/block/type";
+import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "../consts/size";
+import { SizeValue } from "../types/size";
 import { fixFloatingPoint } from "./calc";
 
 export const convertSizeUnit = (value: number, unit: SizeValue["unit"], to: SizeValue["unit"], max: number) => {
