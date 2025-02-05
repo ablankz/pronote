@@ -1,4 +1,6 @@
 export interface FlexibleText {
+    id: string;
+    version: number;
     text: string;
     bold: boolean;
     italic: boolean;
@@ -9,13 +11,17 @@ export interface FlexibleText {
     fontFamily: string;
 }
 
-export const DefaultFlexibleText: FlexibleText = {
-    text: "",
-    bold: false,
-    italic: false,
-    underline: false,
-    strikeThrough: false,
-    color: "",
-    fontSize: 16,
-    fontFamily: "Arial",
+export const DefaultFlexibleText = (id: string): FlexibleText => {
+    return {
+        id: id,
+        version: 0,
+        text: "",
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeThrough: false,
+        color: "",
+        fontSize: 16,
+        fontFamily: "Arial",
+    };
 };

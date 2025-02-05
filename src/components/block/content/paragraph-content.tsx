@@ -10,9 +10,9 @@ interface ParagraphContentProps {
 export default function ParagraphContent(props: ParagraphContentProps) {
 
   const sampleTextBlock: FlexibleText[] = [
-      { text: "Hello ", bold: true, italic: false, underline: false, strikeThrough: false, color: "black", fontSize: 16, fontFamily: "Arial" },
-      { text: "World!", bold: false, italic: true, underline: true, strikeThrough: false, color: "red", fontSize: 18, fontFamily: "Times New Roman" },
-      { text: " This is a test.", bold: false, italic: false, underline: false, strikeThrough: true, color: "blue", fontSize: 14, fontFamily: "Verdana" }
+      { id: crypto.randomUUID(), version: 0, text: "Hello ", bold: true, italic: false, underline: false, strikeThrough: false, color: "black", fontSize: 16, fontFamily: "Arial" },
+      { id: crypto.randomUUID(), version: 0, text: "World!\n", bold: false, italic: true, underline: true, strikeThrough: false, color: "red", fontSize: 18, fontFamily: "Times New Roman" },
+      { id: crypto.randomUUID(), version: 0, text: "This is a test.", bold: false, italic: false, underline: false, strikeThrough: true, color: "blue", fontSize: 14, fontFamily: "Verdana" },
     ];
 
   return (
