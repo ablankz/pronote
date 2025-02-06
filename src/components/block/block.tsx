@@ -30,12 +30,25 @@ export default function Block(props: BlockProps) {
   const [mouseStartY, setMouseStartY] = createSignal(0);
   const [initialWidth, setInitialWidth] = createSignal(0);
   const [initialHeight, setInitialHeight] = createSignal(0);
+  const [dropTarget, setDropTarget] = createSignal(false);
 
   let componentRef: HTMLDivElement | undefined;
 
   const isFocused = createMemo(() => {
     return isLocalResizing() || showResizeModal() || isBlockHovered() || props.isSelected;
   });
+
+  const handleDropMouseEnter = (e: MouseEvent) => {
+    e.preventDefault();
+
+    setDropTarget(true);
+  };
+
+  const handleDropMouseLeave = (e: MouseEvent) => {
+    e.preventDefault();
+
+    setDropTarget(false);
+  };
 
   const handleMouseDown = (direction: "right" | "bottom" | "corner") => (e: MouseEvent) => {
     e.preventDefault();
@@ -209,11 +222,11 @@ export default function Block(props: BlockProps) {
         setDetailOpen(true);
       }}
     >
-      <BlockContent 
+      <BlockContent
         component={props.component} 
       />
       <Show when={isFocused()}>
-        <div class="absolute -top-2 -right-2 flex space-x-2 z-10">
+        <div class="absolute -top-2 -right-2 flex space-x-2 z-[12]">
           <div
             class="p-1 bg-gray-200 rounded"
             onClick={() => {
@@ -323,14 +336,47 @@ export default function Block(props: BlockProps) {
       </Show>
 
         <div
-          class="absolute left-0 top-0 w-full h-[15%] max-h-12 min-h-3 rounded-3xl opacity-50"
+          class="absolute left-0 top-0 w-full h-full rounded-md opacity-50"
           classList={{
-            "cursor-move hover:bg-white hover:bg-[radial-gradient(#e5e7eb_3.5px,transparent_3.5px)] hover:[background-size:12px_12px]": !globalCursorAction(),
+            "bg-white bg-[radial-gradient(#e5e7eb_3.5px,transparent_3.5px)] [background-size:12px_12px] z-10": !globalCursorAction() && dropTarget(),
+            "-z-10": !dropTarget() || globalCursorAction(),
+          }}
+        />
+        <div
+          class="absolute -right-2 top-0 w-3 h-full rounded-md"
+          onMouseEnter={handleDropMouseEnter}
+          onMouseLeave={handleDropMouseLeave}
+          classList={{
+            "cursor-move": !globalCursorAction() && dropTarget(),
+          }}
+        />
+        <div
+          class="absolute -left-2 top-0 w-3 h-full rounded-md"
+          onMouseEnter={handleDropMouseEnter}
+          onMouseLeave={handleDropMouseLeave}
+          classList={{
+            "cursor-move": !globalCursorAction() && dropTarget(),
+          }}
+        />
+        <div
+          class="absolute left-0 -bottom-2 w-full h-3 rounded-md"
+          onMouseEnter={handleDropMouseEnter}
+          onMouseLeave={handleDropMouseLeave}
+          classList={{
+            "cursor-move": !globalCursorAction() && dropTarget(),
+          }}
+        />
+        <div
+          class="absolute left-0 -top-2 w-full h-3 rounded-md"
+          onMouseEnter={handleDropMouseEnter}
+          onMouseLeave={handleDropMouseLeave}
+          classList={{
+            "cursor-move": !globalCursorAction() && dropTarget(),
           }}
         />
 
         <div
-          class="absolute right-0 top-0 w-2 h-full"
+          class="absolute -right-4 top-0 w-2 h-full rounded-r-md"
           onMouseDown={handleMouseDown("right")}
           classList={{
             "cursor-e-resize hover:bg-green-200": !globalCursorAction(),
@@ -339,7 +385,7 @@ export default function Block(props: BlockProps) {
         />
 
         <div
-          class="absolute bottom-0 left-0 w-full h-2"
+          class="absolute -bottom-4 left-0 w-full h-2 rounded-b-md"
           onMouseDown={handleMouseDown("bottom")}
           classList={{
             "cursor-s-resize hover:bg-green-200": !globalCursorAction(),
@@ -348,7 +394,7 @@ export default function Block(props: BlockProps) {
         />
 
         <div
-          class="absolute bottom-0 right-0 w-2 h-2"
+          class="absolute -bottom-3 -right-3 w-4 h-4 rounded-sm"
           onMouseDown={handleMouseDown("corner")}
           classList={{
             "cursor-se-resize hover:bg-green-200": !globalCursorAction(),

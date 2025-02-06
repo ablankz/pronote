@@ -1,5 +1,5 @@
-import { batch, Component, createEffect, createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
-import { DefaultFlexibleText, FlexibleText } from "../../types/text";
+import { batch, Component, createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
+import { DefaultFlexibleText, FlexibleText, FlexibleTextTypes } from "../../types/text";
 import { RangeWithCurrent } from "../../types/generic";
 
 // TODO: 改行でのカーソル移動
@@ -14,13 +14,20 @@ interface FlexibleTextRendererProps {
     defaultBlock: FlexibleText[];
     onUpdate: (block: FlexibleText[]) => void;
     editable?: boolean;
+    letterSpacing?: number;
+    lineHeight?: number;
+    padding?: {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
+    };
 }
 
 const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     let textRef: HTMLDivElement | undefined;
     const [textBlock, setTextBlock] = createSignal<FlexibleText[]>([
       ...props.defaultBlock,
-      DefaultFlexibleText(crypto.randomUUID()),
     ]);
     const [editingTextCursor, setEditingTextCursor] = createSignal<number>(0);
     const [editingTextBlock, setEditingTextBlock] = createSignal<number>(props.defaultBlock.length);
@@ -52,51 +59,55 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       const leftIndex = preCaretRangeLeft.toString().length;
 
       if (selection.isCollapsed) {
-        setCursorPos(rightIndex);
+        batch(() => {
+          setCursorPos(rightIndex);
+        });
       } else {
-        setCursorPos(prev => {
-          if (prev === null) {
-            return null;
-          }
-          let from: number, to: number, direction: "forward" | "backward";
-            switch (typeof prev) {
-              case "number":
-                if (rightIndex > prev) {
-                  direction = "forward";
-                } else {
-                  direction = "backward";
-                }
-                return { start: rightIndex, end: leftIndex, direction: direction, current: rightIndex };
-              case "object":
-                let size: number;
-                if (prev.direction === "forward") {
-                  if (rightIndex > prev.current) {
-                    return { start: leftIndex, end: rightIndex, direction: "forward", current: rightIndex };
-                  } else {
-                    size = prev.current - rightIndex;
-                    from = prev.start;
-                    to = Math.max(prev.end - size, 0);
-                    if (from >= to) {
-                      return { start: to, end: from, direction: "backward", current: leftIndex };
-                    }else {
-                      return { start: from, end: to, direction: "forward", current: rightIndex };
-                    }
-                  }
-                } else {
-                  if (leftIndex < prev.current) {
-                    return { start: leftIndex, end: rightIndex, direction: "backward", current: leftIndex };
-                  } else {
-                    size = leftIndex - prev.current;
-                    from = Math.min(prev.start + size, textRef?.textContent?.length || 0);
-                    to = prev.end;
-                    if (from >= to) {
-                      return { start: to, end: from, direction: "forward", current: rightIndex };
-                    } else {
-                      return { start: from, end: to, direction: "backward", current: leftIndex };
-                    }
-                  }
-                }
+        batch(() => {
+          setCursorPos(prev => {
+            if (prev === null) {
+              return null;
             }
+            let from: number, to: number, direction: "forward" | "backward";
+              switch (typeof prev) {
+                case "number":
+                  if (rightIndex > prev) {
+                    direction = "forward";
+                  } else {
+                    direction = "backward";
+                  }
+                  return { start: rightIndex, end: leftIndex, direction: direction, current: rightIndex };
+                case "object":
+                  let size: number;
+                  if (prev.direction === "forward") {
+                    if (rightIndex > prev.current) {
+                      return { start: leftIndex, end: rightIndex, direction: "forward", current: rightIndex };
+                    } else {
+                      size = prev.current - rightIndex;
+                      from = prev.start;
+                      to = Math.max(prev.end - size, 0);
+                      if (from >= to) {
+                        return { start: to, end: from, direction: "backward", current: leftIndex };
+                      }else {
+                        return { start: from, end: to, direction: "forward", current: rightIndex };
+                      }
+                    }
+                  } else {
+                    if (leftIndex < prev.current) {
+                      return { start: leftIndex, end: rightIndex, direction: "backward", current: leftIndex };
+                    } else {
+                      size = leftIndex - prev.current;
+                      from = Math.min(prev.start + size, textRef?.textContent?.length || 0);
+                      to = prev.end;
+                      if (from >= to) {
+                        return { start: to, end: from, direction: "forward", current: rightIndex };
+                      } else {
+                        return { start: from, end: to, direction: "backward", current: leftIndex };
+                      }
+                    }
+                  }
+              }
+          });
         });
       }
     };
@@ -109,16 +120,22 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
         switch (typeof cursorPos()) {
           case "number":
             const cursorOffset: number = Number(cursorPos());
-            let editingBlock = -1, i = 0, textIndex = -1;
-            textBlock().reduce((acc, block) => {
+            let editingBlock = -1, textIndex = -1;
+            textBlock().reduce((acc, block, iter) => {
               const after = acc + block.text.length;
-              if (acc < cursorOffset && after >= cursorOffset) {
+              const condition = (acc < cursorOffset && after >= cursorOffset)
+                || (iter === 0 && acc <= cursorOffset && after >= cursorOffset);
+              if (condition) {
                 textIndex = cursorOffset - acc;
-                editingBlock = i;
-                i++;
+                editingBlock = iter;
+                if (textIndex === block.text.length && block.text[textIndex-1] === "\n") {
+                  if (iter !== textBlock().length - 1) {
+                    textIndex = 0;
+                    editingBlock = iter + 1;
+                  }
+                }
                 return after;
               }
-              i++;
               return after;
             }, 0);
             batch(() => {
@@ -132,11 +149,12 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       }
     });
 
-    const changeCursorPos = (collapsing: boolean, size: number, direction: "forward" | "backward") => {
+    const moveCursorHorizontally = (collapsing: boolean, size: number, direction: "forward" | "backward") => {
       if (!textRef) return;
 
       if (collapsing) {
         batch(() => {
+          setArrowSelection(true);
           setCursorPos(prev => {
             if (prev === null) {
               return null
@@ -247,13 +265,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
           if (!startNode && from >= charIndex && from <= nextCharIndex) {
             startNode = node;
             startOffset = from - charIndex;
-
-            // if (node.textContent![startOffset - 1] === "\n") {
-              // console.log("newline", startOffset);
-              // cursorを改行後に移動させる
-              // startOffset = startOffset - 1;
-              
-            // }
           }
   
           if (!endNode && to >= charIndex && to <= nextCharIndex) {
@@ -309,7 +320,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       switch(typeof cursorPos()) {
         case "number":
           insertText(e.data);
-          changeCursorPos(true, e.data.length, "forward");
+          moveCursorHorizontally(true, e.data.length, "forward");
           break;
         case "object":
           break;
@@ -331,11 +342,14 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     });
 
     const insertText = (text: string) => {
-      console.log("insertText", text);
       if (cursorPos() === null) return;
       switch (typeof cursorPos()) {
         case "number":
           setTextBlock(prev => {
+            if (prev.length === 0) {
+              text = text + "\n";
+            }
+
             if (editingTextBlock() < 0) {
               return [
                 {
@@ -367,54 +381,46 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       switch (typeof cursorPos()) {
         case "number":
           setTextBlock(prev => {
-            if ((editingTextCursor() <= 0 && direction === "backward") 
-              || editingTextCursor() < 0) {
-              return prev;
+            let editingTextBlockIndex = editingTextBlock();
+            let editingBlock = prev[editingTextBlockIndex];
+            let newText: string, currentTextCursor: number, firstDel = false;
+            if (editingTextBlockIndex === 0 && direction === "backward"
+                  && editingTextCursor() > 0 && editingTextCursor() <= size) {
+                  firstDel = true;
+                  newText = editingBlock.text.slice(editingTextCursor());
+
+                  currentTextCursor = 0;
+            } else if ((editingTextCursor() <= 0 && direction === "backward")
+                  || editingTextCursor() < 0) {
+                if (editingTextBlockIndex <= 0) {
+                  return prev;
+                }
+                if ((editingBlock.text.length === 0) 
+                  || (editingBlock.text.length === 1 && editingBlock.text[0] === "\n")) {
+                  prev = prev.filter((_, index) => index !== editingTextBlockIndex);
+                }
+                editingTextBlockIndex -= 1;
+                editingBlock = prev[editingTextBlockIndex];
+                newText = editingBlock.text.slice(0, editingBlock.text.length - size);
+
+                currentTextCursor = editingBlock.text.length - size;
+            } else {
+                newText = direction === "forward" ? 
+                  editingBlock.text.slice(0, editingTextCursor()) + editingBlock.text.slice(editingTextCursor() + size) 
+                  : editingBlock.text.slice(0, editingTextCursor() - size) + editingBlock.text.slice(editingTextCursor());
+              
+                currentTextCursor = direction === "forward" ? editingTextCursor() : editingTextCursor() - size;
             }
 
-            const editingTextBlockIndex = editingTextBlock();
-            const editingBlock = prev[editingTextBlockIndex];
-            const newText = direction === "forward" ? 
-              editingBlock.text.slice(0, editingTextCursor()) + editingBlock.text.slice(editingTextCursor() + size) 
-              : editingBlock.text.slice(0, editingTextCursor() - size) + editingBlock.text.slice(editingTextCursor());
-            
-            const currentTextCursor = direction === "forward" ? editingTextCursor() : editingTextCursor() - size;
+            if (currentTextCursor <= 0 && !firstDel) {
+              batch(() => {
+                setEditingTextCursor(0);
+                setEditingTextBlock(editingTextBlockIndex);
+              });
+            }
 
-            if (currentTextCursor <= 0) {
-              let newEditingIndex = editingTextBlockIndex - 1;
-              if (newEditingIndex < 0) {
-                batch(() => {
-                  setEditingTextCursor(0);
-                  setEditingTextBlock(0);
-                });
-
-                if (newText.length === 0) {
-                  return [
-                    DefaultFlexibleText(crypto.randomUUID()),
-                    ...prev.filter((_, index) => index !== editingTextBlockIndex)
-                  ];
-                } else {
-                  const newBlock: FlexibleText = {
-                    ...editingBlock,
-                    text: newText,
-                    version: editingBlock.version + 1,
-                    
-                  };
-                  return [
-                    DefaultFlexibleText(crypto.randomUUID()),
-                    ...prev.map((block, index) => index === editingTextBlockIndex ? newBlock : block)
-                  ];
-                }
-              } else {
-                batch(() => {
-                  setEditingTextCursor(0);
-                  setEditingTextBlock(editingTextBlockIndex);
-                });
-              }
-
-              if (newText.length === 0) {
-                return prev.filter((_, index) => index !== editingTextBlockIndex);
-              }
+            if ((newText.length === 0 ) || (newText.length === 1 && newText[0] === "\n")) {
+              return prev.filter((_, index) => index !== editingTextBlockIndex);
             }
             
             const newBlock: FlexibleText = {
@@ -431,30 +437,32 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     };
 
     const saveStyledText = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowUp":
+          return;
+        case "ArrowDown":
+          return;
+        case "ArrowLeft":
+          return;
+        case "ArrowRight":
+          return;
+      }
+
       e.preventDefault();
       if (isComposing()) return;
 
       switch (e.key) {
         case "Backspace":
           deleteText(1, "backward");
-          changeCursorPos(true, 1, "backward");
+          moveCursorHorizontally(true, 1, "backward");
           return;
         case "Enter":
-          if (e.shiftKey) {
-            insertText("\n");
-            changeCursorPos(true, 1, "forward");
-            return;
-          }
-          break;
-        case "ArrowLeft":
-          changeCursorPos(!e.shiftKey, 1, "backward");
-          return;
-        case "ArrowRight":
-          changeCursorPos(!e.shiftKey, 1, "forward");
+          insertText("\n");
+          moveCursorHorizontally(true, 1, "forward");
           return;
         case "Tab":
           insertText("\t");
-          changeCursorPos(true, 1, "forward");
+          moveCursorHorizontally(true, 1, "forward");
           return;
         default:
           if (e.key.length === 1) {
@@ -464,7 +472,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             const shiftKey = e.shiftKey;
             
             insertText(e.key);
-            changeCursorPos(true, 1, "forward");
+            moveCursorHorizontally(true, 1, "forward");
           }
           return;
       }
@@ -482,8 +490,14 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
         <div
             class={`${props.class || ""}`}
             classList={{
-                "bg-white": isEditing(),
                 ...(props.classList || {}),
+            }}
+            style={{
+                "min-height": "1em",
+                "margin": "0",
+                "padding": `${props.padding?.top || 0}px ${props.padding?.right || 0}px ${props.padding?.bottom || 0}px ${props.padding?.left || 0}px`,
+                "line-height": `${props.lineHeight || 1.5}`,
+                "letter-spacing": `${props.letterSpacing || 0}px`,
             }}
             ref={textRef}
             onKeyDown={(e: KeyboardEvent) => saveStyledText(e)}
@@ -497,20 +511,25 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               <For each={keys()}>
                 {(key) => {
                   const chunk = map().get(key)!;
-                  console.log(chunk);
                   return (
-                    <span 
-                      style={{
-                        "font-weight": chunk.bold ? "bold" : "normal",
-                        "font-style": chunk.italic ? "italic" : "normal",
-                        "text-decoration": `${chunk.underline ? "underline" : ""} ${chunk.strikeThrough ? "line-through" : ""}`,
-                        "color": chunk.color || "inherit",
-                        "font-size": `${chunk.fontSize}px`,
-                        "font-family": chunk.fontFamily || "inherit",
-                      }}
-                      >
-                      {chunk.text}
-                    </span>
+                    <Switch>
+                      <Match when={chunk.type === FlexibleTextTypes.TEXT}>
+                        <span 
+                          style={{
+                            "font-weight": chunk.bold ? "bold" : "normal",
+                            "font-style": chunk.italic ? "italic" : "normal",
+                            "text-decoration": `${chunk.underline ? "underline" : ""} ${chunk.strikeThrough ? "line-through" : ""}`,
+                            "color": chunk.color || "inherit",
+                            "background-color": chunk.backgroundColor || "inherit",
+                            "font-size": `${chunk.fontSize}px`,
+                            "font-family": chunk.fontFamily || "inherit",
+                          }}
+                          >
+                          {chunk.text}
+                        </span>
+                      </Match>
+                    </Switch>
+                    
                   );
                 }}
               </For>

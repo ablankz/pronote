@@ -12,7 +12,7 @@ export default function BlockPlus(props: BlockComponentProps) {
     return (
         <>
             <div 
-                class="relative w-1/2 h-[2rem] opacity-80 rounded-2xl mt-4 mb-2"
+                class="relative w-1/2 h-[2rem] opacity-80 rounded-2xl mt-6 mb-2"
                 classList={{
                     "cursor-pointer hover:bg-gray-200 hover:opacity-100": !globalCursorAction(),
                 }}

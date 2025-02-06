@@ -105,14 +105,11 @@ export default function BlockSection() {
             internalId: crypto.randomUUID(),
         }]);
 
-        // document.addEventListener("mousedown", handleClickOutside);
-        // ダブルクリック
         document.addEventListener("dblclick", handleClickOutside);
         document.addEventListener("keydown", handleKeyDown);
     });
 
     onCleanup(() => {
-        // document.removeEventListener("mousedown", handleClickOutside);
         document.removeEventListener("dblclick", handleClickOutside);
         document.removeEventListener("keydown", handleKeyDown);
     });
