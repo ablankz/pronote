@@ -1,6 +1,7 @@
 import { batch, Component, createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
 import { DefaultFlexibleText, FlexibleText, FlexibleTextTypes } from "../../types/text";
 import { RangeWithCurrent } from "../../types/generic";
+import ColorPicker from "../color-picker";
 
 // TODO: 改行でのカーソル移動
 // TODO: 範囲選択後のキー入力

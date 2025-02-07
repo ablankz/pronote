@@ -9,19 +9,19 @@ export interface FlexibleTextStyles {
     italic: boolean;
     underline: boolean;
     strikeThrough: boolean;
-    color: string;
-    backgroundColor: string;
+    fontColor: string;
+    highlightColor: string;
     fontSize: number;
     fontFamily: string;
 }
 
-export const DefaultFlexibleTextStyles = {
+export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
     bold: false,
     italic: false,
     underline: false,
     strikeThrough: false,
-    color: "",
-    backgroundColor: "",
+    fontColor: "",
+    highlightColor: "",
     fontSize: 16,
     fontFamily: "Arial",
 }
@@ -43,8 +43,8 @@ export const DefaultFlexibleText = (id: string): FlexibleText => {
         italic: DefaultFlexibleTextStyles.italic,
         underline: DefaultFlexibleTextStyles.underline,
         strikeThrough: DefaultFlexibleTextStyles.strikeThrough,
-        color: DefaultFlexibleTextStyles.color,
-        backgroundColor: DefaultFlexibleTextStyles.backgroundColor,
+        fontColor: DefaultFlexibleTextStyles.fontColor,
+        highlightColor: DefaultFlexibleTextStyles.highlightColor,
         fontSize: DefaultFlexibleTextStyles.fontSize,
         fontFamily: DefaultFlexibleTextStyles.fontFamily,
     };

@@ -3,6 +3,7 @@ import Scrollable from "../scrollable";
 import { fontSizeList, minFontSize } from "../../consts/font";
 import { globalCursorAction } from "../../store/action";
 import { pxPrecision } from "../../consts/size";
+import { fixFloatingPoint } from "../../utils/calc";
 
 export interface FontSizeDropdownProps {
   class?: string;
@@ -17,7 +18,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
 
   let modalRef: HTMLDivElement | undefined
-  let downRef: HTMLInputElement | undefined
+  let downRef: HTMLDivElement | undefined
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -65,23 +66,15 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   };
 
   const handleFontSizeChange = (sizeStr: string) => {
-    // let size = parseInt(sizeStr);
-    // precision 1に変換
     let size = parseFloat(sizeStr);
     if (isNaN(size) || size.toString() !== sizeStr) {
       size = props.fontSize;
     } 
-    size = Math.round(size * 10 ** pxPrecision) / 10 ** pxPrecision;
+    size = fixFloatingPoint(size,  10 ** pxPrecision) / 10 ** pxPrecision;
     if (size < minFontSize) {
       size = minFontSize;
     }
     applyFontSize(size);
-    // if (isNaN(size) || size.toString() !== sizeStr) {
-    //   size = props.fontSize;
-    // }else if (size < minFontSize) {
-    //   size = minFontSize;
-    // }
-    // applyFontSize(size);
   };
 
   return (
@@ -143,31 +136,45 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
         </div>
       </div>
 
-      <Show when={isOpen()}>
-        <div 
-          class="absolute w-20 z-20 max-h-[32rem] bg-gray-700 shadow-lg rounded-bl-xl"
-          ref={modalRef}>
-          <Scrollable class="[&::-webkit-scrollbar]:w-1 w-full z-20 max-h-[32rem]">
-            <div class="w-full max-h-[32rem]">
-              <For each={fontSizeList}>
-                {(size) => (
-                  <div 
-                    class="py-1 px-3 flex items-center justify-start hover:bg-gray-400 my-1"
-                    classList={{
-                      "cursor-pointer": !globalCursorAction(),
-                    }}
-                    onClick={() => applyFontSize(size)}
-                  >
-                    <div class="text-white">
-                      {size}
-                    </div>
+      <div 
+        class="absolute w-20 z-20 bg-gray-700 shadow-lg rounded-bl-xl  transition-all transform duration-300"
+        classList={{
+          "max-h-[32rem]": isOpen(),
+          "max-h-0": !isOpen(),
+        }}
+        ref={modalRef}>
+        <Scrollable 
+          class="[&::-webkit-scrollbar]:w-1 w-full z-20 transition-all transform duration-300"
+          classList={{
+            "max-h-[32rem]": isOpen(),
+            "max-h-0": !isOpen(),
+          }}
+        >
+          <div 
+            class="w-full transition-all transform duration-300"
+            classList={{
+              "max-h-[32rem]": isOpen(),
+              "max-h-0": !isOpen(),
+            }}
+          >
+            <For each={fontSizeList}>
+              {(size) => (
+                <div 
+                  class="py-1 px-3 flex items-center justify-start hover:bg-gray-400 my-1"
+                  classList={{
+                    "cursor-pointer": !globalCursorAction(),
+                  }}
+                  onClick={() => applyFontSize(size)}
+                >
+                  <div class="text-white">
+                    {size}
                   </div>
-                )}
-              </For>
-            </div>
-          </Scrollable>
-        </div>
-      </Show>
+                </div>
+              )}
+            </For>
+          </div>
+        </Scrollable>
+      </div>
     </div>
   );
 };

@@ -17,7 +17,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
 
   let modalRef: HTMLDivElement | undefined
-  let downRef: HTMLInputElement | undefined
+  let downRef: HTMLDivElement | undefined
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -190,39 +190,53 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
         </div>
       </div>
 
-      <Show when={isOpen()}>
-        <div 
-          class="absolute w-80 z-20 max-h-[20rem] bg-gray-700 shadow-lg rounded-bl-xl"
-          ref={modalRef}>
-          <Scrollable class="[&::-webkit-scrollbar]:w-1.5 w-full z-20 max-h-[20rem]">
-            <div class="w-full max-h-[20rem]">
-              <For each={filteredFonts()} fallback={
-                <div class="p-2 text-white">
-                  No font found for "{query()}"
-                </div>
-              }>
-                {(font) => (
-                  <div 
-                    class="p-2 flex items-center justify-start hover:bg-gray-400 my-2"
-                    classList={{
-                      "cursor-pointer": !globalCursorAction(),
-                    }}
-                    onClick={() => applyFontFamily(font)}
+      <div 
+        class="absolute w-80 z-20 bg-gray-700 shadow-lg rounded-bl-xl transition-all transform duration-300"
+        classList={{
+          "max-h-[20rem]": isOpen(),
+          "max-h-0": !isOpen(),
+        }}
+        ref={modalRef}>
+        <Scrollable 
+          class="[&::-webkit-scrollbar]:w-1.5 w-full z-20 transition-all transform duration-300"
+          classList={{
+            "max-h-[20rem]": isOpen(),
+            "max-h-0": !isOpen(),
+          }}
+        >
+          <div 
+            class="w-full transition-all transform duration-300"
+            classList={{
+              "max-h-[20rem]": isOpen(),
+              "max-h-0": !isOpen(),
+            }}
+          >
+            <For each={filteredFonts()} fallback={
+              <div class="p-2 text-white">
+                No font found for "{query()}"
+              </div>
+            }>
+              {(font) => (
+                <div 
+                  class="p-2 flex items-center justify-start hover:bg-gray-400 my-2"
+                  classList={{
+                    "cursor-pointer": !globalCursorAction(),
+                  }}
+                  onClick={() => applyFontFamily(font)}
+                >
+                  <div class="pl-[0.1rem] h-[0.9em] bg-white" />
+                  <div
+                    class="ml-2"
+                    style={{ "font-family": font }}
                   >
-                    <div class="pl-[0.1rem] h-[0.9em] bg-white" />
-                    <div
-                      class="ml-2"
-                      style={{ "font-family": font }}
-                    >
-                      {font}
-                    </div>
+                    {font}
                   </div>
-                )}
-              </For>
-            </div>
-          </Scrollable>
-        </div>
-      </Show>
+                </div>
+              )}
+            </For>
+          </div>
+        </Scrollable>
+      </div>
     </div>
   );
 };
