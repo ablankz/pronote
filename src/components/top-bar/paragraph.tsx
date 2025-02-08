@@ -2,11 +2,11 @@ import { AArrowDown, AArrowUp, Bold, Italic, Strikethrough, Underline } from "lu
 import { currentStyle, globalCursorAction, setCurrentStyle } from "../../store/action";
 import FontFamilyDropdown from "./font-family-dropdown";
 import FontSizeDropdown from "./font-size-dropdown";
-import { createEffect } from "solid-js";
 import StyleButton from "./style-button";
 import { minFontSize } from "../../consts/font";
 import FontColorDropdown from "./font-color-dropdown";
 import HighlightColorDropdown from "./highlight-color-dropdown";
+import { setStyle } from "../../utils/set-style";
 
 interface TopBarParagraphProps {
     class?: string;
@@ -97,9 +97,9 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
         });
     }
 
-    createEffect(() => {
-        console.log(currentStyle());
-    });
+    // createEffect(() => {
+    //     console.log(currentStyle());
+    // });
 
     return (
         <div 
@@ -122,7 +122,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400 p-0.5">
                 <StyleButton 
                     Icon={<AArrowUp size={24} />} 
-                    onClick={() => changeFontSizes(1)}
+                    onClick={(e) => setStyle(() => changeFontSizes(1))}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -131,7 +131,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<AArrowDown size={18} />}
-                    onClick={() => changeFontSizes(-1)}
+                    onClick={(e) => setStyle(() => changeFontSizes(-1))}
                     class="mx-1 rounded w-7 h-7 flex items-end justify-center pb-1"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -140,7 +140,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Bold size={20} />} 
-                    onClick={setSwitchBold}
+                    onClick={(e) => setStyle(setSwitchBold)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -150,7 +150,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Italic size={20} />} 
-                    onClick={setSwitchItalic}
+                    onClick={(e) => setStyle(setSwitchItalic)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -160,7 +160,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Underline size={20} />}
-                    onClick={setSwitchUnderline}
+                    onClick={(e) => setStyle(setSwitchUnderline)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -170,7 +170,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton
                     Icon={<Strikethrough size={20} />}
-                    onClick={setSwitchStrikeThrough}
+                    onClick={(e) => setStyle(setSwitchStrikeThrough)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -180,18 +180,20 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             </div>
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
-            <HighlightColorDropdown
-                    class="w-full h-full" 
-                    highlightColor={currentStyle().highlightColor}
-                    setHighlightColor={setHighlightColor}
-                />
+                <HighlightColorDropdown
+                        class="w-full h-full" 
+                        highlightColor={currentStyle().highlightColor}
+                        setHighlightColor={(color: string) => setStyle(() => setHighlightColor(color))}
+                        onToggle={() => setStyle(() => {})}
+                    />
             </div>
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
                 <FontColorDropdown
                     class="w-full h-full" 
                     fontColor={currentStyle().fontColor}
-                    setFontColor={setFontColor}
+                    setFontColor={(color: string) => setStyle(() => setFontColor(color))}
+                    onToggle={() => setStyle(() => {})}
                 />
             </div>
         </div>    

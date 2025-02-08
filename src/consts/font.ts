@@ -28,7 +28,8 @@ export const representFontColorList = [
   "#008000", // darkgreen
 ];
 
-export const defaultFontColor = "rgba(255, 0, 0, 1)";
+// red
+export const defaultFontColor = "hsla(0, 100%, 50%, 1)";
 
 export const lightnessRateList: LightnessColor[] = [
   { isLight: true, rate: 0.75},
@@ -55,4 +56,5 @@ export const representHighlightColorList = [
   "#008000", // darkgreen
 ];
 
-export const defaultHighlightColor = "rgba(255, 255, 0, 1)";
+// yellow
+export const defaultHighlightColor = "hsla(60, 100%, 50%, 1)";

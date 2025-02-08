@@ -18,6 +18,7 @@ export interface FontColorDropdownProps {
     class?: string;
     classList?: Record<string, boolean>;
     onFontColorChange?: (fontColor: string) => void;
+    onToggle?: (isOpen: boolean) => void;
     fontColor: string;
     setFontColor: (fontColor: string) => void;
 }
@@ -42,6 +43,8 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
     if (props.fontColor !== "") {
       setLocalColor(props.fontColor);
       setColorValue(resolveColor(props.fontColor));
+    } else {
+      setColorValue(null);
     }
   });
 
@@ -50,7 +53,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
   let pickerCloseIgnoreRef: HTMLDivElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction() || openColorPicker()) return;
+      if (globalCursorAction() || openColorPicker() || !isOpen()) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -60,14 +63,16 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
           setIsOpen(false);
+          props.onToggle && props.onToggle(false);
       }
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (openColorPicker()) return;
+    if (openColorPicker() || !isOpen()) return;
 
     if (e.key === "Escape") {
       setIsOpen(false);
+      props.onToggle && props.onToggle(false);
     }
   };
 
@@ -132,7 +137,11 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
           }}
           onClick={() => {
             batch(() => {
-              setIsOpen(prev => !prev)
+              setIsOpen(prev => {
+                const next = !prev;
+                props.onToggle && props.onToggle(next);
+                return next;
+              });
               setIgnoreOutsideClick(true)
             })
           }}

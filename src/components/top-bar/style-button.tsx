@@ -4,7 +4,7 @@ export interface StyleButtonProps {
     class?: string;
     classList?: Record<string, boolean>;
     Icon: JSXElement;
-    onClick: () => void;
+    onClick: (e: MouseEvent) => void;
 }
 
 const StyleButton = (props: StyleButtonProps) => {

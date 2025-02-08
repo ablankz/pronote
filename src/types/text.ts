@@ -26,11 +26,35 @@ export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
     fontFamily: "Arial",
 }
 
+export function equalFlexibleTextStyles(a: FlexibleTextStyles, b: FlexibleTextStyles): boolean {
+    return a.bold === b.bold &&
+        a.italic === b.italic &&
+        a.underline === b.underline &&
+        a.strikeThrough === b.strikeThrough &&
+        a.fontColor === b.fontColor &&
+        a.highlightColor === b.highlightColor &&
+        a.fontSize === b.fontSize &&
+        a.fontFamily === b.fontFamily;
+}
+
 export interface FlexibleText extends FlexibleTextStyles {
     type: FlexibleTextType;
     id: string;
     version: number;
     text: string;
+}
+
+export function extractStyleFromFlexibleText(flexibleText: FlexibleText): FlexibleTextStyles {
+    return {
+        bold: flexibleText.bold,
+        italic: flexibleText.italic,
+        underline: flexibleText.underline,
+        strikeThrough: flexibleText.strikeThrough,
+        fontColor: flexibleText.fontColor,
+        highlightColor: flexibleText.highlightColor,
+        fontSize: flexibleText.fontSize,
+        fontFamily: flexibleText.fontFamily,
+    };
 }
 
 export const DefaultFlexibleText = (id: string): FlexibleText => {

@@ -147,7 +147,7 @@ const ColorPicker = (props: ColorPickerProps) => {
     const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
 
     const handleClickOutside = (event: MouseEvent) => {
-        if (globalCursorAction() ) return;
+        if (globalCursorAction()) return;
 
         if (ignoreOutsideClick()) {
             setIgnoreOutsideClick(false);

@@ -18,6 +18,7 @@ export interface HighlightColorDropdownProps {
     class?: string;
     classList?: Record<string, boolean>;
     onHighlightColorChange?: (highlightColor: string) => void;
+    onToggle?: (isOpen: boolean) => void;
     highlightColor: string;
     setHighlightColor: (highlightColor: string) => void;
 }
@@ -42,6 +43,8 @@ const HighlightColorDropdown = (props: HighlightColorDropdownProps) => {
     if (props.highlightColor !== "") {
       setLocalColor(props.highlightColor);
       setColorValue(resolveColor(props.highlightColor));
+    } else {
+      setColorValue(null);
     }
   });
 
@@ -50,7 +53,7 @@ const HighlightColorDropdown = (props: HighlightColorDropdownProps) => {
   let pickerCloseIgnoreRef: HTMLDivElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction() || openColorPicker()) return;
+      if (globalCursorAction() || openColorPicker() || !isOpen()) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -60,14 +63,16 @@ const HighlightColorDropdown = (props: HighlightColorDropdownProps) => {
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
           setIsOpen(false);
+          props.onToggle && props.onToggle(false);
       }
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (openColorPicker()) return;
+    if (openColorPicker() || !isOpen()) return;
 
     if (e.key === "Escape") {
       setIsOpen(false);
+      props.onToggle && props.onToggle(false);
     }
   };
 
@@ -132,7 +137,11 @@ const HighlightColorDropdown = (props: HighlightColorDropdownProps) => {
           }}
           onClick={() => {
             batch(() => {
-              setIsOpen(prev => !prev)
+              setIsOpen(prev => {
+                const next = !prev;
+                props.onToggle && props.onToggle(next);
+                return next;
+              })
               setIgnoreOutsideClick(true)
             })
           }}

@@ -1,11 +1,10 @@
-import { batch, Component, createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Switch } from "solid-js";
-import { DefaultFlexibleText, FlexibleText, FlexibleTextTypes } from "../../types/text";
+import { batch, Component, createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Switch, untrack } from "solid-js";
+import { DefaultFlexibleText, DefaultFlexibleTextStyles, equalFlexibleTextStyles, extractStyleFromFlexibleText, FlexibleText, FlexibleTextStyles, FlexibleTextTypes } from "../../types/text";
 import { RangeWithCurrent } from "../../types/generic";
-import ColorPicker from "../color-picker";
+import { currentStyle, setCurrentStyle, setEditableActionIgnore, setEditableTextCursor, setEditableTextRef } from "../../store/action";
 
 // TODO: 改行でのカーソル移動
 // TODO: 範囲選択後のキー入力
-// TODO: Styleバーの作成
 // TODO: 単一カーソルでのスタイル変更
 // TODO: 範囲選択でのスタイル変更
 
@@ -36,6 +35,27 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     const [arrowSelection, setArrowSelection] = createSignal(false);
     const [cursorPos, setCursorPos] = createSignal<number | RangeWithCurrent | null>(null);
     const [isComposing, setIsComposing] = createSignal(false);
+    const [validStyles, setValidStyles] = createSignal<{
+      working: FlexibleTextStyles,
+      current: FlexibleTextStyles,
+      isNeedUpdate: boolean,
+    }>({working: DefaultFlexibleTextStyles, current: DefaultFlexibleTextStyles, isNeedUpdate: false });
+    const [caretColor, setCaretColor] = createSignal<string | null>(null);
+
+    createEffect(() => {
+      const newStyle = currentStyle()
+      setValidStyles(prev => {
+        const isNeedUpdate = !equalFlexibleTextStyles(prev.working, newStyle);
+        if (isNeedUpdate) {
+          setCaretColor(newStyle.fontColor || "black");
+        }
+        return { 
+          working: prev.working, 
+          current: newStyle, 
+          isNeedUpdate: isNeedUpdate,
+        };
+      });
+    });
 
     const saveCursorPosition = () => {
       if (isComposing()) return;
@@ -113,16 +133,16 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       }
     };
 
-    createEffect(() => {
-      if (cursorPos() == null || isComposing()) {
+    const handleCursorPos = () => {
+      if (isComposing() || cursorPos() === null) {
         return
-      }
-      else {
+      } else {
         switch (typeof cursorPos()) {
           case "number":
             const cursorOffset: number = Number(cursorPos());
             let editingBlock = -1, textIndex = -1;
-            textBlock().reduce((acc, block, iter) => {
+            const blocks = untrack(textBlock);
+            blocks.reduce((acc, block, iter) => {
               const after = acc + block.text.length;
               const condition = (acc < cursorOffset && after >= cursorOffset)
                 || (iter === 0 && acc <= cursorOffset && after >= cursorOffset);
@@ -130,7 +150,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                 textIndex = cursorOffset - acc;
                 editingBlock = iter;
                 if (textIndex === block.text.length && block.text[textIndex-1] === "\n") {
-                  if (iter !== textBlock().length - 1) {
+                  if (iter !== blocks.length - 1) {
                     textIndex = 0;
                     editingBlock = iter + 1;
                   }
@@ -139,15 +159,48 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               }
               return after;
             }, 0);
+            let editBlockStyle: FlexibleTextStyles = DefaultFlexibleTextStyles;
+            if (editingBlock >= 0) {
+              const editBlock = blocks[editingBlock];
+              editBlockStyle = {
+                ...extractStyleFromFlexibleText(editBlock),
+              }
+            }
             batch(() => {
+              setEditableTextCursor(cursorPos());
+              textRef && setEditableTextRef(textRef);
               setEditingTextBlock(editingBlock);
               setEditingTextCursor(textIndex);
+              let ignore = false;
+              setEditableActionIgnore(prev => {
+                if (prev) {
+                  ignore = true;
+                }
+                return false;
+              });
+              if (ignore) {
+                return;
+              }
+              let isNeedUpdate = false;
+              setValidStyles(prev => {
+                if (prev.current === null) return prev;
+                if (!equalFlexibleTextStyles(prev.current, editBlockStyle)) {
+                  isNeedUpdate = true;
+                  return { working: editBlockStyle, current: editBlockStyle, isNeedUpdate: true };
+                }
+                return prev;
+              });
+              isNeedUpdate && setCurrentStyle(editBlockStyle);
             });
             break;
           case "object":
             break;
         }
       }
+    }
+
+    createEffect(() => {
+      handleCursorPos();
     });
 
     const moveCursorHorizontally = (collapsing: boolean, size: number, direction: "forward" | "backward") => {
@@ -346,36 +399,114 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       if (cursorPos() === null) return;
       switch (typeof cursorPos()) {
         case "number":
-          setTextBlock(prev => {
-            if (prev.length === 0) {
-              text = text + "\n";
-            }
+          batch(() => {
+            setTextBlock(prev => {
+              if (prev.length === 0) {
+                text = text + "\n";
+              }
+              if (editingTextBlock() < 0) {
+                return [
+                  {
+                    ...DefaultFlexibleText(crypto.randomUUID()),
+                    ...validStyles().current,
+                    text: text,
+                  },
+                  ...prev
+                ]
+              }
 
-            if (editingTextBlock() < 0) {
-              return [
-                {
+              if (validStyles().isNeedUpdate) {
+                const newBlock: FlexibleText = {
                   ...DefaultFlexibleText(crypto.randomUUID()),
+                  ...validStyles().current,
                   text: text,
-                },
-                ...prev
-              ]
-            }
-
-            const editingBlock = prev[editingTextBlock()];
-            const newText = 
-              editingBlock.text.slice(0, editingTextCursor()) + text + editingBlock.text.slice(editingTextCursor());
-            const newBlock: FlexibleText = {
-              ...editingBlock,
-              text: newText,
-              version: editingBlock.version + 1,
-            };
-            return prev.map((block, index) => index === editingTextBlock() ? newBlock : block);
+                };
+                const editingBlock = prev[editingTextBlock()];
+                const firstText = editingBlock.text.slice(0, editingTextCursor());
+                const secondText = editingBlock.text.slice(editingTextCursor());
+                const isLastBlock = editingTextBlock() === prev.length - 1;
+                if (isLastBlock && secondText === "\n") {
+                  const newBlocks: FlexibleText[] = [
+                    {
+                      ...editingBlock,
+                      id: crypto.randomUUID(),
+                      text: firstText,
+                      version: 0,
+                    },
+                    {
+                      ...newBlock,
+                      text: newBlock.text + "\n",
+                    }
+                  ];
+                  return [
+                    ...prev.slice(0, editingTextBlock()),
+                    ...newBlocks,
+                  ];
+                } else if (firstText.length === 0) {
+                  return [
+                    ...prev.slice(0, editingTextBlock()),
+                    newBlock,
+                    ...prev.slice(editingTextBlock()),
+                  ];
+                } else if (secondText.length === 0) {
+                  return [
+                    ...prev.slice(0, editingTextBlock() + 1),
+                    newBlock,
+                    ...prev.slice(editingTextBlock() + 1),
+                  ];
+                } else {
+                  const newBlocks: FlexibleText[] = [
+                    {
+                      ...editingBlock,
+                      text: firstText,
+                      id: crypto.randomUUID(),
+                      version: 0,
+                    },
+                    newBlock,
+                    {
+                      ...editingBlock,
+                      text: secondText,
+                      id: crypto.randomUUID(),
+                      version: 0,
+                    },
+                  ];
+                  return [
+                    ...prev.slice(0, editingTextBlock()),
+                    ...newBlocks,
+                    ...prev.slice(editingTextBlock() + 1),
+                  ];
+                }
+              } else {
+                const editingBlock = prev[editingTextBlock()];
+                const newText = 
+                  editingBlock.text.slice(0, editingTextCursor()) + text + editingBlock.text.slice(editingTextCursor());
+                const newBlock: FlexibleText = {
+                  ...editingBlock,
+                  text: newText,
+                  version: editingBlock.version + 1,
+                };
+                return prev.map((block, index) => index === editingTextBlock() ? newBlock : block);
+              }
+            });
+            setCaretColor(null);
+            setValidStyles(prev => {
+              return { 
+                working: prev.current, 
+                current: prev.current, 
+                isNeedUpdate: false,
+              };
+            });
           });
+          console.log(textBlock());
           break;
         case "object":
           break;
       }
     };
+
+    // createEffect(() => {
+    //   console.log(textBlock());
+    // });
 
     const deleteText = (size: number, direction: "forward" | "backward") => {
       if (cursorPos() === null) return;
@@ -471,7 +602,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             const metaKey = e.metaKey;
             const altKey = e.altKey;
             const shiftKey = e.shiftKey;
-            
             insertText(e.key);
             moveCursorHorizontally(true, 1, "forward");
           }
@@ -479,11 +609,11 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       }
     };
 
-    const keys = createMemo(() => textBlock().map((el) => el.id + "[" + el.version + "]"));
+    const keys = createMemo(() => textBlock().map((el, i) => el.id + "[" + el.version + "]" + ":" + i));
 
     const map = createMemo(() => {
         const map = new Map<string, FlexibleText>();
-        textBlock().forEach((item) => map.set(item.id + "[" + item.version + "]", item));
+        textBlock().forEach((item, i) => map.set(item.id + "[" + item.version + "]" + ":" + i, item));
         return map;
     });
     
@@ -505,8 +635,17 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             onInput={(e: InputEvent) => {
               e.preventDefault();
             }}
-            onFocus={() => setIsEditing(true)}
-            onBlur={() => setIsEditing(false)}
+            onFocus={() => {
+              batch(() => {
+                setIsEditing(true);
+                handleCursorPos();
+              });
+            }}
+            onBlur={() => {
+              batch(() => {
+                setIsEditing(false);
+              });
+            }}
             contenteditable={props.editable}
             >
               <For each={keys()}>
@@ -520,8 +659,9 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                             "font-weight": chunk.bold ? "bold" : "normal",
                             "font-style": chunk.italic ? "italic" : "normal",
                             "text-decoration": `${chunk.underline ? "underline" : ""} ${chunk.strikeThrough ? "line-through" : ""}`,
-                            "color": chunk.color || "inherit",
-                            "background-color": chunk.backgroundColor || "inherit",
+                            "color": chunk.fontColor || "inherit",
+                            "caret-color": caretColor() || chunk.fontColor || "inherit",
+                            "background-color": chunk.highlightColor || "inherit",
                             "font-size": `${chunk.fontSize}px`,
                             "font-family": chunk.fontFamily || "inherit",
                           }}
