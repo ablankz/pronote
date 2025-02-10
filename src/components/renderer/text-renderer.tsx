@@ -1,14 +1,15 @@
 import { batch, Component, createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Switch, untrack } from "solid-js";
-import { DefaultFlexibleText, DefaultFlexibleTextStyles, equalFlexibleTextStyles, extractStyleFromFlexibleText, FlexibleText, FlexibleTextStyles, FlexibleTextTypes } from "../../types/text";
+import { DefaultFlexibleText, DefaultFlexibleTextStyles, equalFlexibleTextStyles, equalOverrideFlexibleTextStyles, extractStyleFromFlexibleText, FlexibleText, FlexibleTextStyles, FlexibleTextTypes, NullableFlexibleTextStyles, nullableToDefaultFlexibleTextStyles } from "../../types/text";
 import { RangeWithCurrent } from "../../types/generic";
-import { currentStyle, setCurrentStyle, setEditableActionIgnore, setEditableTextCursor, setEditableTextRef } from "../../store/action";
+import { currentStyle, editableTextRef, setCurrentStyle, setEditableTextCursor, setEditableTextRef } from "../../store/action";
+import { setTextRefMap } from "../../store/ref";
 
-// TODO: 改行でのカーソル移動
 // TODO: 範囲選択後のキー入力
 // TODO: 単一カーソルでのスタイル変更
 // TODO: 範囲選択でのスタイル変更
 
 interface FlexibleTextRendererProps {
+    textZoneId: string;
     class?: string;
     classList?: Record<string, boolean>;
     defaultBlock: FlexibleText[];
@@ -24,6 +25,19 @@ interface FlexibleTextRendererProps {
     };
 }
 
+interface rangeSelectedState {
+  overStyle: NullableFlexibleTextStyles;
+  editingContents: {
+    blockIndex: number;
+    textFrom: number;
+    textTo: number;
+    isFullLine: boolean;
+    blockStyle: FlexibleTextStyles;
+    lastNewLineSelected: boolean;
+  }[];
+}
+
+
 const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     let textRef: HTMLDivElement | undefined;
     const [textBlock, setTextBlock] = createSignal<FlexibleText[]>([
@@ -31,7 +45,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
     ]);
     const [editingTextCursor, setEditingTextCursor] = createSignal<number>(0);
     const [editingTextBlock, setEditingTextBlock] = createSignal<number>(props.defaultBlock.length);
-    const [isEditing, setIsEditing] = createSignal(false);
     const [arrowSelection, setArrowSelection] = createSignal(false);
     const [cursorPos, setCursorPos] = createSignal<number | RangeWithCurrent | null>(null);
     const [isComposing, setIsComposing] = createSignal(false);
@@ -41,20 +54,42 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       isNeedUpdate: boolean,
     }>({working: DefaultFlexibleTextStyles, current: DefaultFlexibleTextStyles, isNeedUpdate: false });
     const [caretColor, setCaretColor] = createSignal<string | null>(null);
+    const [rangeSelected, setRangeSelected] = createSignal<rangeSelectedState | null>(null);
 
     createEffect(() => {
-      const newStyle = currentStyle()
-      setValidStyles(prev => {
-        const isNeedUpdate = !equalFlexibleTextStyles(prev.working, newStyle);
-        if (isNeedUpdate) {
-          setCaretColor(newStyle.fontColor || "black");
-        }
-        return { 
-          working: prev.working, 
-          current: newStyle, 
-          isNeedUpdate: isNeedUpdate,
-        };
-      });
+      const styleState = currentStyle();
+      if (styleState.from === "textArea") return;
+      const newStyle = nullableToDefaultFlexibleTextStyles(styleState.style);
+      switch (styleState.selectType) {
+        case "cursor":
+        setValidStyles(prev => {
+          const isNeedUpdate = !equalFlexibleTextStyles(prev.working, newStyle);
+          if (isNeedUpdate) {
+            setCaretColor(newStyle.fontColor || "black");
+          }
+          return { 
+            working: prev.working, 
+            current: newStyle, 
+            isNeedUpdate: isNeedUpdate,
+          };
+        });
+        break;
+        case "range":
+          break;
+        case "none":
+          setValidStyles(prev => {
+            const isNeedUpdate = !equalFlexibleTextStyles(prev.working, newStyle);
+            if (isNeedUpdate) {
+              setCaretColor(newStyle.fontColor || "black");
+            }
+            return { 
+              working: prev.working, 
+              current: newStyle, 
+              isNeedUpdate: isNeedUpdate,
+            };
+          });
+          break;
+      }
     });
 
     const saveCursorPosition = () => {
@@ -97,7 +132,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                   } else {
                     direction = "backward";
                   }
-                  return { start: rightIndex, end: leftIndex, direction: direction, current: rightIndex };
+                  return { start: leftIndex, end: rightIndex, direction: direction, current: rightIndex };
                 case "object":
                   let size: number;
                   if (prev.direction === "forward") {
@@ -137,11 +172,12 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       if (isComposing() || cursorPos() === null) {
         return
       } else {
+        const blocks = untrack(textBlock);
+        let editBlockStyle: FlexibleTextStyles = DefaultFlexibleTextStyles;
         switch (typeof cursorPos()) {
           case "number":
             const cursorOffset: number = Number(cursorPos());
             let editingBlock = -1, textIndex = -1;
-            const blocks = untrack(textBlock);
             blocks.reduce((acc, block, iter) => {
               const after = acc + block.text.length;
               const condition = (acc < cursorOffset && after >= cursorOffset)
@@ -159,7 +195,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               }
               return after;
             }, 0);
-            let editBlockStyle: FlexibleTextStyles = DefaultFlexibleTextStyles;
             if (editingBlock >= 0) {
               const editBlock = blocks[editingBlock];
               editBlockStyle = {
@@ -168,19 +203,13 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             }
             batch(() => {
               setEditableTextCursor(cursorPos());
-              textRef && setEditableTextRef(textRef);
               setEditingTextBlock(editingBlock);
+              // textRef && setEditableTextRef({
+              //   elm: textRef,
+              //   id: props.textZoneId,
+              //   newSelected: false,
+              // });
               setEditingTextCursor(textIndex);
-              let ignore = false;
-              setEditableActionIgnore(prev => {
-                if (prev) {
-                  ignore = true;
-                }
-                return false;
-              });
-              if (ignore) {
-                return;
-              }
               let isNeedUpdate = false;
               setValidStyles(prev => {
                 if (prev.current === null) return prev;
@@ -190,10 +219,128 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                 }
                 return prev;
               });
-              isNeedUpdate && setCurrentStyle(editBlockStyle);
+              isNeedUpdate && setCurrentStyle({
+                style: editBlockStyle,
+                selectType: "cursor",
+                from: "textArea",
+              });
             });
             break;
           case "object":
+            const range = cursorPos() as RangeWithCurrent;
+            const from = range.start;
+            const to = range.end;
+            let rangeEditingContents: {
+              blockIndex: number;
+              textFrom: number;
+              textTo: number;
+              isFullLine: boolean;
+              blockStyle: FlexibleTextStyles;
+              lastNewLineSelected: boolean;
+            }[] = [];
+            let overStyle: NullableFlexibleTextStyles = {};
+            let selectionRangeStatus: "none" | "range" | "full" = "none";
+            blocks.reduce((acc, block, iter) => {
+              const after = acc + block.text.length;
+              const fromCondition = after > from;
+              const lastChar = block.text[block.text.length - 1];
+              let lastNewLineSelected = false;
+              if (lastChar === "\n" && after - 1 === to) {
+                lastNewLineSelected = true;
+              }
+              if (fromCondition && selectionRangeStatus === "none") {
+                const textFrom = from - acc;
+                let textTo;
+                if (lastNewLineSelected) {
+                  selectionRangeStatus = "full";
+                  textTo = block.text.length;
+                } else if (after >= to) {
+                  selectionRangeStatus = "full";
+                  textTo = to - acc;
+                } else {
+                  selectionRangeStatus = "range";
+                  textTo = block.text.length;
+                }
+                let fullLine = false; 
+                if (textFrom === 0 && (textTo === block.text.length || lastNewLineSelected)) {
+                  fullLine = true;
+                }
+                let blockStyle = extractStyleFromFlexibleText(block);
+                rangeEditingContents.push({
+                  blockIndex: iter,
+                  textFrom: textFrom,
+                  textTo: textTo,
+                  isFullLine: fullLine,
+                  blockStyle,
+                  lastNewLineSelected,
+                });
+                overStyle = blockStyle;
+                return after;
+              }
+              if (selectionRangeStatus === "range") {
+                let blockStyle = extractStyleFromFlexibleText(block);
+                overStyle = equalOverrideFlexibleTextStyles(overStyle, blockStyle);
+                if (lastNewLineSelected) {
+                  rangeEditingContents.push({
+                    blockIndex: iter,
+                    textFrom: 0,
+                    textTo: block.text.length,
+                    isFullLine: true,
+                    blockStyle,
+                    lastNewLineSelected,
+                  });
+                  selectionRangeStatus = "full";
+                  return after;
+                }
+                const toCondition = (after >= to);
+                if (toCondition) {
+                  const textTo = to - acc;
+                  rangeEditingContents.push({
+                    blockIndex: iter,
+                    textFrom: 0,
+                    textTo: textTo,
+                    isFullLine: after === to,
+                    blockStyle,
+                    lastNewLineSelected,
+                  });
+                  selectionRangeStatus = "full";
+                  return after;
+                } else {
+                  rangeEditingContents.push({
+                    blockIndex: iter,
+                    textFrom: 0,
+                    textTo: block.text.length,
+                    isFullLine: true,
+                    blockStyle,
+                    lastNewLineSelected,
+                  });
+                  return after;
+                }
+              }
+              return after;
+            }, 0);
+            batch(() => {
+              setRangeSelected({
+                overStyle: overStyle,
+                editingContents: rangeEditingContents,
+              });
+              setEditableTextCursor(cursorPos());
+              // let isNeedUpdate = false;
+              // setValidStyles(prev => {
+              //   if (prev.current === null) return prev;
+              //   if (!equalFlexibleTextStyles(prev.current, editBlockStyle)) {
+              //     isNeedUpdate = true;
+              //     return { working: editBlockStyle, current: editBlockStyle, isNeedUpdate: true };
+              //   }
+              //   return prev;
+              // });
+              // isNeedUpdate && setCurrentStyle(editBlockStyle);
+              setCurrentStyle({
+                style: overStyle,
+                selectType: "range",
+                from: "textArea",
+              });
+            });
             break;
         }
       }
@@ -387,12 +534,20 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       document.addEventListener("selectionchange", handleSelectionChange);
       document.addEventListener("compositionstart", handleCompositionStart);
       document.addEventListener("compositionend", handleCompositionEnd);
+      setTextRefMap(prev => {
+        prev.set(props.textZoneId, textRef!);
+        return prev;
+      });
     });
 
     onCleanup(() => {
       document.removeEventListener("selectionchange", handleSelectionChange);
       document.removeEventListener("compositionstart", handleCompositionStart);
       document.removeEventListener("compositionend", handleCompositionEnd);
+      setTextRefMap(prev => {
+        prev.delete(props.textZoneId);
+        return prev;
+      });
     });
 
     const insertText = (text: string) => {
@@ -429,9 +584,8 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                   const newBlocks: FlexibleText[] = [
                     {
                       ...editingBlock,
-                      id: crypto.randomUUID(),
                       text: firstText,
-                      version: 0,
+                      version: editingBlock.version + 1,
                     },
                     {
                       ...newBlock,
@@ -446,9 +600,8 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                   const newBlocks: FlexibleText[] = [
                     {
                       ...editingBlock,
-                      id: crypto.randomUUID(),
                       text: firstText,
-                      version: 0,
+                      version: editingBlock.version + 1,
                     },
                     {
                       ...newBlock,
@@ -477,8 +630,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                     {
                       ...editingBlock,
                       text: firstText,
-                      id: crypto.randomUUID(),
-                      version: 0,
+                      version: editingBlock.version + 1,
                     },
                     newBlock,
                     {
@@ -518,13 +670,11 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
           console.log(textBlock());
           break;
         case "object":
+          const rangeSelectionState = rangeSelected();
+          // console.log(rangeSelectionState);
           break;
       }
     };
-
-    // createEffect(() => {
-    //   console.log(textBlock());
-    // });
 
     const deleteText = (size: number, direction: "forward" | "backward") => {
       if (cursorPos() === null) return;
@@ -612,8 +762,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             }
 
             const onlyNewLine = newText.length === 1 && newText[0] === "\n";
-            // const isLastBlock = editingTextBlockIndex === prev.length - 1;
-
             if ((newText.length === 0 )) {
               return prev.filter((_, index) => index !== editingTextBlockIndex);
             }else if (onlyNewLine && !remainNewLine) {
@@ -629,6 +777,8 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
           });
           break;
         case "object":
+          const rangeSelectionState = rangeSelected();
+          console.log(rangeSelectionState);
           break;
       }
     };
@@ -674,6 +824,20 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       }
     };
 
+    createEffect(() => {
+        const newTextRef = editableTextRef();
+        if (newTextRef === null) return;
+        if (newTextRef.id === props.textZoneId && newTextRef.newSelected) {
+          batch(() => {
+            setEditableTextRef({
+              ...newTextRef,
+              newSelected: false,
+            });
+            handleCursorPos();
+          });
+        }
+    });
+
     const keys = createMemo(() => textBlock().map((el, i) => el.id + "[" + el.version + "]" + ":" + i));
 
     const map = createMemo(() => {
@@ -702,14 +866,12 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             }}
             onFocus={() => {
               batch(() => {
-                setIsEditing(true);
-                handleCursorPos();
+                if (cursorPos() === null) {
+                  handleCursorPos();
+                }
               });
             }}
             onBlur={() => {
-              batch(() => {
-                setIsEditing(false);
-              });
             }}
             contenteditable={props.editable}
             >

@@ -11,6 +11,7 @@ interface BlockComponentProps {
 }
 
 export default function BlockComponent(props: BlockComponentProps) {
+
     return (
         <Block 
             component={props.component}

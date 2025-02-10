@@ -4,6 +4,7 @@ import {
     alphaFixedPrecision, 
     colorToHSL, 
     colorToString, 
+    DefaultHSLColor, 
     hexToHsl, 
     HSLColor, 
     hslHueFixedPrecision, 
@@ -41,7 +42,7 @@ const saturationValidChars = "0123456789";
 const lightnessValidChars = "0123456789";
 
 const ColorPicker = (props: ColorPickerProps) => {
-    const [selectedColor, setSelectedColor] = createSignal<HSLColor|null>(null);
+    const [selectedColor, setSelectedColor] = createSignal<HSLColor>(DefaultHSLColor);
     const [displayStyle, setDisplayStyle] = createSignal<"hex" | "rgb" | "hsl">("hex");
     const [huePickerDragging, setHuePickerDragging] = createSignal(false);
     const [opacityPickerDragging, setOpacityPickerDragging] = createSignal(false);
@@ -57,7 +58,7 @@ const ColorPicker = (props: ColorPickerProps) => {
 
     createEffect(() => {
         if (!props.color) {
-            setSelectedColor(null);
+            setSelectedColor(DefaultHSLColor);
             return;
         }
         const color = resolveColor(props.color);
@@ -188,7 +189,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             newLightness = fixFloatingPoint(newLightness, 10 ** hslLightnessFixedPrecision) / 10 ** hslLightnessFixedPrecision;
             newLightness = Math.max(0, Math.min(100, newLightness));
             setSelectedColor(prev => {
-                if (!prev) return null;
                 if (prev.s === newSaturation && prev.l === newLightness) return prev;
                 return { 
                     ...prev, 
@@ -205,7 +205,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             newHue = fixFloatingPoint(newHue, 10 ** hslHueFixedPrecision) / 10 ** hslHueFixedPrecision
             newHue = Math.max(0, Math.min(359, newHue));
             setSelectedColor(prev => {
-                if (!prev) return null;
                 if (prev.h === newHue) return prev;
                 return { 
                     ...prev, 
@@ -221,7 +220,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             newAlpha = fixFloatingPoint(newAlpha, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision;
             newAlpha = Math.max(0, Math.min(1, newAlpha));
             setSelectedColor(prev => {
-                if (!prev) return null;
                 if (prev.a === newAlpha) return prev;
                 return { 
                     ...prev, 
@@ -303,7 +301,6 @@ const ColorPicker = (props: ColorPickerProps) => {
         newLightness = fixFloatingPoint(newLightness, 10 ** hslLightnessFixedPrecision) / 10 ** hslLightnessFixedPrecision;
         newLightness = Math.max(0, Math.min(100, newLightness));
         setSelectedColor(prev => {
-            if (!prev) return null;
             if (prev.s === newSaturation && prev.l === newLightness) return prev;
             
             return { 
@@ -362,7 +359,6 @@ const ColorPicker = (props: ColorPickerProps) => {
         newHue = fixFloatingPoint(newHue, 10 ** hslHueFixedPrecision) / 10 ** hslHueFixedPrecision
         newHue = Math.max(0, Math.min(359, newHue));
         setSelectedColor(prev => {
-            if (!prev) return null;
             if (prev.h === newHue) return prev;
             return { 
                 ...prev, 
@@ -430,7 +426,6 @@ const ColorPicker = (props: ColorPickerProps) => {
         newAlpha = fixFloatingPoint(newAlpha, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision;
         newAlpha = Math.max(0, Math.min(1, newAlpha));
         setSelectedColor(prev => {
-            if (!prev) return null;
             if (prev.a === newAlpha) return prev;
             return { 
                 ...prev, 
@@ -534,7 +529,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setRGBBatch(true);
             setSelectedColor(prev => {
-                if (!prev) return null;
                 const prevRGB = hslToRgb(prev);
                 const newRGB: RGBColor = {
                     ...prevRGB,
@@ -591,7 +585,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setHSLBatch(true);
             setSelectedColor(prev => {
-                if (!prev) return null;
                 return { 
                     ...prev, 
                     h: numValue,
@@ -646,7 +639,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setHSLBatch(true);
             setSelectedColor(prev => {
-                if (!prev) return null;
                 return { 
                     ...prev, 
                     s: numValue,
@@ -701,7 +693,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setHSLBatch(true);
             setSelectedColor(prev => {
-                if (!prev) return null;
                 return { 
                     ...prev, 
                     l: numValue,
@@ -752,7 +743,6 @@ const ColorPicker = (props: ColorPickerProps) => {
             setAlphaBatch(true);
             setAlphaStr(newValue);
             setSelectedColor(prev => {
-                if (!prev) return null;
                 return { 
                     ...prev, 
                     a: numValue,

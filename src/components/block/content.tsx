@@ -21,7 +21,7 @@ export default function BlockContent(props: BlockContentProps) {
     >
         <Switch>
             <Match when={props.component?.type === BlockTypes.PARAGRAPH}>
-                <ParagraphContent data={props.component?.data} />
+                <ParagraphContent data={props.component?.data} componentId={props.component?.id || ""} />
             </Match>
         </Switch>
     </div>

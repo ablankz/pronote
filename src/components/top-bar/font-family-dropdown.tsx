@@ -8,7 +8,7 @@ export interface FontFamilyDropdownProps {
   classList?: Record<string, boolean>;
   onFontFamilyChange?: (fontFamily: string) => void;
   onToggle?: (open: boolean) => void;
-  fontFamily: string;
+  fontFamily?: string;
   setFontFamily: (fontFamily: string) => void;
 }
 
@@ -53,7 +53,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   };
 
   createEffect(() => {
-    if (props.fontFamily !== "") {
+    if (props.fontFamily !== "" && props.fontFamily !== undefined) {
       setQuery(props.fontFamily)
     }
   });

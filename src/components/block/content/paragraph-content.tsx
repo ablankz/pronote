@@ -1,8 +1,9 @@
-import { FlexibleText, FlexibleTextTypes } from "../../../types/text";
+import { TextZonePrefixes } from "../../../id/text";
+import { FlexibleText } from "../../../types/text";
 import FlexibleTextRenderer from "../../renderer/text-renderer";
-import FontFamilyDropdown from "../../top-bar/font-family-dropdown";
 
 interface ParagraphContentProps {
+    componentId: string;
     class?: string;
     classList?: Record<string, boolean>;
     data: any;
@@ -32,6 +33,7 @@ export default function ParagraphContent(props: ParagraphContentProps) {
         }}
     >
       <FlexibleTextRenderer 
+        textZoneId={TextZonePrefixes.BLOCK_PARAGRAPH + props.componentId}
         defaultBlock={sampleTextBlock}
         onUpdate={(block) => console.log(block)}
         editable={true}

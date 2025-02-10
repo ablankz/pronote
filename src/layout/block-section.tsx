@@ -1,13 +1,16 @@
 import { Show } from "solid-js/web";
 import Scrollable from "../components/scrollable";
-import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, For, getOwner, onCleanup, onMount } from "solid-js";
 import BlockComponent from "../components/block/component";
 import BlockPlus from "../components/block/plus";
 import ComponentAdder from "../components/block/component-adder";
-import { globalCursorAction, setDetailOpen } from "../store/action";
+import { globalCursorAction, setCurrentStyle, setDetailOpen, setEditableTextCursor, setEditableTextRef } from "../store/action";
 import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
 import { AddOpenState } from "../types/state";
-import { setSelectedBlock } from "../store/select";
+import { selectedBlock, setSelectedBlock } from "../store/select";
+import { textRefMap } from "../store/ref";
+import { TextValidComponentsMap } from "../id/text";
+import { DefaultFlexibleTextStyles } from "../types/text";
 
 interface internalBlock {
     internalId: string;
@@ -33,6 +36,51 @@ export default function BlockSection() {
     };
     let addModalRef: HTMLDivElement | undefined;
     let sectionRef: HTMLDivElement | undefined;
+
+
+    createEffect(() => {
+        const selected = selectedBlock();
+        if (!selected) {
+            batch(() => {
+                setEditableTextRef(null);
+                setEditableTextCursor(0);
+                setCurrentStyle({
+                    style: DefaultFlexibleTextStyles,
+                    selectType: "cursor",
+                    from: "none"
+                });
+            });
+            return;
+        }
+        const selectedId = selected.component.id;
+        const componentType = selected.component.type;
+        const prefix = TextValidComponentsMap[componentType];
+        const selectedRef = textRefMap().get(prefix + selectedId);
+        if (!selectedRef) {
+            batch(() => {
+                setEditableTextRef(null);
+                setEditableTextCursor(0);
+                setCurrentStyle({
+                    style: DefaultFlexibleTextStyles,
+                    selectType: "cursor",
+                    from: "none"
+                });
+            });
+            return;
+        }
+        batch(() => {
+            setCurrentStyle({
+                style: DefaultFlexibleTextStyles,
+                selectType: "cursor",
+                from: "none"
+            });
+            setEditableTextRef({
+                elm: selectedRef, 
+                id: prefix + selectedId,
+                newSelected: true 
+            });
+        });
+    });
     
     const handleClickOutside = (event: MouseEvent) => {
         if (globalCursorAction()) return;

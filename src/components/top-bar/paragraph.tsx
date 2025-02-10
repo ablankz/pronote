@@ -7,6 +7,7 @@ import { minFontSize } from "../../consts/font";
 import FontColorDropdown from "./font-color-dropdown";
 import HighlightColorDropdown from "./highlight-color-dropdown";
 import { setStyle } from "../../utils/set-style";
+import { batch, createEffect, createSignal } from "solid-js";
 
 interface TopBarParagraphProps {
     class?: string;
@@ -14,92 +15,220 @@ interface TopBarParagraphProps {
 }
 
 export default function TopBarParagraph(props: TopBarParagraphProps) {
+    const [localStyle, setLocalStyle] = createSignal(currentStyle().style);
+
+    createEffect(() => {
+        const newStyle = currentStyle()
+        switch (newStyle.from) {
+            case "textArea":
+                setLocalStyle(newStyle.style);
+                break;
+            case "none":
+                setLocalStyle(newStyle.style);
+                break;
+            default:
+                break;
+        }
+    });
 
     const setFontFamily = (fontFamily: string) => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                fontFamily: fontFamily,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                return {
+                    style: {
+                        ...prev.style,
+                        fontFamily: fontFamily,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                }
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    fontFamily: fontFamily,
+                };
+            });
         });
     }
 
     const setFontSize = (fontSize: number) => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                fontSize: fontSize,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                return {
+                    style: {
+                        ...prev.style,
+                        fontSize: fontSize,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                }
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    fontSize: fontSize,
+                };
+            });
         });
     }
 
     const changeFontSizes = (size: number) => {
-        setCurrentStyle(prev => {
-            const newSize = prev.fontSize + size;
-            return {
-                ...prev,
-                fontSize: newSize <= minFontSize ? minFontSize : newSize,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.fontSize === undefined) return prev;
+                const newSize = prev.style.fontSize + size;
+                return {
+                    style: {
+                        ...prev.style,
+                        fontSize: newSize <= minFontSize ? minFontSize : newSize,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                if (prev.fontSize === undefined) return prev;
+                const newSize = prev.fontSize + size;
+                return {
+                    ...prev,
+                    fontSize: newSize <= minFontSize ? minFontSize : newSize,
+                };
+            });
         });
     }
 
     const setSwitchBold = () => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                bold: !prev.bold,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.bold === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        bold: !prev.style.bold,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    bold: !prev.bold,
+                };
+            });
         });
     }
 
     const setSwitchItalic = () => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                italic: !prev.italic
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.italic === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        italic: !prev.style.italic,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    italic: !prev.italic,
+                };
+            });
         });
     }
 
     const setSwitchUnderline = () => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                underline: !prev.underline,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.underline === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        underline: !prev.style.underline,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    underline: !prev.underline,
+                };
+            });
         });
     }
 
     const setSwitchStrikeThrough = () => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                strikeThrough: !prev.strikeThrough,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.strikeThrough === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        strikeThrough: !prev.style.strikeThrough,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    strikeThrough: !prev.strikeThrough,
+                };
+            });
         });
     }
 
     const setFontColor = (color: string) => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                fontColor: color,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.fontColor === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        fontColor: color,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    fontColor: color,
+                };
+            });
         });
     }
 
     const setHighlightColor = (color: string) => {
-        setCurrentStyle(prev => {
-            return {
-                ...prev,
-                highlightColor: color,
-            };
+        batch(() => {
+            setCurrentStyle(prev => {
+                if (prev.style.highlightColor === undefined) return prev;
+                return {
+                    style: {
+                        ...prev.style,
+                        highlightColor: color,
+                    },
+                    selectType: "cursor",
+                    from: "topBar",
+                };
+            });
+            setLocalStyle(prev => {
+                return {
+                    ...prev,
+                    highlightColor: color,
+                };
+            });
         });
     }
-
-    // createEffect(() => {
-    //     console.log(currentStyle());
-    // });
 
     return (
         <div 
@@ -110,13 +239,13 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
         >
             <FontFamilyDropdown 
                 class="bg-gray-600 rounded-l" 
-                fontFamily={currentStyle().fontFamily}
+                fontFamily={localStyle().fontFamily}
                 setFontFamily={setFontFamily}
                 onToggle={() => setStyle(() => {})}
             />
             <FontSizeDropdown 
                 class="bg-gray-600 rounded-r border-l border-gray-400 ml-0.5" 
-                fontSize={currentStyle().fontSize}
+                fontSize={localStyle().fontSize}
                 setFontSize={setFontSize}
                 onToggle={() => setStyle(() => {})}
             />
@@ -124,7 +253,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400 p-0.5">
                 <StyleButton 
                     Icon={<AArrowUp size={24} />} 
-                    onClick={(e) => setStyle(() => changeFontSizes(1))}
+                    onClick={(_) => setStyle(() => changeFontSizes(1))}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -133,7 +262,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<AArrowDown size={18} />}
-                    onClick={(e) => setStyle(() => changeFontSizes(-1))}
+                    onClick={(_) => setStyle(() => changeFontSizes(-1))}
                     class="mx-1 rounded w-7 h-7 flex items-end justify-center pb-1"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -142,41 +271,41 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Bold size={20} />} 
-                    onClick={(e) => setStyle(setSwitchBold)}
+                    onClick={(_) => setStyle(setSwitchBold)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
-                        "bg-gray-500 border border-gray-400": currentStyle().bold,
+                        "bg-gray-500 border border-gray-400": localStyle().bold || false,
                     }}
                 />
 
                 <StyleButton 
                     Icon={<Italic size={20} />} 
-                    onClick={(e) => setStyle(setSwitchItalic)}
+                    onClick={(_) => setStyle(setSwitchItalic)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
-                        "bg-gray-500 border border-gray-400": currentStyle().italic,
+                        "bg-gray-500 border border-gray-400": localStyle().italic || false,
                     }}
                 />
 
                 <StyleButton 
                     Icon={<Underline size={20} />}
-                    onClick={(e) => setStyle(setSwitchUnderline)}
+                    onClick={(_) => setStyle(setSwitchUnderline)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
-                        "bg-gray-500 border border-gray-400": currentStyle().underline,
+                        "bg-gray-500 border border-gray-400": localStyle().underline || false,
                     }}
                 />
 
                 <StyleButton
                     Icon={<Strikethrough size={20} />}
-                    onClick={(e) => setStyle(setSwitchStrikeThrough)}
+                    onClick={(_) => setStyle(setSwitchStrikeThrough)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
-                        "bg-gray-500 border border-gray-400": currentStyle().strikeThrough,
+                        "bg-gray-500 border border-gray-400": localStyle().strikeThrough || false,
                     }}
                 />
             </div>
@@ -184,7 +313,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
                 <HighlightColorDropdown
                         class="w-full h-full" 
-                        highlightColor={currentStyle().highlightColor}
+                        highlightColor={localStyle().highlightColor || ""}
                         setHighlightColor={(color: string) => setStyle(() => setHighlightColor(color))}
                         onToggle={() => setStyle(() => {})}
                     />
@@ -193,7 +322,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
                 <FontColorDropdown
                     class="w-full h-full" 
-                    fontColor={currentStyle().fontColor}
+                    fontColor={localStyle().fontColor || ""}
                     setFontColor={(color: string) => setStyle(() => setFontColor(color))}
                     onToggle={() => setStyle(() => {})}
                 />

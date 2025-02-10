@@ -41,6 +41,13 @@ export interface HSLColor {
     a: number;
 }
 
+export const DefaultHSLColor: HSLColor = {
+    h: 0,
+    s: 0,
+    l: 0,
+    a: 1,
+};
+
 export interface HSLColorEqualOptions {
     hueTolerance?: number;
     saturationTolerance?: number;

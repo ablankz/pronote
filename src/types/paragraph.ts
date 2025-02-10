@@ -1,5 +1,5 @@
-import { FlexibleTextBlock } from "./text";
+// import { FlexibleTextBlock } from "./text";
 
-export interface ParagraphContent {
-    content: FlexibleTextBlock;
-}
+// export interface ParagraphContent {
+//     content: FlexibleTextBlock;
+// }

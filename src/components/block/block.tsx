@@ -210,14 +210,20 @@ export default function Block(props: BlockProps) {
       }}
       onClick={() => {
         if (globalCursorAction()) return;
-        setSelectedBlock({
-          component: props.component,
+        setSelectedBlock(prev => {
+          if (!!prev && prev.component?.id === props.component.id) return prev;
+          return {
+            component: props.component,
+          };
         });
       }}
       on:dblclick={() => {
         if (globalCursorAction()) return;
-        setSelectedBlock({
-          component: props.component,
+        setSelectedBlock(prev => {
+          if (!!prev && prev.component?.id === props.component.id) return prev;
+          return {
+            component: props.component,
+          };
         });
         setDetailOpen(true);
       }}
@@ -282,10 +288,14 @@ export default function Block(props: BlockProps) {
               "cursor-pointer hover:bg-gray-300": !globalCursorAction(),
             }}
             on:click={() => {
-              setSelectedBlock({
-                component: props.component,
+              if (globalCursorAction()) return;
+              setSelectedBlock(prev => {
+                if (!!prev && prev.component?.id === props.component.id) return prev;
+                return {
+                  component: props.component,
+                };
               });
-              setDetailOpen(true);
+              setDetailOpen(prev => !prev);
             }}
           >
             <ReceiptText 

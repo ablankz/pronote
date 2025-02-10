@@ -1,10 +1,9 @@
 import { batch } from "solid-js";
-import { editableTextCursor, editableTextRef, setEditableActionIgnore } from "../store/action";
+import { editableTextCursor, editableTextRef } from "../store/action";
 
 export const setStyle = (styleChange: () => void) => {
     batch(() => {
         styleChange();
-        setEditableActionIgnore(true);
     });
     if (editableTextRef()) {
         const cursor = editableTextCursor()
@@ -53,8 +52,8 @@ export const setStyle = (styleChange: () => void) => {
             return false;
         };
         const textRef = editableTextRef()!;
-        textRef.focus();
-        traverseNodes(textRef);
+        textRef.elm.focus();
+        traverseNodes(textRef.elm);
         if (from === to) {
             if (startNode) {
                 range.setStart(startNode, startOffset);
@@ -62,7 +61,7 @@ export const setStyle = (styleChange: () => void) => {
                 selection?.removeAllRanges();
                 selection?.addRange(range);
             } else {
-                range.setStart(textRef, 0);
+                range.setStart(textRef.elm, 0);
                 range.collapse(true);
                 selection?.removeAllRanges();
                 selection?.addRange(range);

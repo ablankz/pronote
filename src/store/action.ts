@@ -1,13 +1,24 @@
 import { createSignal } from "solid-js";
-import { DefaultFlexibleTextStyles } from "../types/text";
+import { DefaultFlexibleTextStyles, NullableFlexibleTextStyles } from "../types/text";
 import { Range } from "../types/generic";
 
 export const [detailOpen, setDetailOpen] = createSignal(false);
 
-export const [currentStyle, setCurrentStyle] = createSignal(DefaultFlexibleTextStyles);
+export const [currentStyle, setCurrentStyle] = createSignal<{
+    style: NullableFlexibleTextStyles,
+    selectType: "cursor" | "range" | "none",
+    from: "textArea" | "topBar" | "none",
+}>({
+    style: DefaultFlexibleTextStyles,
+    selectType: "cursor",
+    from: "none",
+});
 
 export const [globalCursorAction, setGlobalCursorAction] = createSignal<boolean>(false);
 
-export const [editableTextRef, setEditableTextRef] = createSignal<HTMLDivElement | null>(null);
+export const [editableTextRef, setEditableTextRef] = createSignal<{
+    elm: HTMLDivElement,
+    id: string,
+    newSelected: boolean,
+ } | null>(null);
 export const [editableTextCursor, setEditableTextCursor] = createSignal<number | Range | null>(null);
-export const [editableActionIgnore, setEditableActionIgnore] = createSignal<boolean>(false);

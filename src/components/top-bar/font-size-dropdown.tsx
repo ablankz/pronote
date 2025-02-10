@@ -10,7 +10,7 @@ export interface FontSizeDropdownProps {
   classList?: Record<string, boolean>;
   onFontSizeChange?: (fontSize: number) => void;
   onToggle?: (open: boolean) => void;
-  fontSize: number;
+  fontSize?: number;
   setFontSize: (fontSize: number) => void;
 }
 
@@ -47,7 +47,8 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   };
 
   createEffect(() => {
-    if (inputRef) inputRef.value = props.fontSize.toFixed(pxPrecision);
+    if (inputRef) inputRef.value = props.fontSize !== undefined ? 
+      props.fontSize.toFixed(pxPrecision) : "";
   });
 
   onMount(() => {
@@ -62,7 +63,8 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
 
   const applyFontSize = (size: number) => {
     batch(() => {
-      if (inputRef) inputRef.value = props.fontSize.toFixed(pxPrecision);
+      if (inputRef) inputRef.value = props.fontSize !== undefined ?
+        props.fontSize.toFixed(pxPrecision) : "";
       setIsOpen(false);
       props.onToggle?.(false);
       if (props.fontSize === size) return;
@@ -72,15 +74,17 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   };
 
   const handleFontSizeChange = (sizeStr: string) => {
-    let size = parseFloat(sizeStr);
+    let size: number | undefined = parseFloat(sizeStr);
     if (isNaN(size) || size.toString() !== sizeStr) {
-      size = props.fontSize;
+      size = props.fontSize
     } 
-    size = fixFloatingPoint(size,  10 ** pxPrecision) / 10 ** pxPrecision;
-    if (size < minFontSize) {
-      size = minFontSize;
+    if (size !== undefined) {
+      size = fixFloatingPoint(size, 10 ** pxPrecision) / 10 ** pxPrecision;
+      if (size < minFontSize) {
+        size = minFontSize;
+      }
+      applyFontSize(size);
     }
-    applyFontSize(size);
   };
 
   return (
