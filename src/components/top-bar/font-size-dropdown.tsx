@@ -9,6 +9,7 @@ export interface FontSizeDropdownProps {
   class?: string;
   classList?: Record<string, boolean>;
   onFontSizeChange?: (fontSize: number) => void;
+  onToggle?: (open: boolean) => void;
   fontSize: number;
   setFontSize: (fontSize: number) => void;
 }
@@ -22,7 +23,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction()) return;
+      if (globalCursorAction() || !isOpen()) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -32,12 +33,16 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
           setIsOpen(false);
+          props.onToggle?.(false);
       }
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (globalCursorAction() || !isOpen()) return;
+
     if (e.key === "Escape") {
       setIsOpen(false);
+      props.onToggle?.(false);
     }
   };
 
@@ -59,6 +64,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
     batch(() => {
       if (inputRef) inputRef.value = props.fontSize.toFixed(pxPrecision);
       setIsOpen(false);
+      props.onToggle?.(false);
       if (props.fontSize === size) return;
       props.setFontSize(size);
       if (props.onFontSizeChange) props.onFontSizeChange(size);
@@ -94,6 +100,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
             }}
             onFocus={() => {
               setIsOpen(true)
+              props.onToggle?.(true)
             }}
             class="focus:outline-none rounded-l text-white"
           />
@@ -107,6 +114,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
             batch(() => {
               setIsOpen(prev => {
                 if (!prev) inputRef?.select()
+                props.onToggle?.(!prev)
                 return !prev
               })
               setIgnoreOutsideClick(true)

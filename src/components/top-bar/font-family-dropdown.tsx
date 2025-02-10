@@ -7,6 +7,7 @@ export interface FontFamilyDropdownProps {
   class?: string;
   classList?: Record<string, boolean>;
   onFontFamilyChange?: (fontFamily: string) => void;
+  onToggle?: (open: boolean) => void;
   fontFamily: string;
   setFontFamily: (fontFamily: string) => void;
 }
@@ -21,7 +22,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction()) return;
+      if (globalCursorAction() || !isOpen()) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -31,6 +32,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
           setIsOpen(false);
+          props.onToggle?.(false);
       }
   };
 
@@ -42,8 +44,11 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   });
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (globalCursorAction() || !isOpen()) return;
+
     if (e.key === "Escape") {
       setIsOpen(false);
+      props.onToggle?.(false);
     }
   };
 
@@ -67,6 +72,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
     batch(() => {
       setQuery(font);
       setIsOpen(false);
+      props.onToggle?.(false);
       if (props.fontFamily === font) return;
       props.setFontFamily(font);
       if (props.onFontFamilyChange) props.onFontFamilyChange(font);
@@ -112,6 +118,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
             }}
             onFocus={() => {
               setIsOpen(true)
+              props.onToggle?.(true)
             }}
             class="focus:outline-none rounded-l"
             classList={{
@@ -163,6 +170,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
                 if (!prev) inputRef?.select()
                 return !prev
               })
+              props.onToggle?.(!isOpen())
               setIgnoreOutsideClick(true)
             })
           }}

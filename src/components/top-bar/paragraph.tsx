@@ -112,11 +112,13 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 class="bg-gray-600 rounded-l" 
                 fontFamily={currentStyle().fontFamily}
                 setFontFamily={setFontFamily}
+                onToggle={() => setStyle(() => {})}
             />
             <FontSizeDropdown 
                 class="bg-gray-600 rounded-r border-l border-gray-400 ml-0.5" 
                 fontSize={currentStyle().fontSize}
                 setFontSize={setFontSize}
+                onToggle={() => setStyle(() => {})}
             />
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400 p-0.5">

@@ -442,6 +442,24 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                     ...prev.slice(0, editingTextBlock()),
                     ...newBlocks,
                   ];
+                } else if (secondText === "\n") {
+                  const newBlocks: FlexibleText[] = [
+                    {
+                      ...editingBlock,
+                      id: crypto.randomUUID(),
+                      text: firstText,
+                      version: 0,
+                    },
+                    {
+                      ...newBlock,
+                      text: newBlock.text + "\n",
+                    }
+                  ];
+                  return [
+                    ...prev.slice(0, editingTextBlock()),
+                    ...newBlocks,
+                    ...prev.slice(editingTextBlock() + 1),
+                  ];
                 } else if (firstText.length === 0) {
                   return [
                     ...prev.slice(0, editingTextBlock()),
@@ -513,6 +531,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       switch (typeof cursorPos()) {
         case "number":
           setTextBlock(prev => {
+            let remainNewLine = false;
             let editingTextBlockIndex = editingTextBlock();
             let editingBlock = prev[editingTextBlockIndex];
             let newText: string, currentTextCursor: number, firstDel = false;
@@ -527,15 +546,56 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                 if (editingTextBlockIndex <= 0) {
                   return prev;
                 }
-                if ((editingBlock.text.length === 0) 
-                  || (editingBlock.text.length === 1 && editingBlock.text[0] === "\n")) {
+                const afterDeleted = prev[editingTextBlockIndex - 1].text.length - size;
+                const blockBreak = afterDeleted < 0;
+                const onlyNewLine = editingBlock.text.length === 1 && editingBlock.text[0] === "\n";
+                if (!blockBreak && !onlyNewLine) {
+                  editingTextBlockIndex -= 1;
+                  editingBlock = prev[editingTextBlockIndex];
+                  if(editingBlock.text[editingBlock.text.length - 1] === "\n") {
+                    newText = editingBlock.text.slice(0, editingBlock.text.length - 1);
+                    currentTextCursor = newText.length;
+                  } else {
+                    newText = editingBlock.text + editingBlock.text.slice(0, size);
+                    currentTextCursor = editingBlock.text.length;
+                  }
+                } else {
                   prev = prev.filter((_, index) => index !== editingTextBlockIndex);
-                }
-                editingTextBlockIndex -= 1;
-                editingBlock = prev[editingTextBlockIndex];
-                newText = editingBlock.text.slice(0, editingBlock.text.length - size);
+                  editingTextBlockIndex -= 1;
+                  editingBlock = prev[editingTextBlockIndex];
 
-                currentTextCursor = editingBlock.text.length - size;
+                  if (onlyNewLine && editingBlock.text[editingBlock.text.length - 1] === "\n") {
+                    newText = editingBlock.text;
+                    currentTextCursor = editingBlock.text.length;
+                  } else if(editingBlock.text[editingBlock.text.length - 1] === "\n") {
+                    newText = editingBlock.text.slice(0, editingBlock.text.length - 1);
+                    currentTextCursor = newText.length;
+                  } else {
+                    newText = editingBlock.text + editingBlock.text.slice(0, size);
+                    currentTextCursor = editingBlock.text.length;
+                  }
+                }
+            } else if((editingTextCursor() <= size && direction === "backward")
+                  || editingTextCursor() < size) {
+                const prevBlock = prev[editingTextBlockIndex - 1];
+                const isPrevLastNewLine = prevBlock.text[prevBlock.text.length - 1] === "\n";
+                newText = direction === "forward" ? 
+                editingBlock.text.slice(0, editingTextCursor()) + editingBlock.text.slice(editingTextCursor() + size) 
+                : editingBlock.text.slice(0, editingTextCursor() - size) + editingBlock.text.slice(editingTextCursor());
+                if (isPrevLastNewLine) {
+                  remainNewLine = true;
+                } else {
+                  if (newText === "\n") {
+                    const updatedPrevBlock: FlexibleText = {
+                      ...prevBlock,
+                      text: prevBlock.text + "\n",
+                      version: prevBlock.version + 1,
+                    };
+                    prev = prev.map((block, index) => index === editingTextBlockIndex - 1 ? updatedPrevBlock : block);
+                  }
+                }
+            
+                currentTextCursor = direction === "forward" ? editingTextCursor() : editingTextCursor() - size;
             } else {
                 newText = direction === "forward" ? 
                   editingBlock.text.slice(0, editingTextCursor()) + editingBlock.text.slice(editingTextCursor() + size) 
@@ -551,7 +611,12 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               });
             }
 
-            if ((newText.length === 0 ) || (newText.length === 1 && newText[0] === "\n")) {
+            const onlyNewLine = newText.length === 1 && newText[0] === "\n";
+            // const isLastBlock = editingTextBlockIndex === prev.length - 1;
+
+            if ((newText.length === 0 )) {
+              return prev.filter((_, index) => index !== editingTextBlockIndex);
+            }else if (onlyNewLine && !remainNewLine) {
               return prev.filter((_, index) => index !== editingTextBlockIndex);
             }
             
