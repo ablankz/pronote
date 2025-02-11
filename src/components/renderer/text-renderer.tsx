@@ -26,6 +26,7 @@ interface FlexibleTextRendererProps {
 }
 
 interface rangeSelectedState {
+  isLast: boolean;
   overStyle: NullableFlexibleTextStyles;
   editingContents: {
     blockIndex: number;
@@ -176,6 +177,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
         let editBlockStyle: FlexibleTextStyles = DefaultFlexibleTextStyles;
         switch (typeof cursorPos()) {
           case "number":
+            console.log(cursorPos());
             const cursorOffset: number = Number(cursorPos());
             let editingBlock = -1, textIndex = -1;
             blocks.reduce((acc, block, iter) => {
@@ -211,8 +213,21 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               // });
               setEditingTextCursor(textIndex);
               let isNeedUpdate = false;
+              // setCurrentStyle(prev => {
+              //   if (!prev) {
+              //     isNeedUpdate = true;
+              //     return { style: editBlockStyle, selectType: "cursor", from: "textArea" };
+              //   }
+              //   if (prev.from !== "textArea") {
+              //     if (!equalFlexibleTextStyles(prev.style, editBlockStyle)) {
+              //       isNeedUpdate = true;
+              //       return { style: editBlockStyle, selectType: "cursor", from: "textArea" };
+              //     }
+              //   }
+              //   return prev;
               setValidStyles(prev => {
                 if (prev.current === null) return prev;
+                console.log(prev.current, editBlockStyle);
                 if (!equalFlexibleTextStyles(prev.current, editBlockStyle)) {
                   isNeedUpdate = true;
                   return { working: editBlockStyle, current: editBlockStyle, isNeedUpdate: true };
@@ -230,6 +245,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             const range = cursorPos() as RangeWithCurrent;
             const from = range.start;
             const to = range.end;
+            const isLast = range.end === range.current;
             let rangeEditingContents: {
               blockIndex: number;
               textFrom: number;
@@ -323,6 +339,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               setRangeSelected({
                 overStyle: overStyle,
                 editingContents: rangeEditingContents,
+                isLast,
               });
               setEditableTextCursor(cursorPos());
               // let isNeedUpdate = false;
@@ -676,8 +693,15 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       }
     };
 
-    const deleteText = (size: number, direction: "forward" | "backward") => {
-      if (cursorPos() === null) return;
+    const deleteText = (size: number, direction: "forward" | "backward"): {
+      success: boolean,
+      deleted: number,
+      rangeDeleted: boolean,
+      range?: {
+        isLast: boolean,
+      }
+     } => {
+      if (cursorPos() === null) return { success: false, deleted: 0, rangeDeleted: false };
       switch (typeof cursorPos()) {
         case "number":
           setTextBlock(prev => {
@@ -775,11 +799,55 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
             };
             return prev.map((block, index) => index === editingTextBlockIndex ? newBlock : block);
           });
-          break;
+
+          return { success: true, deleted: size, rangeDeleted: false };
         case "object":
-          const rangeSelectionState = rangeSelected();
-          console.log(rangeSelectionState);
-          break;
+          const selected = rangeSelected();
+          if (selected === null) return { success: false, deleted: 0, rangeDeleted: false };
+          const rangeSelectionRange = selected.editingContents;
+          let deletedNum = 0;
+          setTextBlock(prev => {
+            const deleteLists: number[] = [];
+            const lastRangeIndex = rangeSelectionRange.length - 1;
+            const lastRangeLastNewLine = rangeSelectionRange[lastRangeIndex].lastNewLineSelected;
+            rangeSelectionRange.forEach((rangeSelection, index) => {
+              if (rangeSelection.isFullLine) {
+                deleteLists.push(rangeSelection.blockIndex);
+                deletedNum += prev[rangeSelection.blockIndex].text.length;
+                if (index === 0 && lastRangeLastNewLine) {
+                  const firstPrevBlock = prev[rangeSelection.blockIndex - 1];
+                  if (!firstPrevBlock) return;
+                  const firstPrevNewText = firstPrevBlock.text + "\n";
+                  prev = prev.map((block, index) => index === rangeSelection.blockIndex - 1 ? {
+                    ...firstPrevBlock,
+                    text: firstPrevNewText,
+                    version: firstPrevBlock.version + 1,
+                  } : block);
+                }
+                return;
+              }
+              const editingBlock = prev[rangeSelection.blockIndex];
+              let newText = 
+                editingBlock.text.slice(0, rangeSelection.textFrom) + editingBlock.text.slice(rangeSelection.textTo);
+              if (newText.length === 0) {
+                deleteLists.push(rangeSelection.blockIndex);
+              } else {
+                deletedNum += rangeSelection.textTo - rangeSelection.textFrom;
+                if (index === 0 && lastRangeLastNewLine) {
+                  newText = newText + "\n";
+                }
+                const newBlock: FlexibleText = {
+                  ...editingBlock,
+                  text: newText,
+                  version: editingBlock.version + 1,
+                };
+                prev = prev.map((block, index) => index === rangeSelection.blockIndex ? newBlock : block);
+              }
+            });
+            return prev.filter((_, index) => !deleteLists.includes(index));
+          });
+          console.log(textBlock());
+          return { success: true, deleted: deletedNum, rangeDeleted: true, range: { isLast: selected.isLast } };
       }
     };
 
@@ -800,8 +868,27 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
 
       switch (e.key) {
         case "Backspace":
-          deleteText(1, "backward");
-          moveCursorHorizontally(true, 1, "backward");
+          const deleted = deleteText(1, "backward");
+          console.log("deleted", deleted);
+          if (!deleted.success || !deleted.deleted) return;
+          if (!deleted.rangeDeleted) {
+            moveCursorHorizontally(true, deleted.deleted, "backward");
+            return;
+          }
+          moveCursorHorizontally(true, deleted.deleted, "backward");
+          // if (deleted.range?.isLast || false) {
+          //   setCursorPos(prev => {
+          //     if (prev === null) return null;
+          //     switch (typeof prev) {
+          //       case "number":
+          //         return prev;
+          //       case "object":
+          //         return prev.start;
+          //     }
+          //   });
+          // } else {
+          //   moveCursorHorizontally(true, deleted.deleted, "backward");
+          // }
           return;
         case "Enter":
           insertText("\n");
