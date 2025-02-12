@@ -11,6 +11,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "lucide-solid": "^0.474.0",
+    "path": "^0.12.7",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {

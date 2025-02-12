@@ -1,4 +1,4 @@
-import { createMemo, Setter } from "solid-js";
+import { createEffect, createMemo, Setter, Show } from "solid-js";
 import AddComponentModal from "./add-component-modal";
 import { AddOpenState } from "../../types/state";
 import { BlockComponentType, BlockTypeCategories, BlockTypes } from "../../types/block";
@@ -50,6 +50,7 @@ import {
     Vote, 
     WrapText
 } from "lucide-solid";
+import { useAnimationShow } from "../../hooks/use-animation-show";
 
 interface ComponentAdderProps {
     addOpen: AddOpenState;
@@ -985,6 +986,7 @@ export default function ComponentAdder(props: ComponentAdderProps) {
         },
     ];
 
+    const { render, visible} = useAnimationShow(() => props.addOpen.open);
 
     const categoryKeys = createMemo(() => Object.keys(BlockTypeCategories).map((key) => BlockTypeCategories[key as keyof typeof BlockTypeCategories]));
 
@@ -1006,20 +1008,21 @@ export default function ComponentAdder(props: ComponentAdderProps) {
     });
 
     return (
-       <>
+        <>
             <div
-                class="fixed flex items-center justify-center bg-black bg-opacity-50 transition-opacity z-20 opacity-20 rounded-2xl"
+                class="fixed flex items-center justify-center bg-black bg-opacity-50 z-20 opacity-20 rounded-2xl"
             />
-            <div 
-            class="flex fixed items-center justify-center w-128 z-30 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300"
-            ref={props.addModalRef}
-            classList={{
-                "opacity-0": !props.addOpen.open,
-                "scale-0": !props.addOpen.open,
-                "opacity-100": props.addOpen.open,
-                "scale-100": props.addOpen.open
-            }}
+            <Show 
+                ref={props.addModalRef}
+                when={render()}
             >
+                <div
+                    class="flex fixed items-center justify-center w-128 z-30 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300"
+                    classList={{
+                        "opacity-0 scale-0": !visible()
+                    }}
+                    ref={props.addModalRef}
+                >
                 <AddComponentModal
                     categoryKeys={categoryKeys()}
                     categoryMap={categoryMap()}
@@ -1030,7 +1033,8 @@ export default function ComponentAdder(props: ComponentAdderProps) {
                     }}
                     handleClose={() => props.setAddOpen({ open: false, id: "" })}
                 />
-            </div>
+                </div>
+            </Show>
         </>
     );
 }

@@ -20,13 +20,14 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
     createEffect(() => {
         const newStyle = currentStyle()
         switch (newStyle.from) {
-            case "textArea":
-                setLocalStyle(newStyle.style);
-                break;
+            case "topBar":
+                // setLocalStyle(newStyle.style);
+                // break;
             case "none":
                 setLocalStyle(newStyle.style);
                 break;
             default:
+                setLocalStyle(newStyle.style);
                 break;
         }
     });

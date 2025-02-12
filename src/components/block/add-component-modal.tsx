@@ -37,7 +37,7 @@ export default function AddComponentModal(props: AddComponentModalProps) {
                                                         if (!component) return null;
                                                         return (
                                                             <div 
-                                                                class="p-2 bg-white border border-gray-300 rounded shadow-lg mb-1 transition flex items-center justify-center flex-col"
+                                                                class="p-2 bg-white border border-gray-300 rounded shadow-lg mb-1 flex items-center justify-center flex-col"
                                                                 classList={{
                                                                     "cursor-pointer hover:bg-gray-100": !globalCursorAction(),
                                                                 }}

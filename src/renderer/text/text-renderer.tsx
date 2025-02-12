@@ -4,10 +4,6 @@ import { RangeWithCurrent } from "../../types/generic";
 import { currentStyle, editableTextRef, setCurrentStyle, setEditableTextCursor, setEditableTextRef } from "../../store/action";
 import { setTextRefMap } from "../../store/ref";
 
-// TODO: 範囲選択後のキー入力
-// TODO: 単一カーソルでのスタイル変更
-// TODO: 範囲選択でのスタイル変更
-
 interface FlexibleTextRendererProps {
     textZoneId: string;
     class?: string;
@@ -59,7 +55,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
 
     createEffect(() => {
       const styleState = currentStyle();
-      if (styleState.from === "textArea") return;
+      if (styleState.from === props.textZoneId) return;
       const newStyle = nullableToDefaultFlexibleTextStyles(styleState.style);
       switch (styleState.selectType) {
         case "cursor":
@@ -225,6 +221,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
               //     }
               //   }
               //   return prev;
+              // });
               setValidStyles(prev => {
                 if (prev.current === null) return prev;
                 console.log(prev.current, editBlockStyle);
@@ -869,7 +866,6 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
       switch (e.key) {
         case "Backspace":
           const deleted = deleteText(1, "backward");
-          console.log("deleted", deleted);
           if (!deleted.success || !deleted.deleted) return;
           if (!deleted.rangeDeleted) {
             moveCursorHorizontally(true, deleted.deleted, "backward");

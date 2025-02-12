@@ -9,7 +9,7 @@ import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
 import { AddOpenState } from "../types/state";
 import { selectedBlock, setSelectedBlock } from "../store/select";
 import { textRefMap } from "../store/ref";
-import { TextValidComponentsMap } from "../id/text";
+import { TextValidComponentsMap } from "../renderer/text/id";
 import { DefaultFlexibleTextStyles } from "../types/text";
 
 interface internalBlock {

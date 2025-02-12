@@ -1,6 +1,6 @@
-import { TextZonePrefixes } from "../../../id/text";
+import { TextZonePrefixes } from "../../../renderer/text/id";
 import { FlexibleText } from "../../../types/text";
-import FlexibleTextRenderer from "../../renderer/text-renderer";
+import FlexibleTextRenderer from "../../../renderer/text/text-renderer";
 
 interface ParagraphContentProps {
     componentId: string;

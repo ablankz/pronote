@@ -12,7 +12,8 @@ import {
   resolveColor
 } from "../../utils/color";
 import { ChevronsRight, Palette } from "lucide-solid";
-import ColorPicker from "../color-picker";
+import ColorPicker from "../../operator/color/color-picker";
+import { useAnimationShow } from "../../hooks/use-animation-show";
 
 export interface FontColorDropdownProps {
     class?: string;
@@ -38,6 +39,9 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
   const [localColor, setLocalColor] = createSignal(defaultFontColor);
   const [colorValue, setColorValue] = createSignal<Color | null>(null);
   const [openColorPicker, setOpenColorPicker] = createSignal(false);
+
+  const { render, visible } = useAnimationShow(isOpen);
+  const { render: renderColorPicker, visible: visibleColorPicker } = useAnimationShow(openColorPicker);
 
   createEffect(() => {
     if (props.fontColor !== "") {
@@ -169,13 +173,14 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
         </div>
       </div>
 
-        <div 
-          class="absolute w-96 px-2 z-20 bg-gray-700 shadow-lg rounded-bl-xl rounded-r-xl flex flex-col items-center transition-all transform duration-300"
-          classList={{
-            "max-h-[26rem]": isOpen(),
-            "max-h-0": !isOpen(),
-          }}
-          ref={modalRef}>
+        <Show when={render()}>
+          <div
+            class="absolute w-96 px-2 z-20 bg-gray-700 shadow-lg rounded-bl-xl rounded-r-xl flex flex-col items-center transition-all transform duration-300"
+            classList={{
+              "max-h-[26rem]": visible(),
+              "max-h-0": !visible(),
+            }}
+            ref={modalRef}>
             <div 
               class="h-[2rem] flex items-center text-white font-bold transition-transform transform duration-300"
               classList={{
@@ -184,7 +189,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
             >
                 Font Color
             </div>
-          <div 
+          <div
             class="w-full flex items-center justify-start px-5 my-1 py-2 transition-transform transform duration-300"
             classList={{
               "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
@@ -286,7 +291,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
             class="my-4 flex items-center h-[2rem] w-full justify-between px-5 py-2 transition-transform transform duration-300"
             classList={{
               "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
-              "scale-0": !isOpen(),
+              // "scale-0": !isOpen(),
             }}
             ref={pickerCloseIgnoreRef}
             onClick={() => {
@@ -303,26 +308,34 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
                 <ChevronsRight size={20} />
               </div>
           </div>
-      </div>
-      <div 
-        class="absolute -left-10 z-40 w-112 shadow-lg rounded-xl bg-gray-200 transition-transform transform duration-300"
-        classList={{
-          "scale-0": !openColorPicker(),
-        }}
-      >
-        <ColorPicker
-            class="w-full h-full text-gray-600"
-            handleClose={() => {
-              setOpenColorPicker(false)
-            }}
-            color={localColor()}
-            setColor={(color) => {
-              applyFontColor(color);
-            }}
-            setParentIgnoreOutsideClick={setIgnoreOutsideClick}
-            closeIgnoreRef={pickerCloseIgnoreRef}
-          />
-      </div>
+        </div>
+      </Show>
+      <Show when={renderColorPicker()}>
+        <div
+          class="absolute -left-10 z-40 w-112 shadow-lg rounded-xl bg-gray-200 transition-transform transform duration-300"
+          classList={{
+            "scale-0": !visibleColorPicker(),
+          }}
+        >
+          <ColorPicker
+              class="w-full h-full text-gray-600"
+              color={localColor()}
+              isOpen={openColorPicker()}
+              colorStrFormat="hsl"
+              setColor={(color) => {
+                applyFontColor(color);
+              }}
+              onClose={() => {
+                setIgnoreOutsideClick(true);
+              }}
+              handleClose={() => {
+                setOpenColorPicker(false)
+              }}
+              ignoreClick={globalCursorAction()}
+              closeIgnoreRef={pickerCloseIgnoreRef}
+            />
+        </div>
+      </Show>
     </div>
   );
 };

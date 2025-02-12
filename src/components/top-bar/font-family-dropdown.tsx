@@ -2,6 +2,7 @@ import { createSignal, createMemo, For, Show, onMount, onCleanup, batch, createE
 import Scrollable from "../scrollable";
 import { fontList } from "../../consts/font";
 import { globalCursorAction } from "../../store/action";
+import { useAnimationShow } from "../../hooks/use-animation-show";
 
 export interface FontFamilyDropdownProps {
   class?: string;
@@ -16,6 +17,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   const [query, setQuery] = createSignal("");
   const [isOpen, setIsOpen] = createSignal(false);
   const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
+  const { render, visible } = useAnimationShow(isOpen);
 
   let modalRef: HTMLDivElement | undefined
   let downRef: HTMLDivElement | undefined
@@ -198,53 +200,55 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
         </div>
       </div>
 
-      <div 
-        class="absolute w-80 z-20 bg-gray-700 shadow-lg rounded-bl-xl transition-all transform duration-300"
-        classList={{
-          "max-h-[20rem]": isOpen(),
-          "max-h-0": !isOpen(),
-        }}
-        ref={modalRef}>
-        <Scrollable 
-          class="[&::-webkit-scrollbar]:w-1.5 w-full z-20 transition-all transform duration-300"
+      <Show when={render()}>
+        <div
+          class="absolute w-80 z-20 bg-gray-700 shadow-lg rounded-bl-xl transition-all transform duration-300"
           classList={{
-            "max-h-[20rem]": isOpen(),
-            "max-h-0": !isOpen(),
+            "max-h-[20rem]": visible(),
+            "max-h-0": !visible(),
           }}
-        >
-          <div 
-            class="w-full transition-all transform duration-300"
+          ref={modalRef}>
+          <Scrollable 
+            class="[&::-webkit-scrollbar]:w-1.5 w-full z-20 transition-all duration-300"
             classList={{
               "max-h-[20rem]": isOpen(),
               "max-h-0": !isOpen(),
             }}
           >
-            <For each={filteredFonts()} fallback={
-              <div class="p-2 text-white">
-                No font found for "{query()}"
-              </div>
-            }>
-              {(font) => (
-                <div 
-                  class="p-2 flex items-center justify-start hover:bg-gray-400 my-2"
-                  classList={{
-                    "cursor-pointer": !globalCursorAction(),
-                  }}
-                  onClick={() => applyFontFamily(font)}
-                >
-                  <div class="pl-[0.1rem] h-[0.9em] bg-white" />
-                  <div
-                    class="ml-2"
-                    style={{ "font-family": font }}
-                  >
-                    {font}
-                  </div>
+            <div 
+              class="w-full transition-all duration-300 max-h-[19rem]"
+              classList={{
+                "opacity-100": isOpen(),
+                "opacity-0": !isOpen(),
+              }}
+            >
+              <For each={filteredFonts()} fallback={
+                <div class="p-2 text-white">
+                  No font found for "{query()}"
                 </div>
-              )}
-            </For>
-          </div>
-        </Scrollable>
-      </div>
+              }>
+                {(font) => (
+                  <div 
+                    class="p-2 flex items-center justify-start hover:bg-gray-400 my-2"
+                    classList={{
+                      "cursor-pointer": !globalCursorAction(),
+                    }}
+                    onClick={() => applyFontFamily(font)}
+                  >
+                    <div class="pl-[0.1rem] h-[0.9em] bg-white" />
+                    <div
+                      class="ml-2"
+                      style={{ "font-family": font }}
+                    >
+                      {font}
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Scrollable>
+        </div>
+      </Show>
     </div>
   );
 };

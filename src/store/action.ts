@@ -7,7 +7,7 @@ export const [detailOpen, setDetailOpen] = createSignal(false);
 export const [currentStyle, setCurrentStyle] = createSignal<{
     style: NullableFlexibleTextStyles,
     selectType: "cursor" | "range" | "none",
-    from: "textArea" | "topBar" | "none",
+    from: "topBar" | "none" | string,
 }>({
     style: DefaultFlexibleTextStyles,
     selectType: "cursor",

@@ -1,4 +1,4 @@
-import { BlockType, BlockTypes } from "../types/block";
+import { BlockType, BlockTypes } from "../../types/block";
 
 export const TextZonePrefixes = {
     BLOCK_PARAGRAPH: "block-paragraph:",
