@@ -1,14 +1,23 @@
 import { AArrowDown, AArrowUp, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
 import StyleButton from "./style-button";
-import { setStyle } from "../../editor/text/set-style";
-import { batch, createEffect, createSignal } from "solid-js";
-import { colorEqualsOptions, defaultFontColor, defaultHighlightColor, fontList, fontSizeList, lightnessRateList, minFontSize, representFontColorList, representHighlightColorList } from "../style/const";
-import { currentStyle, setCurrentStyle } from "../../editor/text/store";
+import { setCursorForStyle } from "../../editor/text/set-style";
+import { 
+    colorEqualsOptions, 
+    defaultFontColor, 
+    defaultHighlightColor, 
+    fontList, 
+    fontSizeList, 
+    lightnessRateList, 
+    minFontSize, 
+    representFontColorList, 
+    representHighlightColorList 
+} from "../style/const";
 import { globalCursorAction } from "../../store/action";
 import ColorDropdown from "../../operator/color/color-dropdown";
 import { FontColorDropdownButton, HighlightColorDropdownButton } from "../../operator/color/component/dropdown-button";
 import FontFamilyDropdown from "../../operator/font-family/font-family-dropdown";
 import FontSizeDropdown from "../../operator/font-size/font-size-dropdown";
+import { useSetStyle } from "../../editor/text/hooks/use-set-style";
 
 interface TopBarParagraphProps {
     class?: string;
@@ -16,221 +25,20 @@ interface TopBarParagraphProps {
 }
 
 export default function TopBarParagraph(props: TopBarParagraphProps) {
-    const [localStyle, setLocalStyle] = createSignal(currentStyle().style);
+    const {
+        localStyle,
+        updateFontSize,
+        setFontFamily,
+        setFontSize,
+        switchBold,
+        switchItalic,
+        switchUnderline,
+        switchStrikeThrough,
+        setHighlightColor,
+        setFontColor,
+    } = useSetStyle();
 
-    createEffect(() => {
-        const newStyle = currentStyle()
-        switch (newStyle.from) {
-            case "topBar":
-                // setLocalStyle(newStyle.style);
-                // break;
-            case "none":
-                setLocalStyle(newStyle.style);
-                break;
-            default:
-                setLocalStyle(newStyle.style);
-                break;
-        }
-    });
-
-    const setFontFamily = (fontFamily: string) => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                return {
-                    style: {
-                        ...prev.style,
-                        fontFamily: fontFamily,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                }
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    fontFamily: fontFamily,
-                };
-            });
-        });
-    }
-
-    const setFontSize = (fontSize: number) => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                return {
-                    style: {
-                        ...prev.style,
-                        fontSize: fontSize,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                }
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    fontSize: fontSize,
-                };
-            });
-        });
-    }
-
-    const changeFontSizes = (size: number) => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.fontSize === undefined) return prev;
-                const newSize = prev.style.fontSize + size;
-                return {
-                    style: {
-                        ...prev.style,
-                        fontSize: newSize <= minFontSize ? minFontSize : newSize,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                if (prev.fontSize === undefined) return prev;
-                const newSize = prev.fontSize + size;
-                return {
-                    ...prev,
-                    fontSize: newSize <= minFontSize ? minFontSize : newSize,
-                };
-            });
-        });
-    }
-
-    const setSwitchBold = () => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.bold === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        bold: !prev.style.bold,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    bold: !prev.bold,
-                };
-            });
-        });
-    }
-
-    const setSwitchItalic = () => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.italic === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        italic: !prev.style.italic,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    italic: !prev.italic,
-                };
-            });
-        });
-    }
-
-    const setSwitchUnderline = () => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.underline === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        underline: !prev.style.underline,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    underline: !prev.underline,
-                };
-            });
-        });
-    }
-
-    const setSwitchStrikeThrough = () => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.strikeThrough === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        strikeThrough: !prev.style.strikeThrough,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    strikeThrough: !prev.strikeThrough,
-                };
-            });
-        });
-    }
-
-    const setFontColor = (color: string) => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.fontColor === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        fontColor: color,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    fontColor: color,
-                };
-            });
-        });
-    }
-
-    const setHighlightColor = (color: string) => {
-        batch(() => {
-            setCurrentStyle(prev => {
-                if (prev.style.highlightColor === undefined) return prev;
-                return {
-                    style: {
-                        ...prev.style,
-                        highlightColor: color,
-                    },
-                    selectType: "cursor",
-                    from: "topBar",
-                };
-            });
-            setLocalStyle(prev => {
-                return {
-                    ...prev,
-                    highlightColor: color,
-                };
-            });
-        });
-    }
+    const fontSizeValidator = (size: number) => (size <= minFontSize) ? minFontSize : size;
 
     return (
         <div 
@@ -243,7 +51,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 class="bg-gray-600 rounded-l" 
                 fontFamily={localStyle().fontFamily}
                 setFontFamily={setFontFamily}
-                onToggle={() => setStyle(() => {})}
+                onToggle={setCursorForStyle}
                 fontList={fontList}
                 ignoreClick={globalCursorAction()}
             />
@@ -251,7 +59,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 class="bg-gray-600 rounded-r border-l border-gray-400 ml-0.5" 
                 fontSize={localStyle().fontSize}
                 setFontSize={setFontSize}
-                onToggle={() => setStyle(() => {})}
+                onToggle={setCursorForStyle}
                 fontSizeList={fontSizeList}
                 fontSizeRange={{
                     min: minFontSize,
@@ -262,7 +70,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400 p-0.5">
                 <StyleButton 
                     Icon={<AArrowUp size={24} />} 
-                    onClick={(_) => setStyle(() => changeFontSizes(1))}
+                    onClick={(_) => updateFontSize(1, fontSizeValidator)}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -271,7 +79,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<AArrowDown size={18} />}
-                    onClick={(_) => setStyle(() => changeFontSizes(-1))}
+                    onClick={(_) => updateFontSize(-1, fontSizeValidator)}
                     class="mx-1 rounded w-7 h-7 flex items-end justify-center pb-1"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -280,7 +88,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Bold size={20} />} 
-                    onClick={(_) => setStyle(setSwitchBold)}
+                    onClick={switchBold}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -290,7 +98,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Italic size={20} />} 
-                    onClick={(_) => setStyle(setSwitchItalic)}
+                    onClick={switchItalic}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -300,7 +108,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Underline size={20} />}
-                    onClick={(_) => setStyle(setSwitchUnderline)}
+                    onClick={switchUnderline}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -310,7 +118,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton
                     Icon={<Strikethrough size={20} />}
-                    onClick={(_) => setStyle(setSwitchStrikeThrough)}
+                    onClick={switchStrikeThrough}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -323,8 +131,8 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 <ColorDropdown
                     class="w-full h-full" 
                     validColor={localStyle().highlightColor || ""}
-                    setValidColor={(color: string) => setStyle(() => setHighlightColor(color))}
-                    onToggle={() => setStyle(() => {})}
+                    setValidColor={setHighlightColor}
+                    onToggle={setCursorForStyle}
                     defaultColor={defaultHighlightColor}
                     lightnessRateList={lightnessRateList}
                     representColorList={representHighlightColorList}
@@ -342,8 +150,8 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 <ColorDropdown
                     class="w-full h-full" 
                     validColor={localStyle().fontColor || ""}
-                    setValidColor={(color: string) => setStyle(() => setFontColor(color))}
-                    onToggle={() => setStyle(() => {})}
+                    setValidColor={setFontColor}
+                    onToggle={setCursorForStyle}
                     defaultColor={defaultFontColor}
                     lightnessRateList={lightnessRateList}
                     representColorList={representFontColorList}

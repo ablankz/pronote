@@ -1,10 +1,6 @@
-import { batch } from "solid-js";
 import { editableTextCursor, editableTextRef } from "./store";
 
-export const setStyle = (styleChange: () => void) => {
-    batch(() => {
-        styleChange();
-    });
+export const setCursorForStyle = () => {
     if (editableTextRef()) {
         const cursor = editableTextCursor()
         if (cursor === null) return;

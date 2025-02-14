@@ -59,6 +59,8 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   createEffect(() => {
     if (props.fontFamily !== "" && props.fontFamily !== undefined) {
       setQuery(props.fontFamily)
+    } else {
+      setQuery("")
     }
   });
 
