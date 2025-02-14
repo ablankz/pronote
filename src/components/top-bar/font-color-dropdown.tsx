@@ -334,8 +334,8 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
               ignoreClick={globalCursorAction()}
               closeIgnoreRef={pickerCloseIgnoreRef}
               precisions={{
-                alpha: 4,
-                displayAlpha: 4,
+                alpha: 2,
+                displayAlpha: 2,
               }}
             />
         </div>

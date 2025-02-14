@@ -12,8 +12,8 @@ import {
   resolveColor
 } from "../../utils/color";
 import { ChevronsRight, Highlighter, Palette } from "lucide-solid";
-import ColorPicker from "../color-picker";
 import { useAnimationShow } from "../../hooks/use-animation-show";
+import ColorPicker from "../../operator/color/color-picker";
 
 export interface HighlightColorDropdownProps {
     class?: string;
@@ -318,15 +318,24 @@ const HighlightColorDropdown = (props: HighlightColorDropdownProps) => {
         >
           <ColorPicker
               class="w-full h-full text-gray-600"
-              handleClose={() => {
-                setOpenColorPicker(false)
-              }}
               color={localColor()}
+              isOpen={openColorPicker()}
+              colorStrFormat="hsl"
               setColor={(color) => {
                 applyHighlightColor(color);
               }}
-              setParentIgnoreOutsideClick={setIgnoreOutsideClick}
+              onClose={() => {
+                setIgnoreOutsideClick(true);
+              }}
+              handleClose={() => {
+                setOpenColorPicker(false)
+              }}
+              ignoreClick={globalCursorAction()}
               closeIgnoreRef={pickerCloseIgnoreRef}
+              precisions={{
+                alpha: 2,
+                displayAlpha: 2,
+              }}
             />
         </div>
       </Show>
