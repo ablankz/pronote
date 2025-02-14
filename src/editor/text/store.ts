@@ -1,5 +1,7 @@
 import { createSignal } from "solid-js";
-import { DefaultFlexibleTextStyles, NullableFlexibleTextStyles } from "./type";
+import { NullableFlexibleTextStyles } from "../../renderer/text/types";
+import { DefaultFlexibleTextStyles } from "../../renderer/text/const";
+import { Range } from "../../types/generic";
 
 export const [textRefMap, setTextRefMap] = createSignal<Map<string, HTMLDivElement>>(new Map());
 

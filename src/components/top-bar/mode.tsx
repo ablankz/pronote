@@ -8,10 +8,10 @@ interface TopBarModeProps {
 }
 
 export default function TopBarMode(props: TopBarModeProps) {
-  const [isPreview, setIsPreview] = createSignal(false);
-  const [isSplit, setIsSplit] = createSignal(false);
+    const [isPreview, setIsPreview] = createSignal(false);
+    const [isSplit, setIsSplit] = createSignal(false);
 
-  return (
+    return (
         <div class="flex items-center h-[2rem]">
             <div
             class="p-2 mx-0.5 rounded"
@@ -41,5 +41,5 @@ export default function TopBarMode(props: TopBarModeProps) {
             <SquareSplitHorizontal size={24} />
             </div>
         </div>  
-  );
+    );
 }

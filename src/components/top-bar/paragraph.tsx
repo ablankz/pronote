@@ -1,13 +1,14 @@
 import { AArrowDown, AArrowUp, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
-import { currentStyle, globalCursorAction, setCurrentStyle } from "../../store/action";
-import FontFamilyDropdown from "./font-family-dropdown";
-import FontSizeDropdown from "./font-size-dropdown";
 import StyleButton from "./style-button";
-import { minFontSize } from "../../consts/font";
-import FontColorDropdown from "./font-color-dropdown";
-import HighlightColorDropdown from "./highlight-color-dropdown";
-import { setStyle } from "../../utils/set-style";
+import { setStyle } from "../../editor/text/set-style";
 import { batch, createEffect, createSignal } from "solid-js";
+import { colorEqualsOptions, defaultFontColor, defaultHighlightColor, fontList, fontSizeList, lightnessRateList, minFontSize, representFontColorList, representHighlightColorList } from "../style/const";
+import { currentStyle, setCurrentStyle } from "../../editor/text/store";
+import { globalCursorAction } from "../../store/action";
+import ColorDropdown from "../../operator/color/color-dropdown";
+import { FontColorDropdownButton, HighlightColorDropdownButton } from "../../operator/color/component/dropdown-button";
+import FontFamilyDropdown from "../../operator/font-family/font-family-dropdown";
+import FontSizeDropdown from "../../operator/font-size/font-size-dropdown";
 
 interface TopBarParagraphProps {
     class?: string;
@@ -238,17 +239,24 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             ...(props.classList || {}),
             }}
         >
-            <FontFamilyDropdown 
+            <FontFamilyDropdown
                 class="bg-gray-600 rounded-l" 
                 fontFamily={localStyle().fontFamily}
                 setFontFamily={setFontFamily}
                 onToggle={() => setStyle(() => {})}
+                fontList={fontList}
+                ignoreClick={globalCursorAction()}
             />
-            <FontSizeDropdown 
+            <FontSizeDropdown
                 class="bg-gray-600 rounded-r border-l border-gray-400 ml-0.5" 
                 fontSize={localStyle().fontSize}
                 setFontSize={setFontSize}
                 onToggle={() => setStyle(() => {})}
+                fontSizeList={fontSizeList}
+                fontSizeRange={{
+                    min: minFontSize,
+                }}
+                ignoreClick={globalCursorAction()}
             />
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400 p-0.5">
@@ -312,20 +320,40 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             </div>
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
-                <HighlightColorDropdown
-                        class="w-full h-full" 
-                        highlightColor={localStyle().highlightColor || ""}
-                        setHighlightColor={(color: string) => setStyle(() => setHighlightColor(color))}
-                        onToggle={() => setStyle(() => {})}
-                    />
+                <ColorDropdown
+                    class="w-full h-full" 
+                    validColor={localStyle().highlightColor || ""}
+                    setValidColor={(color: string) => setStyle(() => setHighlightColor(color))}
+                    onToggle={() => setStyle(() => {})}
+                    defaultColor={defaultHighlightColor}
+                    lightnessRateList={lightnessRateList}
+                    representColorList={representHighlightColorList}
+                    ignoreClick={globalCursorAction()}
+                    colorEqualsOptions={colorEqualsOptions}
+                    title="Select a highlight color"
+                    pickerDisplay={{
+                        title: "Highlight Color",
+                    }}
+                    dropOpenButton={HighlightColorDropdownButton}
+                />
             </div>
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">
-                <FontColorDropdown
+                <ColorDropdown
                     class="w-full h-full" 
-                    fontColor={localStyle().fontColor || ""}
-                    setFontColor={(color: string) => setStyle(() => setFontColor(color))}
+                    validColor={localStyle().fontColor || ""}
+                    setValidColor={(color: string) => setStyle(() => setFontColor(color))}
                     onToggle={() => setStyle(() => {})}
+                    defaultColor={defaultFontColor}
+                    lightnessRateList={lightnessRateList}
+                    representColorList={representFontColorList}
+                    ignoreClick={globalCursorAction()}
+                    colorEqualsOptions={colorEqualsOptions}
+                    title="Select a font color"
+                    pickerDisplay={{
+                        title: "Font Color",
+                    }}
+                    dropOpenButton={FontColorDropdownButton}
                 />
             </div>
         </div>    

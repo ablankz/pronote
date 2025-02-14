@@ -1,4 +1,4 @@
-import { LightnessColor } from "../utils/color";
+import { ColorEqualOptions, LightnessColor } from "../../operator/color/types";
 
 export const fontList = [
   "Arial", "Verdana", "Times New Roman", "Courier New", "Georgia",
@@ -58,3 +58,12 @@ export const representHighlightColorList = [
 
 // yellow
 export const defaultHighlightColor = "hsla(60, 100%, 50%, 1)";
+
+export const colorEqualsOptions: ColorEqualOptions = { 
+    base: "hsl", 
+    rgbTolerance: 0, 
+    hueTolerance: 10, 
+    saturationTolerance: 5,
+    lightnessTolerance: 5,
+    alphaTolerance: 1,
+};

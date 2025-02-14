@@ -1,10 +1,9 @@
 import { createSignal, For, Show, onMount, onCleanup, batch, createEffect } from "solid-js";
-import Scrollable from "../scrollable";
-import { fontSizeList, minFontSize } from "../../consts/font";
-import { globalCursorAction } from "../../store/action";
 import { pxPrecision } from "../../consts/size";
 import { fixFloatingPoint } from "../../utils/calc";
 import { useAnimationShow } from "../../hooks/use-animation-show";
+import Scrollable from "../../components/scrollable";
+import { defaultFontSizeList, defaultMinFontSize } from "./const";
 
 export interface FontSizeDropdownProps {
   class?: string;
@@ -13,6 +12,12 @@ export interface FontSizeDropdownProps {
   onToggle?: (open: boolean) => void;
   fontSize?: number;
   setFontSize: (fontSize: number) => void;
+  fontSizeList?: number[];
+  fontSizeRange?: {
+    min?: number;
+    max?: number;
+  }
+  ignoreClick?: boolean;
 }
 
 const FontSizeDropdown = (props: FontSizeDropdownProps) => {
@@ -25,7 +30,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction() || !isOpen()) return;
+      if (props.ignoreClick || !isOpen()) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -40,7 +45,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (globalCursorAction() || !isOpen()) return;
+    if (props.ignoreClick || !isOpen()) return;
 
     if (e.key === "Escape") {
       setIsOpen(false);
@@ -82,8 +87,11 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
     } 
     if (size !== undefined) {
       size = fixFloatingPoint(size, 10 ** pxPrecision) / 10 ** pxPrecision;
-      if (size < minFontSize) {
-        size = minFontSize;
+      if (size < (props.fontSizeRange?.min || defaultMinFontSize)) {
+        size = props.fontSizeRange?.min || defaultMinFontSize;
+      }
+      if (size > (props.fontSizeRange?.max || defaultMinFontSize)) {
+        size = props.fontSizeRange?.max || defaultMinFontSize;
       }
       applyFontSize(size);
     }
@@ -114,7 +122,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
         <div
           class="h-full w-8 flex items-center justify-center bg-gray-600 rounded-r border-l border-gray-500"
           classList={{
-            "cursor-pointer": !globalCursorAction(),
+            "cursor-pointer": props.ignoreClick === false,
           }}
           onClick={() => {
             batch(() => {
@@ -158,26 +166,26 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
             "max-h-0": !visible(),
           }}
           ref={modalRef}>
-          <Scrollable 
+          <Scrollable
             class="[&::-webkit-scrollbar]:w-1 w-full z-20 transition-all transform duration-600"
             classList={{
-              "max-h-[32rem]": isOpen(),
-              "max-h-0": !isOpen(),
+              "max-h-[32rem]": visible(),
+              "max-h-0": !visible(),
             }}
           >
             <div 
               class="w-full transition-all transform duration-300"
               classList={{
-                "max-h-[32rem]": isOpen(),
-                "max-h-0": !isOpen(),
+                "max-h-[32rem]": visible(),
+                "max-h-0": !visible(),
               }}
             >
-              <For each={fontSizeList}>
+              <For each={props.fontSizeList || defaultFontSizeList}>
                 {(size) => (
                   <div 
                     class="py-1 px-3 flex items-center justify-start hover:bg-gray-400 my-1"
                     classList={{
-                      "cursor-pointer": !globalCursorAction(),
+                      "cursor-pointer": props.ignoreClick === false,
                     }}
                     onClick={() => applyFontSize(size)}
                   >

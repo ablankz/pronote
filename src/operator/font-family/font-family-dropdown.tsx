@@ -1,8 +1,7 @@
 import { createSignal, createMemo, For, Show, onMount, onCleanup, batch, createEffect } from "solid-js";
-import Scrollable from "../scrollable";
-import { fontList } from "../../consts/font";
-import { globalCursorAction } from "../../store/action";
 import { useAnimationShow } from "../../hooks/use-animation-show";
+import Scrollable from "../../components/scrollable";
+import { defaultFontList } from "./const";
 
 export interface FontFamilyDropdownProps {
   class?: string;
@@ -11,6 +10,8 @@ export interface FontFamilyDropdownProps {
   onToggle?: (open: boolean) => void;
   fontFamily?: string;
   setFontFamily: (fontFamily: string) => void;
+  fontList?: string[];
+  ignoreClick?: boolean;
 }
 
 const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
@@ -24,7 +25,8 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   let inputRef: HTMLInputElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction() || !isOpen()) return;
+      if (!isOpen()) return;
+      if (props.ignoreClick) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -40,13 +42,13 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
 
   const filteredFonts = createMemo(() => {
     if (!!props.fontFamily) {
-      return fontList
+      return props.fontList || defaultFontList;
     }
-    return fontList.filter((font) => font.toLowerCase().includes(query().toLowerCase()))
+    return (props.fontList || defaultFontList).filter((font) => font.toLowerCase().includes(query().toLowerCase()))
   });
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (globalCursorAction() || !isOpen()) return;
+    if (props.ignoreClick || !isOpen()) return;
 
     if (e.key === "Escape") {
       setIsOpen(false);
@@ -133,7 +135,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
             <div 
               class="absolute right-0 top-0 h-full w-8 flex items-center justify-center"
               classList={{
-                "cursor-pointer": !globalCursorAction(),
+                "cursor-pointer": props.ignoreClick === false,
               }}
               onClick={() => {
                 batch(() => {
@@ -164,7 +166,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
         <div
           class="h-full w-8 flex items-center justify-center bg-gray-600 rounded-r border-l border-gray-500"
           classList={{
-            "cursor-pointer": !globalCursorAction(),
+            "cursor-pointer": props.ignoreClick === false,
           }}
           onClick={() => {
             batch(() => {
@@ -208,18 +210,18 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
             "max-h-0": !visible(),
           }}
           ref={modalRef}>
-          <Scrollable 
+          <Scrollable
             class="[&::-webkit-scrollbar]:w-1.5 w-full z-20 transition-all duration-300"
             classList={{
-              "max-h-[20rem]": isOpen(),
-              "max-h-0": !isOpen(),
+              "max-h-[20rem]": visible(),
+              "max-h-0": !visible(),
             }}
           >
             <div 
               class="w-full transition-all duration-300 max-h-[19rem]"
               classList={{
-                "opacity-100": isOpen(),
-                "opacity-0": !isOpen(),
+                "opacity-100": visible(),
+                "opacity-0": !visible(),
               }}
             >
               <For each={filteredFonts()} fallback={
@@ -231,7 +233,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
                   <div 
                     class="p-2 flex items-center justify-start hover:bg-gray-400 my-2"
                     classList={{
-                      "cursor-pointer": !globalCursorAction(),
+                      "cursor-pointer": props.ignoreClick === false,
                     }}
                     onClick={() => applyFontFamily(font)}
                   >

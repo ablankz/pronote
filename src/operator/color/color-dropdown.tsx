@@ -1,42 +1,58 @@
-import { createSignal, For, Show, onMount, onCleanup, batch, createEffect } from "solid-js";
-import Scrollable from "../scrollable";
-import { defaultFontColor, lightnessRateList, representFontColorList } from "../../consts/font";
-import { globalCursorAction } from "../../store/action";
+import { createSignal, For, Show, onMount, onCleanup, batch, createEffect, Component } from "solid-js";
+import { attachColor, colorToString, equalsColor, resolveColor } from "./utils";
 import { 
-  attachColor, 
   Color, 
   ColorEqualOptions, 
-  ColorOptions, 
-  colorToString, 
-  equalsColor, 
-  resolveColor
-} from "../../utils/color";
+  ColorHSLOptions,
+  LightnessColor, 
+} from "./types";
 import { ChevronsRight, Palette } from "lucide-solid";
-import ColorPicker from "../../operator/color/color-picker";
+import ColorPicker from "./color-picker";
 import { useAnimationShow } from "../../hooks/use-animation-show";
+import Scrollable from "../../components/scrollable";
+import { defaultColor, defaultColorDropdownTitle, defaultColorEqualsOptions, defaultLightnessRateList, defaultRepresentColorList } from "./const";
+import { ColorDropdownButtonProps, FontColorDropdownButton } from "./component/dropdown-button";
+import { ColorPickerApplyButtonProps } from "./component/apply-button";
 
-export interface FontColorDropdownProps {
+export interface ColorDropdownProps {
+    title?: string;
+    automaticColorLabel?: string;
+    pickerLinkLabel?: string;
+    pickerDisplay?: {
+      title?: string;
+      alphaLabel?: string;
+      customApplyButton?: Component<ColorPickerApplyButtonProps>;
+    }
     class?: string;
     classList?: Record<string, boolean>;
-    onFontColorChange?: (fontColor: string) => void;
+    onColorChange?: (color: string) => void;
     onToggle?: (isOpen: boolean) => void;
-    fontColor: string;
-    setFontColor: (fontColor: string) => void;
+    validColor: string;
+    setValidColor: (color: string) => void;
+    defaultColor?: string;
+    lightnessRateList?: LightnessColor[];
+    representColorList?: string[];
+    ignoreClick?: boolean;
+    colorEqualsOptions?: ColorEqualOptions;
+    precisions?: {
+      alpha?: number;
+      rgb?: number;
+      hue?: number;
+      saturation?: number;
+      lightness?: number;
+      displayAlpha?: number;
+      displayRGB?: number;
+      displayHue?: number;
+      displaySaturation?: number;
+      displayLightness?: number;
+  };
+  dropOpenButton?: Component<ColorDropdownButtonProps>;
 }
 
-const colorEqualsOptions: ColorEqualOptions = { 
-    base: "hsl", 
-    rgbTolerance: 0, 
-    hueTolerance: 10, 
-    saturationTolerance: 5,
-    lightnessTolerance: 5,
-    alphaTolerance: 1,
-};
-
-const FontColorDropdown = (props: FontColorDropdownProps) => {
+const ColorDropdown = (props: ColorDropdownProps) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
-  const [localColor, setLocalColor] = createSignal(defaultFontColor);
+  const [localColor, setLocalColor] = createSignal(props.defaultColor || defaultColor);
   const [colorValue, setColorValue] = createSignal<Color | null>(null);
   const [openColorPicker, setOpenColorPicker] = createSignal(false);
 
@@ -44,9 +60,9 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
   const { render: renderColorPicker, visible: visibleColorPicker } = useAnimationShow(openColorPicker);
 
   createEffect(() => {
-    if (props.fontColor !== "") {
-      setLocalColor(props.fontColor);
-      setColorValue(resolveColor(props.fontColor));
+    if (props.validColor !== "") {
+      setLocalColor(props.validColor);
+      setColorValue(resolveColor(props.validColor));
     } else {
       setColorValue(null);
     }
@@ -57,7 +73,8 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
   let pickerCloseIgnoreRef: HTMLDivElement | undefined
 
   const handleClickOutside = (event: MouseEvent) => {
-      if (globalCursorAction() || openColorPicker() || !isOpen()) return;
+      if (openColorPicker() || !isOpen()) return;
+      if (props.ignoreClick) return;
 
       if (ignoreOutsideClick()) {
           setIgnoreOutsideClick(false);
@@ -90,13 +107,15 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
     document.removeEventListener("click", handleClickOutside);
   });
 
-  const applyFontColor = (color: string) => {
+  const applyColor = (color: string) => {
     batch(() => {
-      if (props.fontColor === color) return;
-      props.setFontColor(color);
-      if (props.onFontColorChange) props.onFontColorChange(color);
+      if (props.validColor === color) return;
+      props.setValidColor(color);
+      if (props.onColorChange) props.onColorChange(color);
     });
   };
+
+  const DropdownOpenButton = props.dropOpenButton || FontColorDropdownButton;
 
   return (
     <div 
@@ -109,35 +128,32 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
         <div 
           class="relative w-6 h-6 pb-1 flex items-center justify-center text-white font-bold rounded"
           classList={{
-            "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
-            "bg-gray-600": props.fontColor === "",
-            "bg-gray-700 border border-gray-400": props.fontColor !== "",
+            "cursor-pointer hover:bg-gray-500": props.ignoreClick === false,
+            "bg-gray-600": props.validColor === "",
+            "bg-gray-700 border border-gray-400": props.validColor !== "",
           }}
           onClick={() => {
             batch(() => {
-              if (props.fontColor === "" && localColor() === "") return;
-              if (props.fontColor === "") {
-                props.setFontColor(localColor());
-                if (props.onFontColorChange) props.onFontColorChange(localColor());
+              if (props.validColor === "" && localColor() === "") return;
+              if (props.validColor === "") {
+                props.setValidColor(localColor());
+                if (props.onColorChange) props.onColorChange(localColor());
                 setIgnoreOutsideClick(true);
               } else {
-                props.setFontColor("");
-                if (props.onFontColorChange) props.onFontColorChange("");
+                props.setValidColor("");
+                if (props.onColorChange) props.onColorChange("");
                 setIgnoreOutsideClick(true);
               }
             });
           }}
         >
-          A
-          <div 
-            class="absolute bottom-0.5 mx-0.5 left-0 right-0 h-1 bg-gray-500"
-            style={{ "background-color": localColor() === "" ? "var(--color-gray-500)" : localColor() }}
-          />
+          <DropdownOpenButton isOpen={isOpen()} colorStr={localColor()} />
+          
         </div>
         <div
           class="h-full w-4 flex items-center justify-center bg-gray-600 rounded-r border-gray-500"
           classList={{
-            "cursor-pointer": !globalCursorAction(),
+            "cursor-pointer": props.ignoreClick === false,
           }}
           onClick={() => {
             batch(() => {
@@ -187,30 +203,30 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
                 "scale-0": !isOpen(),
               }}
             >
-                Font Color
+                {props.title || defaultColorDropdownTitle}
             </div>
           <div
             class="w-full flex items-center justify-start px-5 my-1 py-2 transition-transform transform duration-300"
             classList={{
-              "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
+              "cursor-pointer hover:bg-gray-600": props.ignoreClick === false,
               "bg-gray-600": localColor() === "",
               "scale-0": !isOpen(),
             }}
             onClick={() => {
-              if (props.fontColor === "" && localColor() === "") return;
+              if (props.validColor === "" && localColor() === "") return;
               setLocalColor("");
-              props.setFontColor("");
-              if (props.onFontColorChange) props.onFontColorChange("");
+              props.setValidColor("");
+              if (props.onColorChange) props.onColorChange("");
               setIgnoreOutsideClick(true);
             }}
           >
-            <ColorBox color="#000000" size={20} />
+            <ColorBox color="#000000" size={20} ignoreClick={props.ignoreClick} />
             <span class="text-white ml-2">
-              Automatic Color
+              {props.automaticColorLabel || "Automatic Color"}
             </span>
           </div>
           <div class="h-[1px] bg-gray-200 w-7/8" />
-          <Scrollable 
+          <Scrollable
             class="[&::-webkit-scrollbar]:w-1 w-full z-20 transition-all transform duration-300"
             classList={{
               "max-h-[calc(20rem-2px)]": isOpen(),
@@ -226,7 +242,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
             >
               {/* Present Color */}
               <div class="mt-2 flex items-center justify-center px-3 space-x-2 h-[1rem]">
-                <For each={representFontColorList}>
+                <For each={props.representColorList || defaultRepresentColorList}>
                   {(color) => {
                     const colorVal = resolveColor(color);
                     const colorStr = colorToString(colorVal, "hsl");
@@ -234,28 +250,28 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
                     <div
                       class="w-[20px] h-[20px] flex items-center justify-center rounded"
                       classList={{
-                        "cursor-pointer hover:bg-black hover:w-[22px] hover:h-[22px]": !globalCursorAction(),
-                        "outline-2": colorValue() !== null && equalsColor(colorValue()!, colorVal, colorEqualsOptions),
+                        "cursor-pointer hover:bg-black hover:w-[22px] hover:h-[22px]": props.ignoreClick === false,
+                        "outline-2": colorValue() !== null && equalsColor(colorValue()!, colorVal, props.colorEqualsOptions || defaultColorEqualsOptions),
                       }}
                       onClick={() => {
-                        applyFontColor(colorStr);
+                        applyColor(colorStr);
                         setIgnoreOutsideClick(true);
                       }}
                     >
-                      <ColorBox color={colorStr} size={20} />
+                      <ColorBox color={colorStr} size={20} ignoreClick={props.ignoreClick} />
                     </div>
                   )}}
                 </For>
               </div>
               {/* Grid Color List */}
               <div class="mt-4 flex flex-col items-center justify-around px-3">
-                <For each={lightnessRateList}>
+                <For each={props.lightnessRateList || defaultLightnessRateList}>
                   {(rate) => (
                     <div class="flex items-center w-full my-1 justify-center px-3 space-x-2 h-6">
-                      <For each={representFontColorList}>
+                      <For each={props.representColorList || defaultRepresentColorList}>
                         {(color) => {
                           let colorVal = resolveColor(color);
-                          const options: ColorOptions = {
+                          const options: ColorHSLOptions = {
                             lightness: {
                               isLight: rate.isLight,
                               rate: rate.rate,
@@ -267,15 +283,15 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
                           <div
                             class="w-[20px] h-[20px] flex items-center justify-center rounded"
                             classList={{
-                              "cursor-pointer hover:bg-black hover:w-[22px] hover:h-[22px]": !globalCursorAction(),
-                              "outline-2": colorValue() !== null && equalsColor(colorValue()!, colorVal, colorEqualsOptions),
+                              "cursor-pointer hover:bg-black hover:w-[22px] hover:h-[22px]": props.ignoreClick === false,
+                              "outline-2": colorValue() !== null && equalsColor(colorValue()!, colorVal, props.colorEqualsOptions || defaultColorEqualsOptions),
                             }}
                             onClick={() => {
-                              applyFontColor(colorStr);
+                              applyColor(colorStr);
                               setIgnoreOutsideClick(true);
                             }}
                           >
-                            <ColorBox color={colorStr} size={20} />
+                            <ColorBox color={colorStr} size={20} ignoreClick={props.ignoreClick} />
                           </div>
                         )}}
                       </For>
@@ -290,7 +306,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
           <div 
             class="my-4 flex items-center h-[2rem] w-full justify-between px-5 py-2 transition-transform transform duration-300"
             classList={{
-              "cursor-pointer hover:bg-gray-600": !globalCursorAction(),
+              "cursor-pointer hover:bg-gray-600": props.ignoreClick === false,
               // "scale-0": !isOpen(),
             }}
             ref={pickerCloseIgnoreRef}
@@ -301,7 +317,7 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
               <div class="flex items-center justify-start">
                 <Palette size={20} />
                 <span class="text-white ml-2">
-                  Custom Color
+                  {props.pickerLinkLabel || "Custom Color"}
                 </span>
               </div>
               <div>
@@ -319,11 +335,13 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
         >
           <ColorPicker
               class="w-full h-full text-gray-600"
+              title={props.pickerDisplay?.title}
+              alphaLabel={props.pickerDisplay?.alphaLabel}
               color={localColor()}
               isOpen={openColorPicker()}
               colorStrFormat="hsl"
               setColor={(color) => {
-                applyFontColor(color);
+                applyColor(color);
               }}
               onClose={() => {
                 setIgnoreOutsideClick(true);
@@ -331,12 +349,10 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
               handleClose={() => {
                 setOpenColorPicker(false)
               }}
-              ignoreClick={globalCursorAction()}
+              ignoreClick={props.ignoreClick}
               closeIgnoreRef={pickerCloseIgnoreRef}
-              precisions={{
-                alpha: 2,
-                displayAlpha: 2,
-              }}
+              precisions={props.precisions}
+              customApplyButton={props.pickerDisplay?.customApplyButton}
             />
         </div>
       </Show>
@@ -344,14 +360,14 @@ const FontColorDropdown = (props: FontColorDropdownProps) => {
   );
 };
 
-export default FontColorDropdown;
+export default ColorDropdown;
 
-export const ColorBox = (props: { color: string, size: number }) => {
+export const ColorBox = (props: { color: string, size: number, ignoreClick?: boolean }) => {
   return (
     <div 
       class="rounded border border-gray-400 transition-transform transform duration-[50ms]" 
       classList={{
-        "hover:scale-80": !globalCursorAction(),
+        "hover:scale-80": props.ignoreClick === false,
       }}
       style={{ 
         "background-color": props.color,

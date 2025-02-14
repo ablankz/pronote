@@ -38,11 +38,14 @@ import {
     hslLightnessFixedPrecision, 
     hslSaturationFixedPrecision, 
     rgbFixedPrecision,
-    DefaultHSLColor, 
+    DefaultHSLColor,
+    defaultColorPickerTitle, 
 } from "./const";
 import { preValidateNumInput } from "../../hooks/use-pre-validate-num-input";
 
 interface ColorPickerProps {
+    title?: string;
+    alphaLabel?: string;
     class?: string;
     classList?: Record<string, boolean>;
     defaultColor?: Color;
@@ -574,7 +577,7 @@ const ColorPicker = (props: ColorPickerProps) => {
                 <span 
                     class="text-xl font-bold font-sans"
                 >
-                    Custom Color Picker
+                    {props.title || defaultColorPickerTitle}
                 </span>
                 <div class="absolute top-2 right-2 p-1">
                     <div 
@@ -880,7 +883,7 @@ const ColorPicker = (props: ColorPickerProps) => {
                             }}
                         />
                         <div class="text-center text-xs font-light">
-                            Alpha
+                            {props.alphaLabel || "alpha"}
                         </div>
                     </div>
                 </div>

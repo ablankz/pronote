@@ -1,6 +1,6 @@
-import { TextZonePrefixes } from "../../../renderer/text/id";
-import { FlexibleText } from "../../../types/text";
-import FlexibleTextRenderer from "../../../renderer/text/text-renderer";
+import { TextZonePrefixes } from "../../../editor/text/id";
+import FlexibleTextEditor from "../../../editor/text/text-editor";
+import { FlexibleText } from "../../../renderer/text/types";
 
 interface ParagraphContentProps {
     componentId: string;
@@ -32,7 +32,7 @@ export default function ParagraphContent(props: ParagraphContentProps) {
         ...(props.classList || {}),
         }}
     >
-      <FlexibleTextRenderer 
+      <FlexibleTextEditor
         textZoneId={TextZonePrefixes.BLOCK_PARAGRAPH + props.componentId}
         defaultBlock={sampleTextBlock}
         onUpdate={(block) => console.log(block)}

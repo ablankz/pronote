@@ -1,16 +1,16 @@
 import { Show } from "solid-js/web";
 import Scrollable from "../components/scrollable";
-import { batch, createEffect, createMemo, createSignal, For, getOwner, onCleanup, onMount } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
 import BlockComponent from "../components/block/component";
 import BlockPlus from "../components/block/plus";
 import ComponentAdder from "../components/block/component-adder";
-import { globalCursorAction, setCurrentStyle, setDetailOpen, setEditableTextCursor, setEditableTextRef } from "../store/action";
+import { globalCursorAction, setDetailOpen } from "../store/action";
 import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
 import { AddOpenState } from "../types/state";
 import { selectedBlock, setSelectedBlock } from "../store/select";
-import { textRefMap } from "../store/ref";
-import { TextValidComponentsMap } from "../renderer/text/id";
-import { DefaultFlexibleTextStyles } from "../types/text";
+import { TextValidComponentsMap } from "../editor/text/id";
+import { setCurrentStyle, setEditableTextCursor, setEditableTextRef, textRefMap } from "../editor/text/store";
+import { DefaultFlexibleTextStyles } from "../renderer/text/const";
 
 interface internalBlock {
     internalId: string;

@@ -1,5 +1,5 @@
 import { batch } from "solid-js";
-import { editableTextCursor, editableTextRef } from "../store/action";
+import { editableTextCursor, editableTextRef } from "./store";
 
 export const setStyle = (styleChange: () => void) => {
     batch(() => {

@@ -1,30 +1,9 @@
-export const FlexibleTextTypes = {
-    TEXT: "text"
-} as const;
-
-export type FlexibleTextType = typeof FlexibleTextTypes[keyof typeof FlexibleTextTypes];
-
-export interface FlexibleTextStyles {
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-    strikeThrough: boolean;
-    fontColor: string;
-    highlightColor: string;
-    fontSize: number;
-    fontFamily: string;
-}
-
-export interface NullableFlexibleTextStyles {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-    strikeThrough?: boolean;
-    fontColor?: string;
-    highlightColor?: string;
-    fontSize?: number;
-    fontFamily?: string;
-}
+import { DefaultFlexibleTextStyles } from "./const";
+import { 
+    FlexibleText, 
+    FlexibleTextStyles, 
+    NullableFlexibleTextStyles 
+} from "./types";
 
 export function nullableToDefaultFlexibleTextStyles(
     nullable: NullableFlexibleTextStyles | undefined,
@@ -39,17 +18,6 @@ export function nullableToDefaultFlexibleTextStyles(
         fontSize: nullable?.fontSize ?? DefaultFlexibleTextStyles.fontSize,
         fontFamily: nullable?.fontFamily ?? DefaultFlexibleTextStyles.fontFamily,
     };
-}
-
-export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
-    bold: false,
-    italic: false,
-    underline: false,
-    strikeThrough: false,
-    fontColor: "",
-    highlightColor: "",
-    fontSize: 16,
-    fontFamily: "Arial",
 }
 
 export function equalFlexibleTextStyles(a: FlexibleTextStyles, b: FlexibleTextStyles): boolean {
@@ -79,13 +47,6 @@ export function equalOverrideFlexibleTextStyles(
     };
 }
 
-export interface FlexibleText extends FlexibleTextStyles {
-    type: FlexibleTextType;
-    id: string;
-    version: number;
-    text: string;
-}
-
 export function extractStyleFromFlexibleText(flexibleText: FlexibleText): FlexibleTextStyles {
     return {
         bold: flexibleText.bold,
@@ -98,20 +59,3 @@ export function extractStyleFromFlexibleText(flexibleText: FlexibleText): Flexib
         fontFamily: flexibleText.fontFamily,
     };
 }
-
-export const DefaultFlexibleText = (id: string): FlexibleText => {
-    return {
-        type: FlexibleTextTypes.TEXT,
-        id: id,
-        version: 0,
-        text: "",
-        bold: DefaultFlexibleTextStyles.bold,
-        italic: DefaultFlexibleTextStyles.italic,
-        underline: DefaultFlexibleTextStyles.underline,
-        strikeThrough: DefaultFlexibleTextStyles.strikeThrough,
-        fontColor: DefaultFlexibleTextStyles.fontColor,
-        highlightColor: DefaultFlexibleTextStyles.highlightColor,
-        fontSize: DefaultFlexibleTextStyles.fontSize,
-        fontFamily: DefaultFlexibleTextStyles.fontFamily,
-    };
-};
