@@ -4,59 +4,29 @@ import {
     hslHueFixedPrecision,  
     hslLightnessFixedPrecision, 
     hslSaturationFixedPrecision, 
-    rgbFixedPrecision
+    rgbFixedPrecision,
 } from "./const";
+import { 
+    ColorHSLOptions, 
+    ColorOptions,
+    RGBColor,
+    HSLColor,
+    Color,
+    HSLColorEqualOptions,
+    RGBColorEqualOptions,
+    ColorEqualOptions,
+} from "./types";
 
-export interface LightnessColor {
-    isLight: boolean;
-    rate: number; // 0.0 ~ 1.0
-}
-
-export interface ColorOptions {
-    lightness?: LightnessColor;
-    saturation?: number; // 0 ~ 100
-    alpha?: number; // 0 ~ 1
-}
-
-export interface RGBColor {
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-}
-
-export interface RGBColorEqualOptions {
-    tolerance?: number;
-    alphaTolerance?: number;
-}
-
-export function equalsRGBColor(a: RGBColor, b: RGBColor, options: RGBColorEqualOptions = { tolerance: 0, alphaTolerance: 0 }): boolean {
+export function equalsRGBColor(
+    a: RGBColor, 
+    b: RGBColor, 
+    options: RGBColorEqualOptions = { tolerance: 0, alphaTolerance: 0 }
+): boolean {
     const tolerance = options.tolerance || 0;
     return Math.abs(a.r - b.r) <= tolerance 
     && Math.abs(a.g - b.g) <= tolerance 
     && Math.abs(a.b - b.b) <= tolerance 
     && Math.abs(a.a - b.a) <= (options.alphaTolerance || 0);
-}
-
-export interface HSLColor {
-    h: number;
-    s: number;
-    l: number;
-    a: number;
-}
-
-export const DefaultHSLColor: HSLColor = {
-    h: 0,
-    s: 0,
-    l: 0,
-    a: 1,
-};
-
-export interface HSLColorEqualOptions {
-    hueTolerance?: number;
-    saturationTolerance?: number;
-    lightnessTolerance?: number;
-    alphaTolerance?: number;
 }
 
 export function equalsHSLColor(
@@ -73,13 +43,6 @@ export function equalsHSLColor(
     && Math.abs(a.s - b.s) <= (options.saturationTolerance || 0)
     && Math.abs(a.l - b.l) <= (options.lightnessTolerance || 0)
     && Math.abs(a.a - b.a) <= (options.alphaTolerance || 0);
-}
-
-export interface Color {
-    type: "rgb" | "hsl" | "hex";
-    hex?: string;
-    rgb?: RGBColor;
-    hsl?: HSLColor;
 }
 
 export function wrapColor(color: Color | RGBColor | HSLColor | string): Color {
@@ -102,15 +65,6 @@ export function wrapColor(color: Color | RGBColor | HSLColor | string): Color {
         throw new Error("Invalid color object");
     }
     throw new Error("Invalid color");
-}
-
-export interface ColorEqualOptions {
-    base: "rgb" | "hsl" | "hex";
-    rgbTolerance?: number;
-    hueTolerance?: number;
-    saturationTolerance?: number;
-    lightnessTolerance?: number;
-    alphaTolerance?: number;
 }
 
 export function equalsColor(
@@ -149,19 +103,24 @@ export function equalsColor(
     }
 }
 
-export function rgbToHsl(rgb: RGBColor): HSLColor {
+export function rgbToHsl(
+    rgb: RGBColor,
+    options: ColorOptions = {},
+): HSLColor {
     const r = rgb.r / 255;
     const g = rgb.g / 255;
     const b = rgb.b / 255;
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const l = (max + min) / 2;
+    const rgbPrecision = options.rgbPrecision || rgbFixedPrecision;
+    const alphaPrecision = options.alphaPrecision || alphaFixedPrecision;
     if (max === min) {
         return { 
             h: 0, 
             s: 0, 
-            l: fixFloatingPoint(l * 100, 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-            a: fixFloatingPoint(rgb.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
+            l: fixFloatingPoint(l * 100, 10 ** rgbPrecision) / 10 ** rgbPrecision,
+            a: fixFloatingPoint(rgb.a, 10 ** alphaPrecision) / 10 ** alphaPrecision
         };
     }
     const d = max - min;
@@ -179,11 +138,14 @@ export function rgbToHsl(rgb: RGBColor): HSLColor {
             break;
     }
     h *= 60;
+    const hslHuePrecision = options.hslHuePrecision || hslHueFixedPrecision;
+    const hslSaturationPrecision = options.hslSaturationPrecision || hslSaturationFixedPrecision;
+    const hslLightnessPrecision = options.hslLightnessPrecision || hslLightnessFixedPrecision;
     return { 
-        h: fixFloatingPoint(h, 10 ** hslHueFixedPrecision) / 10 ** hslHueFixedPrecision,
-        s: fixFloatingPoint(s * 100, 10 ** hslSaturationFixedPrecision) / 10 ** hslSaturationFixedPrecision,
-        l: fixFloatingPoint(l * 100, 10 ** hslLightnessFixedPrecision) / 10 ** hslLightnessFixedPrecision,
-        a: fixFloatingPoint(rgb.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
+        h: fixFloatingPoint(h, 10 ** hslHuePrecision) / 10 ** hslHuePrecision,
+        s: fixFloatingPoint(s * 100, 10 ** hslSaturationPrecision) / 10 ** hslSaturationPrecision,
+        l: fixFloatingPoint(l * 100, 10 ** hslLightnessPrecision) / 10 ** hslLightnessPrecision,
+        a: fixFloatingPoint(rgb.a, 10 ** alphaPrecision) / 10 ** alphaPrecision
     };
 }
 
@@ -196,7 +158,10 @@ export function hueToRgb(p: number, q: number, t: number): number {
     return p;
 }
 
-export function hslToRgb(hsl: HSLColor): RGBColor {
+export function hslToRgb(
+    hsl: HSLColor,
+    options: ColorOptions = {},
+): RGBColor {
     const h = hsl.h / 360;
     const s = hsl.s / 100;
     const l = hsl.l / 100;
@@ -205,11 +170,13 @@ export function hslToRgb(hsl: HSLColor): RGBColor {
     const r = hueToRgb(p, q, h + 1 / 3);
     const g = hueToRgb(p, q, h);
     const b = hueToRgb(p, q, h - 1 / 3);
+    const rgbPrecision = options.rgbPrecision || rgbFixedPrecision;
+    const alphaPrecision = options.alphaPrecision || alphaFixedPrecision;
     return { 
-        r: fixFloatingPoint(r * 255, 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        g: fixFloatingPoint(g * 255, 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        b: fixFloatingPoint(b * 255, 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
+        r: fixFloatingPoint(r * 255, 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        g: fixFloatingPoint(g * 255, 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        b: fixFloatingPoint(b * 255, 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        a: fixFloatingPoint(hsl.a, 10 ** alphaPrecision) / 10 ** alphaPrecision
     };
 }
 
@@ -222,50 +189,71 @@ export function rgbToHex(rgb: RGBColor): string {
     return `#${hex(rgb.r)}${hex(rgb.g)}${hex(rgb.b)}`;
 }
 
-export function hslToHex(hsl: HSLColor): string {
-    return rgbToHex(hslToRgb(hsl));
+export function hslToHex(
+    hsl: HSLColor,
+    options: ColorOptions = {},
+): string {
+    return rgbToHex(hslToRgb(hsl, options));
 }
 
-export function hexToRgb(hex: string, alpha: number = 1): RGBColor {
+export function hexToRgb(
+    hex: string, 
+    alpha: number = 1,
+    options: ColorOptions = {},
+): RGBColor {
     const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
     if (!match) {
         throw new Error(`Invalid hex color: ${hex}`);
     }
+    const rgbPrecision = options.rgbPrecision || rgbFixedPrecision;
+    const alphaPrecision = options.alphaPrecision || alphaFixedPrecision;
     return {
-        r: fixFloatingPoint(parseInt(match[1], 16), 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        g: fixFloatingPoint(parseInt(match[2], 16), 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        b: fixFloatingPoint(parseInt(match[3], 16), 10 ** rgbFixedPrecision) / 10 ** rgbFixedPrecision,
-        a: fixFloatingPoint(alpha, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
+        r: fixFloatingPoint(parseInt(match[1], 16), 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        g: fixFloatingPoint(parseInt(match[2], 16), 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        b: fixFloatingPoint(parseInt(match[3], 16), 10 ** rgbPrecision) / 10 ** rgbPrecision,
+        a: fixFloatingPoint(alpha, 10 ** alphaPrecision) / 10 ** alphaPrecision
     };
 }
 
-export function hexToHsl(hex: string, alpha: number = 1): HSLColor {
-    return rgbToHsl(hexToRgb(hex, alpha));
+export function hexToHsl(
+    hex: string, 
+    alpha: number = 1,
+    options: ColorOptions = {},
+): HSLColor {
+    return rgbToHsl(hexToRgb(hex, alpha, options), options);
 }
 
-export function calcRgbColor(rgb: RGBColor, options: ColorOptions): string {
-    const hsl = rgbToHsl(rgb);
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function calcRgbColor(
+    rgb: RGBColor, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): string {
+    const hsl = rgbToHsl(rgb, options);
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
 
-export function attachRgbColor(rgb: RGBColor, options: ColorOptions): RGBColor {
-    const hsl = rgbToHsl(rgb);
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function attachRgbColor(
+    rgb: RGBColor, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): RGBColor {
+    const hsl = rgbToHsl(rgb, options);
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return { 
         r: color.r, 
         g: color.g, 
@@ -274,27 +262,35 @@ export function attachRgbColor(rgb: RGBColor, options: ColorOptions): RGBColor {
     };
 }
 
-export function calcHslColor(hsl: HSLColor, options: ColorOptions): string {
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function calcHslColor(
+    hsl: HSLColor, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): string {
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
 
-export function attachHslColor(hsl: HSLColor, options: ColorOptions): HSLColor {
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function attachHslColor(
+    hsl: HSLColor, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): HSLColor {
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return { 
         h: hsl.h, 
         s: hsl.s, 
@@ -303,31 +299,39 @@ export function attachHslColor(hsl: HSLColor, options: ColorOptions): HSLColor {
     };
 }
 
-export function calcHexColor(hex: string, options: ColorOptions): string {
-    const rgb = hexToRgb(hex);
-    const hsl = rgbToHsl(rgb);
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function calcHexColor(
+    hex: string, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): string {
+    const rgb = hexToRgb(hex, hslOptions.alpha || 1, options);
+    const hsl = rgbToHsl(rgb, options);
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
 
-export function attachHexColor(hex: string, options: ColorOptions): string {
-    const rgb = hexToRgb(hex);
-    const hsl = rgbToHsl(rgb);
-    const lightness = options.lightness || { isLight: false, rate: 0 };
+export function attachHexColor(
+    hex: string, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): string {
+    const rgb = hexToRgb(hex, hslOptions.alpha || 1, options);
+    const hsl = rgbToHsl(rgb, options);
+    const lightness = hslOptions.lightness || { isLight: false, rate: 0 };
     const color = hslToRgb({
         h: hsl.h,
-        s: options.saturation === undefined ? hsl.s : options.saturation,
+        s: hslOptions.saturation === undefined ? hsl.s : hslOptions.saturation,
         l: lightness.isLight ? hsl.l + (100 - hsl.l) * lightness.rate : hsl.l - hsl.l * lightness.rate,
         a: fixFloatingPoint(hsl.a, 10 ** alphaFixedPrecision) / 10 ** alphaFixedPrecision
-    });
-    const alpha = options.alpha !== undefined ? options.alpha : color.a;
+    }, options);
+    const alpha = hslOptions.alpha !== undefined ? hslOptions.alpha : color.a;
     return rgbToHex({ 
         r: color.r, 
         g: color.g, 
@@ -336,29 +340,37 @@ export function attachHexColor(hex: string, options: ColorOptions): string {
     });
 }
 
-export function calcColor(baseColor: Color, options: ColorOptions): string {
-    const { lightness, saturation, alpha } = options;
+export function calcColor(
+    baseColor: Color, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): string {
+    const { lightness, saturation, alpha } = hslOptions;
     switch (baseColor.type) {
         case "rgb":
             if (!baseColor.rgb) {
                 throw new Error("Invalid color type: rgb");
             }
-            return calcRgbColor(baseColor.rgb, { lightness, saturation, alpha });
+            return calcRgbColor(baseColor.rgb, { lightness, saturation, alpha }, options);
         case "hsl":
             if (!baseColor.hsl) {
                 throw new Error("Invalid color type: hsl");
             }
-            return calcHslColor(baseColor.hsl, { lightness, saturation, alpha });
+            return calcHslColor(baseColor.hsl, { lightness, saturation, alpha }, options);
         case "hex":
             if (!baseColor.hex) {
                 throw new Error("Invalid color type: hex");
             }
-            return calcHexColor(baseColor.hex, { lightness, saturation, alpha });
+            return calcHexColor(baseColor.hex, { lightness, saturation, alpha }, options);
     }
 }
 
-export function attachColor(baseColor: Color, options: ColorOptions): Color {
-    const { lightness, saturation, alpha } = options;
+export function attachColor(
+    baseColor: Color, 
+    hslOptions: ColorHSLOptions,
+    options: ColorOptions = {},
+): Color {
+    const { lightness, saturation, alpha } = hslOptions;
     switch (baseColor.type) {
         case "rgb":
             if (!baseColor.rgb) {
@@ -366,7 +378,7 @@ export function attachColor(baseColor: Color, options: ColorOptions): Color {
             }
             return { 
                 type: "rgb", 
-                rgb: attachRgbColor(baseColor.rgb, { lightness, saturation, alpha }),
+                rgb: attachRgbColor(baseColor.rgb, { lightness, saturation, alpha }, options),
             };
         case "hsl":
             if (!baseColor.hsl) {
@@ -374,7 +386,7 @@ export function attachColor(baseColor: Color, options: ColorOptions): Color {
             }
             return { 
                 type: "hsl", 
-                hsl: attachHslColor(baseColor.hsl, { lightness, saturation, alpha }),
+                hsl: attachHslColor(baseColor.hsl, { lightness, saturation, alpha }, options),
             };
         case "hex":
             if (!baseColor.hex) {
@@ -382,7 +394,7 @@ export function attachColor(baseColor: Color, options: ColorOptions): Color {
             }
             return { 
                 type: "hex", 
-                hex: attachHexColor(baseColor.hex, { lightness, saturation, alpha }),
+                hex: attachHexColor(baseColor.hex, { lightness, saturation, alpha }, options),
             };
     }
 }
@@ -421,7 +433,10 @@ export function resolveHSLColor(color: string): HSLColor {
     };
 }
 
-export function colorToRGB(color: Color): RGBColor {
+export function colorToRGB(
+    color: Color,
+    options: ColorOptions = {},
+): RGBColor {
     switch (color.type) {
         case "rgb":
             if (!color.rgb) {
@@ -432,22 +447,25 @@ export function colorToRGB(color: Color): RGBColor {
             if (!color.hsl) {
                 throw new Error("Invalid color type: hsl");
             }
-            return hslToRgb(color.hsl);
+            return hslToRgb(color.hsl, options);
         case "hex":
             if (!color.hex) {
                 throw new Error("Invalid color type: hex");
             }
-            return hexToRgb(color.hex);
+            return hexToRgb(color.hex, 1, options);
     }
 }
 
-export function colorToHSL(color: Color): HSLColor {
+export function colorToHSL(
+    color: Color,
+    options: ColorOptions = {},
+): HSLColor {
     switch (color.type) {
         case "rgb":
             if (!color.rgb) {
                 throw new Error("Invalid color type: rgb");
             }
-            return rgbToHsl(color.rgb);
+            return rgbToHsl(color.rgb, options);
         case "hsl":
             if (!color.hsl) {
                 throw new Error("Invalid color type: hsl");
@@ -457,11 +475,14 @@ export function colorToHSL(color: Color): HSLColor {
             if (!color.hex) {
                 throw new Error("Invalid color type: hex");
             }
-            return rgbToHsl(hexToRgb(color.hex));
+            return rgbToHsl(hexToRgb(color.hex, 1, options), options);
     }
 }
 
-export function colorToHex(color: Color): string {
+export function colorToHex(
+    color: Color,
+    options: ColorOptions = {},
+): string {
     switch (color.type) {
         case "rgb":
             if (!color.rgb) {
@@ -472,7 +493,7 @@ export function colorToHex(color: Color): string {
             if (!color.hsl) {
                 throw new Error("Invalid color type: hsl");
             }
-            return hslToHex(color.hsl);
+            return hslToHex(color.hsl, options);
         case "hex":
             if (!color.hex) {
                 throw new Error("Invalid color type: hex");
@@ -522,14 +543,15 @@ export function colorToString(
     color: Color | RGBColor | HSLColor | string, 
     to: "rgb" | "hsl" | "hex" | null = null,
     alpha: number = 1,
+    options: ColorOptions = {},
 ): string {
     switch (typeof color) {
         case "string":
             switch (to) {
                 case "rgb":
-                    return colorToString(hexToRgb(color, alpha), "rgb");
+                    return colorToString(hexToRgb(color, alpha, options), "rgb");
                 case "hsl":
-                    return colorToString(hexToHsl(color, alpha), "hsl");
+                    return colorToString(hexToHsl(color, alpha, options), "hsl");
                 case "hex":
                 default:
                     return color;
@@ -562,7 +584,7 @@ export function colorToString(
             if ("r" in color && "g" in color && "b" in color) {
                 switch (to) {
                     case "hsl":
-                        return colorToString(rgbToHsl(color), "hsl");
+                        return colorToString(rgbToHsl(color, options), "hsl");
                     case "hex":
                         return colorToString(rgbToHex(color), "hex");
                     case "rgb":
@@ -573,9 +595,9 @@ export function colorToString(
             if ("h" in color && "s" in color && "l" in color) {
                 switch (to) {
                     case "rgb":
-                        return colorToString(hslToRgb(color), "rgb");
+                        return colorToString(hslToRgb(color, options), "rgb");
                     case "hex":
-                        return colorToString(hslToHex(color), "hex");
+                        return colorToString(hslToHex(color, options), "hex");
                     case "hsl":
                     default:
                         return `hsla(${color.h}, ${color.s}%, ${color.l}%, ${color.a})`;

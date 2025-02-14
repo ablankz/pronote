@@ -1,4 +1,4 @@
-import { HSLColor, RGBColor } from "../utils";
+import { HSLColor, RGBColor } from "../types";
 
 export interface ColorPickerApplyButtonProps{
     colorHSL: HSLColor | null,

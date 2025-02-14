@@ -1,3 +1,12 @@
+import { HSLColor } from "./types";
+
+export const DefaultHSLColor: HSLColor = {
+    h: 0,
+    s: 0,
+    l: 0,
+    a: 1,
+};
+
 export const rgbFixedPrecision = 4;
 export const hslHueFixedPrecision = 4;
 export const hslSaturationFixedPrecision = 4;

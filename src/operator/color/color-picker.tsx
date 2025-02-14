@@ -10,18 +10,19 @@ import {
     onCleanup,
 } from "solid-js";
 import { 
-    Color, 
     colorToHSL, 
     colorToString, 
-    DefaultHSLColor, 
     hexToHsl, 
-    HSLColor, 
     hslToHex, 
     hslToRgb, 
     resolveColor,
-    RGBColor,
     rgbToHsl,
 } from "./utils";
+import {
+    Color,
+    HSLColor, 
+    RGBColor,
+} from "./types";
 import { ChevronsUpDown } from "lucide-solid";
 import { fixFloatingPoint } from "../../utils/calc";
 import { ColorPickerApplyButtonProps, DefaultColorPickerApplyButton } from "./component/apply-button";
@@ -33,9 +34,13 @@ import {
     displayLightnessPrecision, 
     displayRGBPrecision, 
     displaySaturationPrecision, 
+    hslHueFixedPrecision, 
     hslLightnessFixedPrecision, 
-    hslSaturationFixedPrecision 
+    hslSaturationFixedPrecision, 
+    rgbFixedPrecision,
+    DefaultHSLColor, 
 } from "./const";
+import { preValidateNumInput } from "../../hooks/use-pre-validate-num-input";
 
 interface ColorPickerProps {
     class?: string;
@@ -68,14 +73,19 @@ interface ColorPickerProps {
 }
 
 const hexValidChars = "0123456789abcdefABCDEF";
-const rgbValidChars = "0123456789";
-const hueValidChars = "0123456789";
-const saturationValidChars = "0123456789";
-const lightnessValidChars = "0123456789";
 
 const ColorPicker = (props: ColorPickerProps) => {
+    const colorOptions = createMemo(() => {
+        return {
+            rgbPrecision: props.precisions?.rgb || rgbFixedPrecision,
+            hslHuePrecision: props.precisions?.hue || hslHueFixedPrecision,
+            hslSaturationPrecision: props.precisions?.saturation || hslSaturationFixedPrecision,
+            hslLightnessPrecision: props.precisions?.lightness || hslLightnessFixedPrecision,
+            alphaPrecision: props.precisions?.alpha || alphaFixedPrecision,
+        };
+    });
     const [selectedColor, setSelectedColor] = createSignal<HSLColor>(
-        props.defaultColor ? colorToHSL(props.defaultColor) : DefaultHSLColor
+        props.defaultColor ? colorToHSL(props.defaultColor, colorOptions()) : DefaultHSLColor
     );
     const [selectedColorFrom, setSelectedColorFrom] = createSignal<"init" | "canvas" | "input" | "prop">("init");
     const [displayStyle, setDisplayStyle] = createSignal<"hex" | "rgb" | "hsl">(props.defaultDisplayStyle || "rgb");
@@ -105,14 +115,14 @@ const ColorPicker = (props: ColorPickerProps) => {
         if (!props.color) {
             batch(() => {
                 setSelectedColor(
-                    props.defaultColor ? colorToHSL(props.defaultColor) : DefaultHSLColor
+                    props.defaultColor ? colorToHSL(props.defaultColor, colorOptions()) : DefaultHSLColor
                 );
                 setSelectedColorFrom("prop");
             });
             return;
         }
         const color = resolveColor(props.color);
-        const hsl = colorToHSL(color);
+        const hsl = colorToHSL(color, colorOptions());
         batch(() => {
             setSelectedColor(hsl);
             setSelectedColorFrom("prop");
@@ -122,7 +132,7 @@ const ColorPicker = (props: ColorPickerProps) => {
     // Set the color prop for display when the selected color changes
     const colorStr = createMemo(() => {
         if (!selectedColor()) return null;
-        return colorToString(selectedColor()!, props.colorStrFormat);
+        return colorToString(selectedColor()!, props.colorStrFormat, selectedColor().a, colorOptions());
     });
 
     createEffect(() => {
@@ -135,7 +145,7 @@ const ColorPicker = (props: ColorPickerProps) => {
             return false;
         });
         if (batch) return;
-        setHexStr(hslToHex(selectedColor()!).replace("#", "").toUpperCase());
+        setHexStr(hslToHex(selectedColor()!, colorOptions()).replace("#", "").toUpperCase());
     });
 
     createEffect(() => {
@@ -150,7 +160,8 @@ const ColorPicker = (props: ColorPickerProps) => {
         if (needBatch) return;
         const alpha = selectedColor()!.a;
         batch(() => {
-            setAlphaStr((fixFloatingPoint(alpha, 10 ** displayAlphaPrecision) / 10 ** displayAlphaPrecision).toString());
+            setAlphaStr((fixFloatingPoint(alpha, 10 ** (props.precisions?.displayAlpha || displayAlphaPrecision)) / 10 ** 
+                (props.precisions?.displayAlpha || displayAlphaPrecision)).toString());
             setRgbColor(prev => {
                 if (!prev) return null;
                 return {
@@ -171,12 +182,12 @@ const ColorPicker = (props: ColorPickerProps) => {
             return false;
         });
         if (needBatch) return;
-        const rgb = hslToRgb(selectedColor()!);
+        const rgb = hslToRgb(selectedColor()!, colorOptions());
         batch(() => {
             setRgbStr({
-                r: (fixFloatingPoint(rgb.r, 10 ** displayRGBPrecision) / 10 ** displayRGBPrecision).toString(),
-                g: (fixFloatingPoint(rgb.g, 10 ** displayRGBPrecision) / 10 ** displayRGBPrecision).toString(),
-                b: (fixFloatingPoint(rgb.b, 10 ** displayRGBPrecision) / 10 ** displayRGBPrecision).toString(),
+                r: (fixFloatingPoint(rgb.r, 10 ** (props.precisions?.displayRGB || displayRGBPrecision)) / 10 ** (props.precisions?.displayRGB || displayRGBPrecision)).toString(),
+                g: (fixFloatingPoint(rgb.g, 10 ** (props.precisions?.displayRGB || displayRGBPrecision)) / 10 ** (props.precisions?.displayRGB || displayRGBPrecision)).toString(),
+                b: (fixFloatingPoint(rgb.b, 10 ** (props.precisions?.displayRGB || displayRGBPrecision)) / 10 ** (props.precisions?.displayRGB || displayRGBPrecision)).toString(),
             });
             setRgbColor(prev => {
                 if (!prev) return null;
@@ -202,9 +213,9 @@ const ColorPicker = (props: ColorPickerProps) => {
         if (needBatch) return;
         batch(() => {
             setHslStr({
-                h: (fixFloatingPoint(selectedColor()!.h, 10 ** displayHuePrecision) / 10 ** displayHuePrecision).toString(),
-                s: (fixFloatingPoint(selectedColor()!.s, 10 ** displaySaturationPrecision) / 10 ** displaySaturationPrecision).toString(),
-                l: (fixFloatingPoint(selectedColor()!.l, 10 ** displayLightnessPrecision) / 10 ** displayLightnessPrecision).toString(),
+                h: (fixFloatingPoint(selectedColor()!.h, 10 ** (props.precisions?.displayHue || displayHuePrecision)) / 10 ** (props.precisions?.displayHue || displayHuePrecision)).toString(),
+                s: (fixFloatingPoint(selectedColor()!.s, 10 ** (props.precisions?.displaySaturation || displaySaturationPrecision)) / 10 ** (props.precisions?.displaySaturation || displaySaturationPrecision)).toString(),
+                l: (fixFloatingPoint(selectedColor()!.l, 10 ** (props.precisions?.displayLightness || displayLightnessPrecision)) / 10 ** (props.precisions?.displayLightness || displayLightnessPrecision)).toString(),
             });
         });
     });
@@ -385,7 +396,7 @@ const ColorPicker = (props: ColorPickerProps) => {
         batch(() => {
             setHexStr(newValue);
             if (newValue.length === 6) {
-                const hsl = hexToHsl("#" + newValue, selectedColor() !== null ? selectedColor()!.a : 1);
+                const hsl = hexToHsl("#" + newValue, selectedColor() !== null ? selectedColor()!.a : 1, colorOptions());
                 batch(() => {
                     setSelectedColor(hsl);
                     setSelectedColorFrom("input");
@@ -402,106 +413,50 @@ const ColorPicker = (props: ColorPickerProps) => {
         }
     };
 
-    const handelRGBBeforeInput = (e: InputEvent, rgb: "r" | "g" | "b") => {
-        if (e.inputType === "insertText" 
-            && !rgbValidChars.includes((e.data || "").toLowerCase())) {
-            e.preventDefault();
-            return;
-        }
-        if (e.inputType === "insertText") {
-            e.preventDefault();
-            const insertChar = e.data || "";
-            const insertIndex = (e.target as HTMLInputElement).selectionStart || 0;
-            const value = (e.target as HTMLInputElement).value;
-            const newValue = value.substring(0, insertIndex) + insertChar + value.substring(insertIndex);
-            const numValue = parseInt(newValue);
-            if (isNaN(numValue) || numValue < 0 || numValue > 255) {
-                return;
-            }
-            (e.target as HTMLInputElement).value = newValue;
-            (e.target as HTMLInputElement).setSelectionRange(insertIndex + 1, insertIndex + 1);
-            handleRGBInput(newValue, rgb);
-            return;
-        }
-    };
-
-    const handleRGBInput = (newValue: string, rgb: "r" | "g" | "b") => {
-        const numValue = parseInt(newValue);
-        if (isNaN(numValue) || numValue < 0 || numValue > 255) {
-            return;
-        }
-        batch(() => {
-            setRgbStr(prev => {
-                if (!prev) return null;
-                return { 
-                    ...prev, 
-                    [rgb]: newValue,
-                };
+    const handleRGBInputFactory = (rgb: "r" | "g" | "b") => {
+        return (rawValue: string, numValue: number|null) => {
+            batch(() => {
+                setRgbStr(prev => {
+                    if (!prev) return null;
+                    return { 
+                        ...prev, 
+                        [rgb]: rawValue,
+                    };
+                });
+                if (numValue === null) return;
+                setRGBBatch(true);
+                setSelectedColor(prev => {
+                    const prevRGB = hslToRgb(prev);
+                    const newRGB: RGBColor = {
+                        ...prevRGB,
+                        [rgb]: numValue,
+                    }
+                    return rgbToHsl(newRGB, colorOptions());
+                });
+                setSelectedColorFrom("input");
             });
-            setRgbColor(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    [rgb]: numValue,
-                };
-            });
-            setRGBBatch(true);
-            setSelectedColor(prev => {
-                const prevRGB = hslToRgb(prev);
-                const newRGB: RGBColor = {
-                    ...prevRGB,
-                    [rgb]: numValue,
-                }
-                return rgbToHsl(newRGB);
-            });
-            setSelectedColorFrom("input");
-        });
-    };
-
-    const handleRGBChange = (e: Event, rgb: "r" | "g" | "b") => {
-        const value = (e.target as HTMLInputElement).value;
-        const numValue = parseInt(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 255) {
-            (e.target as HTMLInputElement).value = rgbStr() !== null ? rgbStr()![rgb] : "";
         }
     }
 
-    const handleHueBeforeInput = (e: InputEvent) => {
-        if (e.inputType === "insertText" 
-            && !hueValidChars.includes((e.data || "").toLowerCase())) {
-            e.preventDefault();
-            return;
+    const calcAccurateRGBFactory = (rgb: "r" | "g" | "b") => {
+        return () => {
+            let value = rgbColor()![rgb];
+            return fixFloatingPoint(
+                value, 
+                10 ** (props.precisions?.displayRGB || displayRGBPrecision)) / 10 ** (props.precisions?.displayRGB || displayRGBPrecision);
         }
-        if (e.inputType === "insertText") {
-            e.preventDefault();
-            const insertChar = e.data || "";
-            const insertIndex = (e.target as HTMLInputElement).selectionStart || 0;
-            const value = (e.target as HTMLInputElement).value;
-            const newValue = value.substring(0, insertIndex) + insertChar + value.substring(insertIndex);
-            const numValue = parseInt(newValue);
-            if (isNaN(numValue) || numValue < 0 || numValue > 359) {
-                return;
-            }
-            (e.target as HTMLInputElement).value = newValue;
-            (e.target as HTMLInputElement).setSelectionRange(insertIndex + 1, insertIndex + 1);
-            handleHueInput(newValue);
-            return;
-        }
-    };
+    }
 
-    const handleHueInput = (newValue: string) => {
-        const numValue = parseInt(newValue);
-        if (isNaN(numValue) || numValue < 0 || numValue > 359) {
-            return;
-        }
+    const handleHueInput = (rawValue: string, numValue: number|null) => {
         batch(() => {
             setHslStr(prev => {
                 if (!prev) return null;
                 return { 
                     ...prev, 
-                    h: newValue,
+                    h: rawValue,
                 };
             });
+            if (numValue === null) return;
             setHSLBatch(true);
             setSelectedColor(prev => {
                 return { 
@@ -511,52 +466,25 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setSelectedColorFrom("input");
         });
-    };
+    }
 
-    const handleHueChange = (e: Event) => {
-        const value = (e.target as HTMLInputElement).value;
-        const numValue = parseInt(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 359) {
-            (e.target as HTMLInputElement).value = hslStr() !== null ? hslStr()!.h : "";
-        }
-    };
+    const calcAccurateHue = () => {
+        let hue = selectedColor()!.h;
+        return fixFloatingPoint(
+            hue, 
+            10 ** (props.precisions?.displayHue || displayHuePrecision)) / 10 ** (props.precisions?.displayHue || displayHuePrecision);
+    }
 
-    const handleSaturationBeforeInput = (e: InputEvent) => {
-        if (e.inputType === "insertText" 
-            && !saturationValidChars.includes((e.data || "").toLowerCase())) {
-            e.preventDefault();
-            return;
-        }
-        if (e.inputType === "insertText") {
-            e.preventDefault();
-            const insertChar = e.data || "";
-            const insertIndex = (e.target as HTMLInputElement).selectionStart || 0;
-            const value = (e.target as HTMLInputElement).value;
-            const newValue = value.substring(0, insertIndex) + insertChar + value.substring(insertIndex);
-            const numValue = parseInt(newValue);
-            if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-                return;
-            }
-            (e.target as HTMLInputElement).value = newValue;
-            (e.target as HTMLInputElement).setSelectionRange(insertIndex + 1, insertIndex + 1);
-            handleSaturationInput(newValue);
-            return;
-        }
-    };
-
-    const handleSaturationInput = (newValue: string) => {
-        const numValue = parseInt(newValue);
-        if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-            return;
-        }
+    const handleSaturationInput = (rawValue: string, numValue: number|null) => {
         batch(() => {
             setHslStr(prev => {
                 if (!prev) return null;
                 return { 
                     ...prev, 
-                    s: newValue,
+                    s: rawValue,
                 };
             });
+            if (numValue === null) return;
             setHSLBatch(true);
             setSelectedColor(prev => {
                 return { 
@@ -566,52 +494,25 @@ const ColorPicker = (props: ColorPickerProps) => {
             });
             setSelectedColorFrom("input");
         });
-    };
+    }
 
-    const handleSaturationChange = (e: Event) => {
-        const value = (e.target as HTMLInputElement).value;
-        const numValue = parseInt(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-            (e.target as HTMLInputElement).value = hslStr() !== null ? hslStr()!.s : "";
-        }
-    };
+    const calcAccurateSaturation = () => {
+        let saturation = selectedColor()!.s;
+        return fixFloatingPoint(
+            saturation, 
+            10 ** (props.precisions?.displaySaturation || displaySaturationPrecision)) / 10 ** (props.precisions?.displaySaturation || displaySaturationPrecision);
+    }
 
-    const handleLightnessBeforeInput = (e: InputEvent) => {
-        if (e.inputType === "insertText" 
-            && !lightnessValidChars.includes((e.data || "").toLowerCase())) {
-            e.preventDefault();
-            return;
-        }
-        if (e.inputType === "insertText") {
-            e.preventDefault();
-            const insertChar = e.data || "";
-            const insertIndex = (e.target as HTMLInputElement).selectionStart || 0;
-            const value = (e.target as HTMLInputElement).value;
-            const newValue = value.substring(0, insertIndex) + insertChar + value.substring(insertIndex);
-            const numValue = parseInt(newValue);
-            if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-                return;
-            }
-            (e.target as HTMLInputElement).value = newValue;
-            (e.target as HTMLInputElement).setSelectionRange(insertIndex + 1, insertIndex + 1);
-            handleLightnessInput(newValue);
-            return;
-        }
-    };
-
-    const handleLightnessInput = (newValue: string) => {
-        const numValue = parseInt(newValue);
-        if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-            return;
-        }
+    const handleLightnessInput = (rawValue: string, numValue: number|null) => {
         batch(() => {
             setHslStr(prev => {
                 if (!prev) return null;
                 return { 
                     ...prev, 
-                    l: newValue,
+                    l: rawValue,
                 };
             });
+            if (numValue === null) return;
             setHSLBatch(true);
             setSelectedColor(prev => {
                 return { 
@@ -623,47 +524,18 @@ const ColorPicker = (props: ColorPickerProps) => {
         });
     };
 
-    const handleLightnessChange = (e: Event) => {
-        const value = (e.target as HTMLInputElement).value;
-        const numValue = parseInt(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 100) {
-            (e.target as HTMLInputElement).value = hslStr() !== null ? hslStr()!.l : "";
-        }
-    };
+    const calcAccurateLightness = () => {
+        let lightness = selectedColor()!.l;
+        return fixFloatingPoint(
+            lightness, 
+            10 ** (props.precisions?.displayLightness || displayLightnessPrecision)) / 10 ** (props.precisions?.displayLightness || displayLightnessPrecision);
+    }
 
-    const handleAlphaBeforeInput = (e: InputEvent) => {
-        if (e.inputType === "insertText") {
-            e.preventDefault();
-            const insertChar = e.data || "";
-            const insertIndex = (e.target as HTMLInputElement).selectionStart || 0;
-            const value = (e.target as HTMLInputElement).value;
-            let newValue = value.substring(0, insertIndex) + insertChar + value.substring(insertIndex);
-            const numValue = parseFloat(newValue);
-            if (isNaN(numValue) || numValue < 0 || numValue > 1) {
-                return;
-            }
-            const decimalIndex = newValue.indexOf(".");
-            if (decimalIndex !== -1) {
-                const decimalLength = newValue.length - decimalIndex - 1;
-                if (decimalLength > displayAlphaPrecision) {
-                    return;
-                }
-            }
-            (e.target as HTMLInputElement).value = newValue;
-            (e.target as HTMLInputElement).setSelectionRange(insertIndex + 1, insertIndex + 1);
-            handleAlphaInput(newValue);
-            return;
-        }
-    };
-
-    const handleAlphaInput = (newValue: string) => {
-        const numValue = parseFloat(newValue);
-        if (isNaN(numValue) || numValue < 0 || numValue > 1) {
-            return;
-        }
+    const handleAlphaInput = (rawValue: string, numValue: number|null) => {
         batch(() => {
+            setAlphaStr(rawValue);            
+            if (numValue === null) return;
             setAlphaBatch(true);
-            setAlphaStr(newValue);
             setSelectedColor(prev => {
                 return { 
                     ...prev, 
@@ -681,12 +553,11 @@ const ColorPicker = (props: ColorPickerProps) => {
         });
     };
 
-    const handleAlphaChange = (e: Event) => {
-        const value = (e.target as HTMLInputElement).value;
-        const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 1) {
-            (e.target as HTMLInputElement).value = alphaStr();
-        }
+    const calcAccurateAlpha = () => {
+        let alpha = selectedColor()!.a;
+        return fixFloatingPoint(
+            alpha, 
+            10 ** (props.precisions?.displayAlpha || displayAlphaPrecision)) / 10 ** (props.precisions?.displayAlpha || displayAlphaPrecision);
     };
 
     const ApplyButtonComponent = props.customApplyButton || DefaultColorPickerApplyButton;
@@ -767,7 +638,7 @@ const ColorPicker = (props: ColorPickerProps) => {
                             onChange={hCanvasOnChange}
                             xMax={359}
                             xMin={0}
-                            xPrecision={props.precisions?.hue || displayHuePrecision}
+                            xPrecision={props.precisions?.hue || hslHueFixedPrecision}
                             canvasResetBatch={{
                                 value: recalcHCanvas(),
                                 set: setRecalcHCanvas,
@@ -841,9 +712,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                         type="text" 
                                         value={rgbStr() !== null ? rgbStr()!.r : ""}
                                         class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                        onbeforeinput={(e: InputEvent) => handelRGBBeforeInput(e, "r")}
-                                        oninput={(e: Event) => handleRGBInput((e.target as HTMLInputElement).value, "r")}
-                                        onchange={(e: Event) => handleRGBChange(e, "r")}
+                                        use:preValidateNumInput={{
+                                            validateOptions: {
+                                                precision: props.precisions?.displayRGB || displayRGBPrecision,
+                                                max: 255,
+                                                min: 0,
+                                            },
+                                            accurateValue: calcAccurateRGBFactory("r"),
+                                            handleInput: handleRGBInputFactory("r"),
+                                        }}
                                     />
                                     <div class="text-center text-xs font-light">
                                         R
@@ -854,9 +731,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                         type="text"
                                         value={rgbStr() !== null ? rgbStr()!.g : ""}
                                         class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                        onbeforeinput={(e: InputEvent) => handelRGBBeforeInput(e, "g")}
-                                        oninput={(e: Event) => handleRGBInput((e.target as HTMLInputElement).value, "g")}
-                                        onchange={(e: Event) => handleRGBChange(e, "g")}
+                                        use:preValidateNumInput={{
+                                            validateOptions: {
+                                                precision: props.precisions?.displayRGB || displayRGBPrecision,
+                                                max: 255,
+                                                min: 0,
+                                            },
+                                            accurateValue: calcAccurateRGBFactory("g"),
+                                            handleInput: handleRGBInputFactory("g"),
+                                        }}
                                     />
                                     <div class="text-center text-xs font-light">
                                         G
@@ -867,9 +750,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                         type="text"
                                         value={rgbStr() !== null ? rgbStr()!.b : ""}
                                         class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                        onbeforeinput={(e: InputEvent) => handelRGBBeforeInput(e, "b")}
-                                        oninput={(e: Event) => handleRGBInput((e.target as HTMLInputElement).value, "b")}
-                                        onchange={(e: Event) => handleRGBChange(e, "b")}
+                                        use:preValidateNumInput={{
+                                            validateOptions: {
+                                                precision: props.precisions?.displayRGB || displayRGBPrecision,
+                                                max: 255,
+                                                min: 0,
+                                            },
+                                            accurateValue: calcAccurateRGBFactory("b"),
+                                            handleInput: handleRGBInputFactory("b"),
+                                        }}
                                     />
                                     <div class="text-center text-xs font-light">
                                         B
@@ -883,9 +772,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                             type="text"
                                             value={hslStr() !== null ? hslStr()!.h : 0}
                                             class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                            onbeforeinput={(e: InputEvent) => handleHueBeforeInput(e)}
-                                            oninput={(e: Event) => handleHueInput((e.target as HTMLInputElement).value)}
-                                            onchange={handleHueChange}
+                                            use:preValidateNumInput={{
+                                                validateOptions: {
+                                                    precision: props.precisions?.displayHue || displayHuePrecision,
+                                                    max: 359,
+                                                    min: 0,
+                                                },
+                                                accurateValue: calcAccurateHue,
+                                                handleInput: handleHueInput,
+                                            }}
                                         />
                                         <span class="text-center text-xs font-light">
                                             °
@@ -901,9 +796,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                             type="text"
                                             value={hslStr() !== null ? hslStr()!.s : 0}
                                             class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                            onbeforeinput={(e: InputEvent) => handleSaturationBeforeInput(e)}
-                                            oninput={(e: Event) => handleSaturationInput((e.target as HTMLInputElement).value)}
-                                            onchange={handleSaturationChange}
+                                            use:preValidateNumInput={{
+                                                validateOptions: {
+                                                    precision: props.precisions?.displaySaturation || displaySaturationPrecision,
+                                                    max: 100,
+                                                    min: 0,
+                                                },
+                                                accurateValue: calcAccurateSaturation,
+                                                handleInput: handleSaturationInput,
+                                            }}
                                         />
                                         <span class="text-center text-xs font-light">
                                             %
@@ -919,9 +820,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                                             type="text"
                                             value={hslStr() !== null ? hslStr()!.l : 0}
                                             class="w-8 text-center outline-none border border-gray-300 rounded shadow-sm"
-                                            onbeforeinput={(e: InputEvent) => handleLightnessBeforeInput(e)}
-                                            oninput={(e: Event) => handleLightnessInput((e.target as HTMLInputElement).value)}
-                                            onchange={handleLightnessChange}
+                                            use:preValidateNumInput={{
+                                                validateOptions: {
+                                                    precision: props.precisions?.displayLightness || displayLightnessPrecision,
+                                                    max: 100,
+                                                    min: 0,
+                                                },
+                                                accurateValue: calcAccurateLightness,
+                                                handleInput: handleLightnessInput,
+                                            }}
                                         />
                                         <span class="text-center text-xs font-light">
                                             %
@@ -962,9 +869,15 @@ const ColorPicker = (props: ColorPickerProps) => {
                             type="text" 
                             value={alphaStr()}
                             class="w-full text-center outline-none border border-gray-300 rounded shadow-sm"
-                            onbeforeinput={(e: InputEvent) => handleAlphaBeforeInput(e)}
-                            oninput={(e: Event) => handleAlphaInput((e.target as HTMLInputElement).value)}
-                            onchange={handleAlphaChange}
+                            use:preValidateNumInput={{
+                                validateOptions: {
+                                    precision: props.precisions?.displayAlpha || displayAlphaPrecision,
+                                    max: 1,
+                                    min: 0,
+                                },
+                                accurateValue: calcAccurateAlpha,
+                                handleInput: handleAlphaInput,
+                            }}
                         />
                         <div class="text-center text-xs font-light">
                             Alpha
