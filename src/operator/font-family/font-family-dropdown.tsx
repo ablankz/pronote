@@ -17,7 +17,6 @@ export interface FontFamilyDropdownProps {
 const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
   const [query, setQuery] = createSignal("");
   const [isOpen, setIsOpen] = createSignal(false);
-  const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
   const { render, visible } = useAnimationShow(isOpen);
 
   let modalRef: HTMLDivElement | undefined
@@ -28,10 +27,7 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
       if (!isOpen()) return;
       if (props.ignoreClick) return;
 
-      if (ignoreOutsideClick()) {
-          setIgnoreOutsideClick(false);
-          return;
-      }
+      event.preventDefault();
 
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
@@ -66,12 +62,12 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
 
   onMount(() => {
     document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
   });
 
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeyDown);
-    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("mousedown", handleClickOutside);
   });
 
   const applyFontFamily = (font: string) => {
@@ -144,7 +140,6 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
                   setQuery("")
                   if (inputRef) inputRef.focus()
                   props.setFontFamily("")
-                  setIgnoreOutsideClick(true)
                 })
               }}
             >
@@ -177,7 +172,6 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
                 return !prev
               })
               props.onToggle?.(!isOpen())
-              setIgnoreOutsideClick(true)
             })
           }}
         >

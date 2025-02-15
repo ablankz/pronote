@@ -223,16 +223,10 @@ const ColorPicker = (props: ColorPickerProps) => {
         });
     });
 
-    let pickerRef: HTMLDivElement | undefined
-    const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
-
+    let pickerRef: HTMLDivElement | undefined;
     const handleClickOutside = (event: MouseEvent) => {
-        if (props.ignoreClick) return;
-
-        if (ignoreOutsideClick()) {
-            setIgnoreOutsideClick(false);
-            return;
-        }
+        if (props.ignoreClick || !props.isOpen) return;
+        event.preventDefault();
 
         if (pickerRef && !pickerRef.contains(event.target as Node)) {
             if (!props.closeIgnoreRef || !props.closeIgnoreRef.contains(event.target as Node)) {
@@ -250,12 +244,12 @@ const ColorPicker = (props: ColorPickerProps) => {
     };
 
     onMount(() => {
-        document.addEventListener("click", handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
         document.addEventListener("keydown", handleKeyDown);
     });
 
     onCleanup(() => {
-        document.removeEventListener("click", handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
         document.removeEventListener("keydown", handleKeyDown);
     });
 

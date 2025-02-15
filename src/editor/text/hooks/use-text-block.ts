@@ -55,6 +55,10 @@ export function editableTextBlock(
     }>({working: DefaultFlexibleTextStyles, current: DefaultFlexibleTextStyles, isNeedUpdate: false });
     const [caretColor, setCaretColor] = createSignal<string | null>(null);
     const [rangeSelected, setRangeSelected] = createSignal<rangeSelectedState | null>(null);
+    const [batchSelectCursorPos, setBatchSelectCursorPos] = createSignal<{
+        from: number,
+        to: number,
+    } | null>(null);
 
     createEffect(() => {
         if (rangeFontColorStyleUpdate() !== null) {
@@ -65,59 +69,72 @@ export function editableTextBlock(
                     || rangeFontColorStyleUpdate()?.color === undefined
                 ) return;
                 const cursor = cursorPos();
-                // console.log(cursor);
                 if (cursor === null || typeof cursor === "number") return;
                 const from = cursor.start;
                 const to = cursor.end;
                 const newBlocksMap: Map<string, FlexibleText[]> = new Map();
                 rangeSelected()!.editingContents.forEach(range => {
-                const editingBlock = textBlock()[range.blockIndex];
-                if (range!.isFullLine) {
-                    const newBlock: FlexibleText = {
-                    ...editingBlock,
-                    fontColor: rangeFontColorStyleUpdate()!.color!,
-                    version: editingBlock.version + 1,
-                    };
-                    newBlocksMap.set(editingBlock.id, [newBlock]);
-                } else {
-                    const beforeText = editingBlock.text.slice(0, range.textFrom);
-                    const rangeText = editingBlock.text.slice(range.textFrom, range.textTo);
-                    const afterText = editingBlock.text.slice(range.textTo);
-                    const newBlocks: FlexibleText[] = [
-                    {
+                    const editingBlock = textBlock()[range.blockIndex];
+                    if (range!.isFullLine) {
+                        const newBlock: FlexibleText = {
                         ...editingBlock,
-                        text: beforeText,
-                        version: editingBlock.version + 1,
-                    },
-                    {
-                        ...editingBlock,
-                        id: generateUniqueID(),
-                        text: rangeText,
                         fontColor: rangeFontColorStyleUpdate()!.color!,
-                        version: 0,
-                    },
-                    {
-                        ...editingBlock,
-                        id: generateUniqueID(),
-                        text: afterText,
-                        version: 0,
-                    }
-                    ];
-                    newBlocksMap.set(editingBlock.id, newBlocks);
-                }
-                });
-                setTextBlock(prev => {
-                const newBlocks: FlexibleText[] = [];
-                prev.forEach(block => {
-                    if (newBlocksMap.has(block.id)) {
-                    newBlocks.push(...newBlocksMap.get(block.id)!);
+                        version: editingBlock.version + 1,
+                        };
+                        newBlocksMap.set(editingBlock.id, [newBlock]);
                     } else {
-                    newBlocks.push(block);
+                        const beforeText = editingBlock.text.slice(0, range.textFrom);
+                        const rangeText = editingBlock.text.slice(range.textFrom, range.textTo);
+                        const afterText = editingBlock.text.slice(range.textTo);
+                        const newBlocks: FlexibleText[] = [
+                        {
+                            ...editingBlock,
+                            text: beforeText,
+                            version: editingBlock.version + 1,
+                        },
+                        {
+                            ...editingBlock,
+                            id: generateUniqueID(),
+                            text: rangeText,
+                            fontColor: rangeFontColorStyleUpdate()!.color!,
+                            version: 0,
+                        },
+                        {
+                            ...editingBlock,
+                            id: generateUniqueID(),
+                            text: afterText,
+                            version: 0,
+                        }
+                        ];
+                        newBlocksMap.set(editingBlock.id, newBlocks);
                     }
                 });
-                return newBlocks;
+                batch(() => {
+                    setTextBlock(prev => {
+                        const newBlocks: FlexibleText[] = [];
+                        prev.forEach(block => {
+                            if (newBlocksMap.has(block.id)) {
+                                newBlocks.push(...newBlocksMap.get(block.id)!);
+                            } else {
+                                newBlocks.push(block);
+                            }
+                        });
+                        return newBlocks;
+                    });
+                    setBatchSelectCursorPos({
+                        from,
+                        to,
+                    });
                 });
-                el && selectCursorPos(from, to, el);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (batchSelectCursorPos() !== null) {
+            batch(() => {
+                selectCursorPos(batchSelectCursorPos()!.from, batchSelectCursorPos()!.to, el);
+                setBatchSelectCursorPos(null);
             });
         }
     });
@@ -155,7 +172,6 @@ export function editableTextBlock(
 
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
-
         const range = selection.getRangeAt(0);
 
         const preCaretRangeRight = range.cloneRange();
@@ -167,8 +183,6 @@ export function editableTextBlock(
         el && preCaretRangeLeft.selectNodeContents(el);
         preCaretRangeLeft.setEnd(range.startContainer, range.startOffset);
         const leftIndex = preCaretRangeLeft.toString().length;
-
-        console.log(leftIndex, rightIndex);
 
         if (selection.isCollapsed) {
             batch(() => {
@@ -375,9 +389,9 @@ export function editableTextBlock(
                     batch(() => {
                         setCaretColor(null);
                         setRangeSelected({
-                        overStyle: overStyle,
-                        editingContents: rangeEditingContents,
-                        isLast,
+                            overStyle: overStyle,
+                            editingContents: rangeEditingContents,
+                            isLast,
                         });
                         setEditableTextCursor(cursorPos());
                         setCurrentStyle({
@@ -412,19 +426,19 @@ export function editableTextBlock(
             let offset;
             switch (typeof prev) {
                 case "number":
-                offset = direction === "forward" ? Math.min(
-                    prev + size, el.textContent?.length || 0
-                ) : Math.max(prev - size, 0);
-                selectCursorPos(offset, offset, el);
-                return offset;
+                    offset = direction === "forward" ? Math.min(
+                        prev + size, el.textContent?.length || 0
+                    ) : Math.max(prev - size, 0);
+                    selectCursorPos(offset, offset, el);
+                    return offset;
                 case "object":
-                if (direction === "forward") {
-                    offset = prev.end;
-                } else {
-                    offset = prev.start;
-                }
-                selectCursorPos(offset, offset, el);
-                return offset;
+                    if (direction === "forward") {
+                        offset = prev.end;
+                    } else {
+                        offset = prev.start;
+                    }
+                    selectCursorPos(offset, offset, el);
+                    return offset;
             }
             }
         });
@@ -438,58 +452,58 @@ export function editableTextBlock(
             } else {
             switch (typeof prev) {
                 case "number":
-                let from: number, to: number, current: number;
-                if (direction === "forward") {
-                    from = prev;
-                    to = Math.min(prev + size, el.textContent?.length || 0);
-                    current = to;
-                } else {
-                    from = Math.max(prev - size, 0);
-                    to = prev;
-                    current = from;
-                }
-                selectCursorPos(from, to, el);
-                return { start: from, end: to, direction: direction, current: current };
-                case "object":
-                if (direction === prev.direction) {
                     let from: number, to: number, current: number;
                     if (direction === "forward") {
-                    from = prev.start;
-                    to = Math.min(prev.end + size, el.textContent?.length || 0);
-                    current = to;
+                        from = prev;
+                        to = Math.min(prev + size, el.textContent?.length || 0);
+                        current = to;
                     } else {
-                    from = Math.max(prev.start - size, 0);
-                    to = prev.end;
-                    current = from;
+                        from = Math.max(prev - size, 0);
+                        to = prev;
+                        current = from;
                     }
                     selectCursorPos(from, to, el);
                     return { start: from, end: to, direction: direction, current: current };
-                } else {
-                    let from: number, to: number, current: number;
-                    let reverse = false;
-                    if (prev.direction === "forward") {
-                    from = prev.start;
-                    to = Math.max(prev.end - size, 0);
-                    current = to;
-                    if (from >= to) {
-                        reverse = true;
-                    }
-                    } else {
-                    from = Math.min(prev.start + size, el.textContent?.length || 0);
-                    to = prev.end;
-                    current = from;
-                    if (from >= to) {
-                        reverse = true;
-                    }
-                    }
-                    if (reverse) {
-                        selectCursorPos(to, from, el);
-                        return { start: to, end: from, direction: direction, current: current };
-                    } else {
+                case "object":
+                    if (direction === prev.direction) {
+                        let from: number, to: number, current: number;
+                        if (direction === "forward") {
+                        from = prev.start;
+                        to = Math.min(prev.end + size, el.textContent?.length || 0);
+                        current = to;
+                        } else {
+                        from = Math.max(prev.start - size, 0);
+                        to = prev.end;
+                        current = from;
+                        }
                         selectCursorPos(from, to, el);
-                        return { start: from, end: to, direction: prev.direction, current: current };
+                        return { start: from, end: to, direction: direction, current: current };
+                    } else {
+                        let from: number, to: number, current: number;
+                        let reverse = false;
+                        if (prev.direction === "forward") {
+                        from = prev.start;
+                        to = Math.max(prev.end - size, 0);
+                        current = to;
+                        if (from >= to) {
+                            reverse = true;
+                        }
+                        } else {
+                        from = Math.min(prev.start + size, el.textContent?.length || 0);
+                        to = prev.end;
+                        current = from;
+                        if (from >= to) {
+                            reverse = true;
+                        }
+                        }
+                        if (reverse) {
+                            selectCursorPos(to, from, el);
+                            return { start: to, end: from, direction: direction, current: current };
+                        } else {
+                            selectCursorPos(from, to, el);
+                            return { start: from, end: to, direction: prev.direction, current: current };
+                        }
                     }
-                }
             }
             }
         });
@@ -536,7 +550,6 @@ export function editableTextBlock(
                             ...prev
                         ]
                     }
-                    console.log(validStyles());
 
                     if (validStyles().isNeedUpdate) {
                         const newBlock: FlexibleText = {
@@ -638,7 +651,6 @@ export function editableTextBlock(
             break;
         case "object":
             const rangeSelectionState = rangeSelected();
-            // console.log(rangeSelectionState);
             break;
         }
     };
@@ -871,7 +883,8 @@ export function editableTextBlock(
     el.addEventListener("input", (e) => {
         e.preventDefault();
     });
-    el.addEventListener("focus", () => {
+    el.addEventListener("focus", (e) => {
+        e.preventDefault();
         batch(() => {
             if (cursorPos() === null) {
                 handleCursorPos();
@@ -887,11 +900,8 @@ export function editableTextBlock(
 
     const handleSelectionChange = () => {
         if (!el) return;
-        console.log("selection change", editableTextRef()?.id, value().textZoneId(),
-        "===", editableTextRef()?.id === value().textZoneId());
-        // if (editableTextRef()?.id === value().textZoneId()) {
-        if (document.activeElement === el) {
-            // console.log("selection change", editableTextRef()?.id, value().textZoneId());
+        if (document.activeElement !== el) return;
+        if (editableTextRef()?.id === value().textZoneId()) {
             saveCursorPosition();
         }
     };
@@ -900,9 +910,8 @@ export function editableTextBlock(
         const newTextRef = editableTextRef();
         if (newTextRef === null) return;
         if (newTextRef.id === value().textZoneId() && newTextRef.newSelected) {
-            console.log("new selected", newTextRef.id);
             batch(() => {
-                // saveCursorPosition();
+                saveCursorPosition();
                 setEditableTextRef({
                     ...newTextRef,
                     newSelected: false,

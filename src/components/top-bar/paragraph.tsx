@@ -46,6 +46,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
             classList={{
             ...(props.classList || {}),
             }}
+            on:mousedown={(e: MouseEvent) => e.preventDefault()}
         >
             <FontFamilyDropdown
                 class="bg-gray-600 rounded-l" 

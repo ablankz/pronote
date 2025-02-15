@@ -22,7 +22,6 @@ export interface FontSizeDropdownProps {
 
 const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   const [isOpen, setIsOpen] = createSignal(false);
-  const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
   const { render, visible } = useAnimationShow(isOpen);
 
   let modalRef: HTMLDivElement | undefined
@@ -32,10 +31,7 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
   const handleClickOutside = (event: MouseEvent) => {
       if (props.ignoreClick || !isOpen()) return;
 
-      if (ignoreOutsideClick()) {
-          setIgnoreOutsideClick(false);
-          return;
-      }
+      event.preventDefault();
 
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
@@ -60,12 +56,12 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
 
   onMount(() => {
     document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
   });
 
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeyDown);
-    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("mousedown", handleClickOutside);
   });
 
   const applyFontSize = (size: number) => {
@@ -131,7 +127,6 @@ const FontSizeDropdown = (props: FontSizeDropdownProps) => {
                 props.onToggle?.(!prev)
                 return !prev
               })
-              setIgnoreOutsideClick(true)
             })
           }}
         >

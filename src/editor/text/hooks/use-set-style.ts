@@ -35,8 +35,8 @@ export function useSetStyle() {
     const setCursorForStyle = () => {
         if (editableTextRef()) {
             const textRef = editableTextRef()!;
+            textRef.elm.focus();
             const cursor = editableTextCursor();
-            // console.log("+++++++++++++++++++++++", cursor);
             if (cursor === null) return;
             let from: number, to: number;
             switch (typeof cursor) {
@@ -551,6 +551,8 @@ export function useSetStyle() {
                     id: editableTextRef()!.id,
                     color,
                 });
+            } else {
+                setCursorForStyle()
             }
             setLocalStyle(prev => {
                 if (prev.fontColor === color) {
@@ -561,7 +563,6 @@ export function useSetStyle() {
                     fontColor: color,
                 };
             });
-            setCursorForStyle()
         });
     };
 

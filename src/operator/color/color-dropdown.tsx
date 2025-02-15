@@ -51,7 +51,6 @@ export interface ColorDropdownProps {
 
 const ColorDropdown = (props: ColorDropdownProps) => {
   const [isOpen, setIsOpen] = createSignal(false);
-  const [ignoreOutsideClick, setIgnoreOutsideClick] = createSignal(false);
   const [localColor, setLocalColor] = createSignal(props.defaultColor || defaultColor);
   const [colorValue, setColorValue] = createSignal<Color | null>(null);
   const [openColorPicker, setOpenColorPicker] = createSignal(false);
@@ -74,13 +73,8 @@ const ColorDropdown = (props: ColorDropdownProps) => {
 
   const handleClickOutside = (event: MouseEvent) => {
       if (openColorPicker() || !isOpen()) return;
+      event.preventDefault();
       if (props.ignoreClick) return;
-
-      if (ignoreOutsideClick()) {
-          setIgnoreOutsideClick(false);
-          return;
-      }
-
       if (modalRef && !modalRef.contains(event.target as Node)
           && downRef && !downRef.contains(event.target as Node)) {
           setIsOpen(false);
@@ -99,12 +93,12 @@ const ColorDropdown = (props: ColorDropdownProps) => {
 
   onMount(() => {
     document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
   });
 
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeyDown);
-    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("mousedown", handleClickOutside);
   });
 
   const applyColor = (color: string) => {
@@ -138,11 +132,9 @@ const ColorDropdown = (props: ColorDropdownProps) => {
               if (props.validColor === "") {
                 props.setValidColor(localColor());
                 if (props.onColorChange) props.onColorChange(localColor());
-                setIgnoreOutsideClick(true);
               } else {
                 props.setValidColor("");
                 if (props.onColorChange) props.onColorChange("");
-                setIgnoreOutsideClick(true);
               }
             });
           }}
@@ -162,7 +154,6 @@ const ColorDropdown = (props: ColorDropdownProps) => {
                 props.onToggle && props.onToggle(next);
                 return next;
               });
-              setIgnoreOutsideClick(true)
             })
           }}
         >
@@ -217,7 +208,6 @@ const ColorDropdown = (props: ColorDropdownProps) => {
               setLocalColor("");
               props.setValidColor("");
               if (props.onColorChange) props.onColorChange("");
-              setIgnoreOutsideClick(true);
             }}
           >
             <ColorBox color="#000000" size={20} ignoreClick={props.ignoreClick} />
@@ -255,7 +245,6 @@ const ColorDropdown = (props: ColorDropdownProps) => {
                       }}
                       onClick={() => {
                         applyColor(colorStr);
-                        setIgnoreOutsideClick(true);
                       }}
                     >
                       <ColorBox color={colorStr} size={20} ignoreClick={props.ignoreClick} />
@@ -288,7 +277,6 @@ const ColorDropdown = (props: ColorDropdownProps) => {
                             }}
                             onClick={() => {
                               applyColor(colorStr);
-                              setIgnoreOutsideClick(true);
                             }}
                           >
                             <ColorBox color={colorStr} size={20} ignoreClick={props.ignoreClick} />
@@ -342,9 +330,6 @@ const ColorDropdown = (props: ColorDropdownProps) => {
               colorStrFormat="hsl"
               setColor={(color) => {
                 applyColor(color);
-              }}
-              onClose={() => {
-                setIgnoreOutsideClick(true);
               }}
               handleClose={() => {
                 setOpenColorPicker(false)

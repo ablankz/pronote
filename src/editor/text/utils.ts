@@ -17,41 +17,41 @@ export const selectCursorPos = (
         const nextCharIndex = charIndex + textLength;
 
         if (!startNode && from >= charIndex && from <= nextCharIndex) {
-        startNode = node;
-        startOffset = from - charIndex;
+            startNode = node;
+            startOffset = from - charIndex;
         }
 
         if (!endNode && to >= charIndex && to <= nextCharIndex) {
-        endNode = node;
-        endOffset = to - charIndex;
+            endNode = node;
+            endOffset = to - charIndex;
 
-        if (endOffset === textLength) {
-            endOffset = textLength;
-        }
+            if (endOffset === textLength) {
+                endOffset = textLength;
+            }
         }
 
         charIndex = nextCharIndex;
     } else {
         for (const child of Array.from(node.childNodes)) {
-        if (traverseNodes(child)) return true;
+            if (traverseNodes(child)) return true;
         }
     }
-    return false;
+        return false;
     };
 
     traverseNodes(textRef);
 
     if (from === to) {
-    if (startNode) {
+        if (startNode) {
+            range.setStart(startNode, startOffset);
+            range.collapse(true);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }
+    } else if (startNode && endNode) {
         range.setStart(startNode, startOffset);
-        range.collapse(true);
+        range.setEnd(endNode, endOffset);
         selection?.removeAllRanges();
         selection?.addRange(range);
-    }
-    } else if (startNode && endNode) {
-    range.setStart(startNode, startOffset);
-    range.setEnd(endNode, endOffset);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
     }
 };

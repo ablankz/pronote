@@ -32,7 +32,7 @@ const FlexibleTextEditor : Component<FlexibleTextEditorProps> = (props) => {
     
     return (
         <div
-            class={`${props.class || ""}`}
+            class={`${props.class || ""} clear-selection`}
             classList={{
                 ...(props.classList || {}),
             }}
