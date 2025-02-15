@@ -1,7 +1,8 @@
 export const selectCursorPos = (
     from: number, 
     to: number,
-    textRef: HTMLElement
+    textRef: HTMLElement,
+    noRemove: boolean = false
 ) => {
     const selection = window.getSelection();
     const range = document.createRange();
@@ -45,13 +46,13 @@ export const selectCursorPos = (
         if (startNode) {
             range.setStart(startNode, startOffset);
             range.collapse(true);
-            selection?.removeAllRanges();
+            noRemove || selection?.removeAllRanges();
             selection?.addRange(range);
         }
     } else if (startNode && endNode) {
         range.setStart(startNode, startOffset);
         range.setEnd(endNode, endOffset);
-        selection?.removeAllRanges();
+        noRemove || selection?.removeAllRanges();
         selection?.addRange(range);
     }
 };

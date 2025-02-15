@@ -765,11 +765,13 @@ export function editableTextBlock(
     };
 
     const handleCompositionStart = (e: CompositionEvent) => {
+        if (document.activeElement !== el) return;
         e.preventDefault();
         setIsComposing(true);
     };
     
     const handleCompositionEnd = (e: CompositionEvent) => {
+        if (document.activeElement !== el) return;
         e.preventDefault();
 
         switch(typeof cursorPos()) {
@@ -1168,6 +1170,7 @@ export function editableTextBlock(
     };
 
     const saveStyledText = (e: KeyboardEvent) => {
+        if (document.activeElement !== el) return;
         switch (e.key) {
         case "ArrowUp":
             return;
@@ -1227,6 +1230,7 @@ export function editableTextBlock(
             } else {
                 moved.cursorMoveNum.insert && moveCursorHorizontally(true, moved.cursorMoveNum.insert, "forward");
             }
+            return;
         default:
             if (e.key.length === 1) {
                 const ctrKey = e.ctrlKey

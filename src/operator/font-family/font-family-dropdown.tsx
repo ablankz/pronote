@@ -138,7 +138,6 @@ const FontFamilyDropdown = (props: FontFamilyDropdownProps) => {
               onClick={() => {
                 batch(() => {
                   setQuery("")
-                  if (inputRef) inputRef.focus()
                   props.setFontFamily("")
                 })
               }}

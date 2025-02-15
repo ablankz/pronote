@@ -46,7 +46,7 @@ export default function ResizeModal(props: ResizeModalProps) {
             setWidthUnitOpen(false);
         } else if (heightUnitOpen() && !heightUnitModal?.contains(event.target as Node)) {
             setHeightUnitOpen(false);
-        }else if (modalRef && !modalRef.contains(event.target as Node)) {
+        } else if (modalRef && !modalRef.contains(event.target as Node)) {
             props.setModal(false);
         }
     };
