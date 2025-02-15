@@ -6,7 +6,14 @@ import { FlexibleText, FlexibleTextStyles, NullableFlexibleTextStyles } from "..
 import { 
     currentStyle, 
     editableTextRef, 
+    rangeFontBoldStyleUpdate, 
     rangeFontColorStyleUpdate, 
+    rangeFontFamilyStyleUpdate, 
+    rangeFontItalicStyleUpdate, 
+    rangeFontSizeStyleUpdate, 
+    rangeFontStrikeThroughStyleUpdate, 
+    rangeFontUnderlineStyleUpdate, 
+    rangeHighlightColorStyleUpdate, 
     setCurrentStyle, 
     setEditableTextRef, 
     setTextRefMap 
@@ -60,6 +67,78 @@ export function editableTextBlock(
     } | null>(null);
 
     createEffect(() => {
+        console.log("textBlock", textBlock());
+    });
+
+
+    const rangeUpdate = (
+        newBlockFactory: (block: FlexibleText) => FlexibleText,
+    ) => {
+        const cursor = cursorPos();
+        if (cursor === null || typeof cursor === "number") return;
+        const from = cursor.start;
+        const to = cursor.end;
+        const newBlocksMap: Map<string, FlexibleText[]> = new Map();
+        rangeSelected()!.editingContents.forEach(range => {
+            const editingBlock = textBlock()[range.blockIndex];
+            if (range!.isFullLine) {
+                let newBlock: FlexibleText = {
+                    ...editingBlock,
+                    version: editingBlock.version + 1,
+                };
+                newBlock = newBlockFactory(newBlock);
+                newBlocksMap.set(editingBlock.id, [newBlock]);
+            } else {
+                const beforeText = editingBlock.text.slice(0, range.textFrom);
+                const rangeText = editingBlock.text.slice(range.textFrom, range.textTo);
+                const afterText = editingBlock.text.slice(range.textTo);
+                let newBlock: FlexibleText = {
+                    ...editingBlock,
+                    text: rangeText,
+                    version: editingBlock.version + 1,
+                };
+                newBlock = newBlockFactory(newBlock);
+                const newBlocks: FlexibleText[] = [newBlock];
+                if (beforeText.length !== 0) {
+                    newBlocks.unshift({
+                        ...editingBlock,
+                        text: beforeText,
+                        id: generateUniqueID(),
+                        version: 0,
+                    });
+                }
+                if (afterText.length !== 0) {
+                    newBlocks.push({
+                        ...editingBlock,
+                        text: afterText,
+                        id: generateUniqueID(),
+                        version: 0,
+                    });
+                }
+                newBlocksMap.set(editingBlock.id, newBlocks);
+            }
+        });
+        console.log("newBlocksMap", newBlocksMap);
+        batch(() => {
+            setTextBlock(prev => {
+                const newBlocks: FlexibleText[] = [];
+                prev.forEach(block => {
+                    if (newBlocksMap.has(block.id)) {
+                        newBlocks.push(...newBlocksMap.get(block.id)!);
+                    } else {
+                        newBlocks.push(block);
+                    }
+                });
+                return newBlocks;
+            });
+            setBatchSelectCursorPos({
+                from,
+                to,
+            });
+        });
+    }
+
+    createEffect(() => {
         if (rangeFontColorStyleUpdate() !== null) {
             untrack(() => {
                 if (
@@ -67,64 +146,241 @@ export function editableTextBlock(
                     || rangeFontColorStyleUpdate()?.id !== value().textZoneId()
                     || rangeFontColorStyleUpdate()?.color === undefined
                 ) return;
-                const cursor = cursorPos();
-                if (cursor === null || typeof cursor === "number") return;
-                const from = cursor.start;
-                const to = cursor.end;
-                const newBlocksMap: Map<string, FlexibleText[]> = new Map();
-                rangeSelected()!.editingContents.forEach(range => {
-                    const editingBlock = textBlock()[range.blockIndex];
-                    if (range!.isFullLine) {
-                        const newBlock: FlexibleText = {
-                        ...editingBlock,
+                const newBlockFactory = (block: FlexibleText) => {
+                    return {
+                        ...block,
                         fontColor: rangeFontColorStyleUpdate()!.color!,
-                        version: editingBlock.version + 1,
+                    };
+                };
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeHighlightColorStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeHighlightColorStyleUpdate()?.id !== value().textZoneId()
+                    || rangeHighlightColorStyleUpdate()?.color === undefined
+                ) return;
+                const newBlockFactory = (block: FlexibleText) => {
+                    return {
+                        ...block,
+                        highlightColor: rangeHighlightColorStyleUpdate()!.color!,
+                    };
+                };
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontBoldStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontBoldStyleUpdate()?.id !== value().textZoneId()
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                switch (rangeFontBoldStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                bold: rangeFontBoldStyleUpdate()!.bold!,
+                            };
                         };
-                        newBlocksMap.set(editingBlock.id, [newBlock]);
-                    } else {
-                        const beforeText = editingBlock.text.slice(0, range.textFrom);
-                        const rangeText = editingBlock.text.slice(range.textFrom, range.textTo);
-                        const afterText = editingBlock.text.slice(range.textTo);
-                        const newBlocks: FlexibleText[] = [
-                        {
-                            ...editingBlock,
-                            text: beforeText,
-                            version: editingBlock.version + 1,
-                        },
-                        {
-                            ...editingBlock,
-                            id: generateUniqueID(),
-                            text: rangeText,
-                            fontColor: rangeFontColorStyleUpdate()!.color!,
-                            version: 0,
-                        },
-                        {
-                            ...editingBlock,
-                            id: generateUniqueID(),
-                            text: afterText,
-                            version: 0,
-                        }
-                        ];
-                        newBlocksMap.set(editingBlock.id, newBlocks);
-                    }
-                });
-                batch(() => {
-                    setTextBlock(prev => {
-                        const newBlocks: FlexibleText[] = [];
-                        prev.forEach(block => {
-                            if (newBlocksMap.has(block.id)) {
-                                newBlocks.push(...newBlocksMap.get(block.id)!);
-                            } else {
-                                newBlocks.push(block);
-                            }
-                        });
-                        return newBlocks;
-                    });
-                    setBatchSelectCursorPos({
-                        from,
-                        to,
-                    });
-                });
+                        break;
+                    case "toggle":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                bold: !block.bold,
+                            };
+                        };
+                        break;
+                    case "nearTrue":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                bold: !(rangeFontBoldStyleUpdate()!.allTrue!),
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontItalicStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontItalicStyleUpdate()?.id !== value().textZoneId()
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                switch (rangeFontItalicStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                italic: rangeFontItalicStyleUpdate()!.italic!,
+                            };
+                        };
+                        break;
+                    case "toggle":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                italic: !block.italic,
+                            };
+                        };
+                        break;
+                    case "nearTrue":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                italic: !(rangeFontItalicStyleUpdate()!.allTrue!),
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontUnderlineStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontUnderlineStyleUpdate()?.id !== value().textZoneId()
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                switch (rangeFontUnderlineStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                underline: rangeFontUnderlineStyleUpdate()!.underline!,
+                            };
+                        };
+                        break;
+                    case "toggle":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                underline: !block.underline,
+                            };
+                        };
+                        break;
+                    case "nearTrue":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                underline: !(rangeFontUnderlineStyleUpdate()!.allTrue!),
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontStrikeThroughStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontStrikeThroughStyleUpdate()?.id !== value().textZoneId()
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                console.log("rangeFontStrikeThroughStyleUpdate", rangeFontStrikeThroughStyleUpdate());
+                switch (rangeFontStrikeThroughStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                strikeThrough: rangeFontStrikeThroughStyleUpdate()!.strikeThrough!,
+                            };
+                        };
+                        break;
+                    case "toggle":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                strikeThrough: !block.strikeThrough,
+                            };
+                        };
+                        break;
+                    case "nearTrue":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                strikeThrough: !(rangeFontStrikeThroughStyleUpdate()!.allTrue!),
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontFamilyStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontFamilyStyleUpdate()?.id !== value().textZoneId()
+                    || rangeFontFamilyStyleUpdate()?.fontFamily === undefined
+                ) return;
+                const newBlockFactory = (block: FlexibleText) => {
+                    return {
+                        ...block,
+                        fontFamily: rangeFontFamilyStyleUpdate()!.fontFamily!,
+                    };
+                };
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontSizeStyleUpdate() !== null) {
+            untrack(() => {
+                console.log("rangeFontSizeStyleUpdate", rangeFontSizeStyleUpdate());
+                if (
+                    rangeSelected() === null 
+                    || rangeFontSizeStyleUpdate()?.id !== value().textZoneId()
+                    || rangeFontSizeStyleUpdate()?.size === undefined
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                switch (rangeFontSizeStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                fontSize: rangeFontSizeStyleUpdate()!.size!,
+                            };
+                        };
+                        break;
+                    case "update":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                fontSize: block.fontSize + rangeFontSizeStyleUpdate()!.size!,
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
             });
         }
     });
@@ -415,30 +671,30 @@ export function editableTextBlock(
 
     if (collapsing) {
         batch(() => {
-        setArrowSelection(true);
-        setCursorPos(prev => {
-            if (prev === null) {
-            return null
-            } else {
-            let offset;
-            switch (typeof prev) {
-                case "number":
-                    offset = direction === "forward" ? Math.min(
-                        prev + size, el.textContent?.length || 0
-                    ) : Math.max(prev - size, 0);
-                    selectCursorPos(offset, offset, el);
-                    return offset;
-                case "object":
-                    if (direction === "forward") {
-                        offset = prev.end;
-                    } else {
-                        offset = prev.start;
+            setArrowSelection(true);
+            setCursorPos(prev => {
+                if (prev === null) {
+                    return null
+                } else {
+                    let offset;
+                    switch (typeof prev) {
+                        case "number":
+                            offset = direction === "forward" ? Math.min(
+                                prev + size, el.textContent?.length || 0
+                            ) : Math.max(prev - size, 0);
+                            selectCursorPos(offset, offset, el);
+                            return offset;
+                        case "object":
+                            if (direction === "forward") {
+                                offset = prev.end + size;
+                            } else {
+                                offset = prev.start - size;
+                            }
+                            selectCursorPos(offset, offset, el);
+                            return offset;
                     }
-                    selectCursorPos(offset, offset, el);
-                    return offset;
-            }
-            }
-        });
+                }
+            });
         });
     } else {
         batch(() => {
@@ -528,127 +784,222 @@ export function editableTextBlock(
         setIsComposing(false);
     };
 
-    const insertText = (text: string) => {
-        if (cursorPos() === null) return;
+    const insertText = (text: string): {
+        success: boolean,
+        cursorMoveNum: {
+            insert: number,
+            delete: number,
+        },
+        rangeInserted: boolean,
+        range?: {
+            isLast: boolean,
+        }
+    } => {
+        if (cursorPos() === null) return { success: false, cursorMoveNum: { insert: 0, delete: 0 }, rangeInserted: false };
+        const txtLen = text.length;
         switch (typeof cursorPos()) {
-        case "number":
-            batch(() => {
-                setTextBlock(prev => {
-                    if (prev.length === 0) {
-                    text = text + "\n";
-                    }
-                    if (editingTextBlock() < 0) {
-                        return [
-                            {
+            case "number":
+                batch(() => {
+                    setTextBlock(prev => {
+                        if (prev.length === 0) {
+                        text = text + "\n";
+                        }
+                        if (editingTextBlock() < 0) {
+                            return [
+                                {
+                                    ...DefaultFlexibleText(generateUniqueID()),
+                                    ...validStyles().current,
+                                    text: text,
+                                },
+                                ...prev
+                            ]
+                        }
+
+                        if (validStyles().isNeedUpdate) {
+                            const newBlock: FlexibleText = {
                                 ...DefaultFlexibleText(generateUniqueID()),
                                 ...validStyles().current,
                                 text: text,
-                            },
-                            ...prev
-                        ]
-                    }
-
-                    if (validStyles().isNeedUpdate) {
-                        const newBlock: FlexibleText = {
-                            ...DefaultFlexibleText(generateUniqueID()),
-                            ...validStyles().current,
-                            text: text,
-                        };
-                        const editingBlock = prev[editingTextBlock()];
-                        const firstText = editingBlock.text.slice(0, editingTextCursor());
-                        const secondText = editingBlock.text.slice(editingTextCursor());
-                        const isLastBlock = editingTextBlock() === prev.length - 1;
-                        if (isLastBlock && secondText === "\n") {
-                            const newBlocks: FlexibleText[] = [
-                            {
-                                ...editingBlock,
-                                text: firstText,
-                                version: editingBlock.version + 1,
-                            },
-                            {
-                                ...newBlock,
-                                text: newBlock.text + "\n",
+                            };
+                            const editingBlock = prev[editingTextBlock()];
+                            const firstText = editingBlock.text.slice(0, editingTextCursor());
+                            const secondText = editingBlock.text.slice(editingTextCursor());
+                            const isLastBlock = editingTextBlock() === prev.length - 1;
+                            if (isLastBlock && secondText === "\n") {
+                                const newBlocks: FlexibleText[] = [
+                                {
+                                    ...editingBlock,
+                                    text: firstText,
+                                    version: editingBlock.version + 1,
+                                },
+                                {
+                                    ...newBlock,
+                                    text: newBlock.text + "\n",
+                                }
+                                ];
+                                return [
+                                ...prev.slice(0, editingTextBlock()),
+                                ...newBlocks,
+                                ];
+                            } else if (secondText === "\n") {
+                                const newBlocks: FlexibleText[] = [
+                                {
+                                    ...editingBlock,
+                                    text: firstText,
+                                    version: editingBlock.version + 1,
+                                },
+                                {
+                                    ...newBlock,
+                                    text: newBlock.text + "\n",
+                                }
+                                ];
+                                return [
+                                ...prev.slice(0, editingTextBlock()),
+                                ...newBlocks,
+                                ...prev.slice(editingTextBlock() + 1),
+                                ];
+                            } else if (firstText.length === 0) {
+                                return [
+                                ...prev.slice(0, editingTextBlock()),
+                                newBlock,
+                                ...prev.slice(editingTextBlock()),
+                                ];
+                            } else if (secondText.length === 0) {
+                                return [
+                                ...prev.slice(0, editingTextBlock() + 1),
+                                newBlock,
+                                ...prev.slice(editingTextBlock() + 1),
+                                ];
+                            } else {
+                                const newBlocks: FlexibleText[] = [
+                                {
+                                    ...editingBlock,
+                                    text: firstText,
+                                    version: editingBlock.version + 1,
+                                },
+                                newBlock,
+                                {
+                                    ...editingBlock,
+                                    text: secondText,
+                                    id: generateUniqueID(),
+                                    version: 0,
+                                },
+                                ];
+                                return [
+                                ...prev.slice(0, editingTextBlock()),
+                                ...newBlocks,
+                                ...prev.slice(editingTextBlock() + 1),
+                                ];
                             }
-                            ];
-                            return [
-                            ...prev.slice(0, editingTextBlock()),
-                            ...newBlocks,
-                            ];
-                        } else if (secondText === "\n") {
-                            const newBlocks: FlexibleText[] = [
-                            {
-                                ...editingBlock,
-                                text: firstText,
-                                version: editingBlock.version + 1,
-                            },
-                            {
-                                ...newBlock,
-                                text: newBlock.text + "\n",
-                            }
-                            ];
-                            return [
-                            ...prev.slice(0, editingTextBlock()),
-                            ...newBlocks,
-                            ...prev.slice(editingTextBlock() + 1),
-                            ];
-                        } else if (firstText.length === 0) {
-                            return [
-                            ...prev.slice(0, editingTextBlock()),
-                            newBlock,
-                            ...prev.slice(editingTextBlock()),
-                            ];
-                        } else if (secondText.length === 0) {
-                            return [
-                            ...prev.slice(0, editingTextBlock() + 1),
-                            newBlock,
-                            ...prev.slice(editingTextBlock() + 1),
-                            ];
                         } else {
-                            const newBlocks: FlexibleText[] = [
-                            {
-                                ...editingBlock,
-                                text: firstText,
-                                version: editingBlock.version + 1,
-                            },
-                            newBlock,
-                            {
-                                ...editingBlock,
-                                text: secondText,
-                                id: generateUniqueID(),
-                                version: 0,
-                            },
-                            ];
-                            return [
-                            ...prev.slice(0, editingTextBlock()),
-                            ...newBlocks,
-                            ...prev.slice(editingTextBlock() + 1),
-                            ];
-                        }
-                    } else {
-                    const editingBlock = prev[editingTextBlock()];
-                    const newText = 
-                        editingBlock.text.slice(0, editingTextCursor()) + text + editingBlock.text.slice(editingTextCursor());
-                    const newBlock: FlexibleText = {
-                        ...editingBlock,
-                        text: newText,
-                        version: editingBlock.version + 1,
+                        const editingBlock = prev[editingTextBlock()];
+                        const newText = 
+                            editingBlock.text.slice(0, editingTextCursor()) + text + editingBlock.text.slice(editingTextCursor());
+                        const newBlock: FlexibleText = {
+                            ...editingBlock,
+                            text: newText,
+                            version: editingBlock.version + 1,
+                        };
+                        return prev.map((block, index) => index === editingTextBlock() ? newBlock : block);
+                    }
+                });
+                setCaretColor(null);
+                setValidStyles(prev => {
+                    return { 
+                        working: prev.current, 
+                        current: prev.current, 
+                        isNeedUpdate: false,
                     };
-                    return prev.map((block, index) => index === editingTextBlock() ? newBlock : block);
-                }
+                });
             });
-            setCaretColor(null);
-            setValidStyles(prev => {
-                return { 
-                    working: prev.current, 
-                    current: prev.current, 
-                    isNeedUpdate: false,
-                };
-            });
-            });
-            break;
+            return { success: true, cursorMoveNum: { insert: txtLen, delete: 0 }, rangeInserted: false };
         case "object":
             const rangeSelectionState = rangeSelected();
-            break;
+            if (rangeSelectionState === null) return { success: false, cursorMoveNum: { insert: 0, delete: 0 }, rangeInserted: false };
+            const rangeSelectionRange = rangeSelectionState.editingContents;
+            if (rangeSelectionRange.length === 0) return { success: false, cursorMoveNum: { insert: 0, delete: 0 }, rangeInserted: false };
+            let deletedNum = 0;
+            batch(() => {
+                setTextBlock(prev => {
+                    const deleteLists: number[] = [];
+                    const lastRangeIndex = rangeSelectionRange.length - 1;
+                    const lastRangeLastNewLine = rangeSelectionRange[lastRangeIndex].lastNewLineSelected;
+                    let firstBlock: {
+                        index: number,
+                        preText: string,
+                        afterText: string,
+                    } | undefined;
+                    rangeSelectionRange.forEach((rangeSelection, index) => {
+                        if (index === 0) {
+                            const editingBlockText = prev[rangeSelection.blockIndex].text;
+                            const from = rangeSelection.textFrom;
+                            const to = rangeSelection.textTo;
+                            let preText = editingBlockText.slice(0, from);
+                            let afterText = editingBlockText.slice(to);
+                            deletedNum += to - from;
+                            if (rangeSelection.lastNewLineSelected) {
+                                afterText = afterText + "\n";
+                            }
+                            firstBlock = {
+                                index: rangeSelection.blockIndex,
+                                preText: preText,
+                                afterText: afterText,
+                            };
+                            return;
+                        }
+                        if (rangeSelection.isFullLine) {
+                            deleteLists.push(rangeSelection.blockIndex);
+                            deletedNum += prev[rangeSelection.blockIndex].text.length;
+                            if (index === 0 && lastRangeLastNewLine) {
+                                const firstPrevBlock = prev[rangeSelection.blockIndex - 1];
+                                if (!firstPrevBlock) return;
+                                const firstPrevNewText = firstPrevBlock.text + "\n";
+                                prev = prev.map((block, index) => index === rangeSelection.blockIndex - 1 ? {
+                                ...firstPrevBlock,
+                                text: firstPrevNewText,
+                                version: firstPrevBlock.version + 1,
+                                } : block);
+                            }
+                            return;
+                        }
+                        const editingBlock = prev[rangeSelection.blockIndex];
+                        let newText = 
+                        editingBlock.text.slice(0, rangeSelection.textFrom) + editingBlock.text.slice(rangeSelection.textTo);
+                        if (newText.length === 0) {
+                        deleteLists.push(rangeSelection.blockIndex);
+                        } else {
+                            deletedNum += rangeSelection.textTo - rangeSelection.textFrom;
+                            if (index === 0 && lastRangeLastNewLine) {
+                                newText = newText + "\n";
+                            }
+                            const newBlock: FlexibleText = {
+                                ...editingBlock,
+                                text: newText,
+                                version: editingBlock.version + 1,
+                            };
+                            prev = prev.map((block, index) => index === rangeSelection.blockIndex ? newBlock : block);
+                        }
+                    });
+                    if (firstBlock !== undefined) {
+                        const newText = firstBlock.preText + text + firstBlock.afterText;
+                        const newBlock: FlexibleText = {
+                            ...prev[firstBlock.index],
+                            text: newText,
+                            version: prev[firstBlock.index].version + 1,
+                        };
+                        prev = prev.map((block, index) => index === firstBlock!.index ? newBlock : block);
+                    }
+                    return prev.filter((_, index) => !deleteLists.includes(index));
+                });
+                setCaretColor(null);
+                setRangeSelected(null);
+            });
+            return { 
+                success: true, 
+                cursorMoveNum: { insert: txtLen, delete: deletedNum },
+                rangeInserted: true, 
+                range: { isLast: rangeSelectionState.isLast } 
+            };
         }
     };
 
@@ -766,6 +1117,7 @@ export function editableTextBlock(
             const selected = rangeSelected();
             if (selected === null) return { success: false, deleted: 0, rangeDeleted: false };
             const rangeSelectionRange = selected.editingContents;
+            if (rangeSelectionRange.length === 0) return { success: false, deleted: 0, rangeDeleted: false };
             let deletedNum = 0;
             batch(() => {
                 setTextBlock(prev => {
@@ -830,45 +1182,64 @@ export function editableTextBlock(
         e.preventDefault();
         if (isComposing()) return;
 
+        let deleted: {
+            success: boolean,
+            deleted: number,
+            rangeDeleted: boolean,
+            range?: {
+                isLast: boolean,
+            }
+        }
+        let moved: {
+            success: boolean,
+            cursorMoveNum: {
+                insert: number,
+                delete: number,
+            }
+            rangeInserted: boolean,
+            range?: {
+                isLast: boolean,
+            }
+        };
+
         switch (e.key) {
         case "Backspace":
-            const deleted = deleteText(1, "backward");
+            deleted = deleteText(1, "backward");
             if (!deleted.success || !deleted.deleted) return;
-            if (!deleted.rangeDeleted) {
-            moveCursorHorizontally(true, deleted.deleted, "backward");
-            return;
-            }
-            moveCursorHorizontally(true, deleted.deleted, "backward");
-            // if (deleted.range?.isLast || false) {
-            //   setCursorPos(prev => {
-            //     if (prev === null) return null;
-            //     switch (typeof prev) {
-            //       case "number":
-            //         return prev;
-            //       case "object":
-            //         return prev.start;
-            //     }
-            //   });
-            // } else {
-            //   moveCursorHorizontally(true, deleted.deleted, "backward");
-            // }
+            deleted.rangeDeleted ?
+                moveCursorHorizontally(true, 0, "backward")
+                : moveCursorHorizontally(true, deleted.deleted, "backward");
             return;
         case "Enter":
-            insertText("\n");
-            moveCursorHorizontally(true, 1, "forward");
+            moved = insertText("\n");
+            if (!moved.success) return;
+            if (moved.rangeInserted) {
+                moved.cursorMoveNum.insert && moveCursorHorizontally(true, -moved.cursorMoveNum.insert, "backward");
+            } else {
+                moved.cursorMoveNum.insert && moveCursorHorizontally(true, moved.cursorMoveNum.insert, "forward");
+            }
             return;
         case "Tab":
-            insertText("\t");
-            moveCursorHorizontally(true, 1, "forward");
-            return;
+            moved = insertText("\t");
+            if (!moved.success) return;
+            if (moved.rangeInserted) {
+                moved.cursorMoveNum.insert && moveCursorHorizontally(true, -moved.cursorMoveNum.insert, "backward");
+            } else {
+                moved.cursorMoveNum.insert && moveCursorHorizontally(true, moved.cursorMoveNum.insert, "forward");
+            }
         default:
             if (e.key.length === 1) {
-            const ctrKey = e.ctrlKey
-            const metaKey = e.metaKey;
-            const altKey = e.altKey;
-            const shiftKey = e.shiftKey;
-            insertText(e.key);
-            moveCursorHorizontally(true, 1, "forward");
+                const ctrKey = e.ctrlKey
+                const metaKey = e.metaKey;
+                const altKey = e.altKey;
+                const shiftKey = e.shiftKey;
+                moved = insertText(e.key);
+                if (!moved.success) return;
+                if (moved.rangeInserted) {
+                    moved.cursorMoveNum.insert && moveCursorHorizontally(true, -moved.cursorMoveNum.insert, "backward");
+                } else {
+                    moved.cursorMoveNum.insert && moveCursorHorizontally(true, moved.cursorMoveNum.insert, "forward");
+                }
             }
             return;
         }

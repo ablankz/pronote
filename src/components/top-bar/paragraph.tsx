@@ -29,10 +29,10 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
         updateFontSize,
         setFontFamily,
         setFontSize,
-        switchBold,
-        switchItalic,
-        switchUnderline,
-        switchStrikeThrough,
+        nearTrueBold,
+        nearTrueItalic,
+        nearTrueUnderline,
+        nearTrueStrikeThrough,
         setHighlightColor,
         setFontColor,
     } = useSetStyle();
@@ -86,7 +86,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Bold size={20} />} 
-                    onClick={switchBold}
+                    onClick={nearTrueBold}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -96,7 +96,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Italic size={20} />} 
-                    onClick={switchItalic}
+                    onClick={nearTrueItalic}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -106,7 +106,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton 
                     Icon={<Underline size={20} />}
-                    onClick={switchUnderline}
+                    onClick={nearTrueUnderline}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
@@ -116,7 +116,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
 
                 <StyleButton
                     Icon={<Strikethrough size={20} />}
-                    onClick={switchStrikeThrough}
+                    onClick={nearTrueStrikeThrough}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),

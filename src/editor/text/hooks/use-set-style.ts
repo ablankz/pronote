@@ -213,7 +213,48 @@ export function useSetStyle() {
             if (forRange && editableTextRef() !== null) {
                 setRangeFontBoldStyleUpdate({
                     id: editableTextRef()!.id,
-                    type: "switch",
+                    type: "toggle",
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.bold === undefined) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    bold: !prev.bold,
+                };
+            });
+        });
+    };
+
+    const nearTrueBold = () => {
+        batch(() => {
+            let forRange = false, allTrue = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                if (prev.style.bold === undefined) {
+                    return prev;
+                }
+                if (prev.style.bold) {
+                    allTrue = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        bold: !prev.style.bold,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontBoldStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "nearTrue",
+                    allTrue,
                 });
             }
             setLocalStyle(prev => {
@@ -288,7 +329,48 @@ export function useSetStyle() {
             if (forRange && editableTextRef() !== null) {
                 setRangeFontItalicStyleUpdate({
                     id: editableTextRef()!.id,
-                    type: "switch",
+                    type: "toggle",
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.italic === undefined) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    italic: !prev.italic,
+                };
+            });
+        });
+    };
+
+    const nearTrueItalic = () => {
+        batch(() => {
+            let forRange = false, allTrue = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                if (prev.style.italic === undefined) {
+                    return prev;
+                }
+                if (prev.style.italic) {
+                    allTrue = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        italic: !prev.style.italic,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontItalicStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "nearTrue",
+                    allTrue,
                 });
             }
             setLocalStyle(prev => {
@@ -363,7 +445,48 @@ export function useSetStyle() {
             if (forRange && editableTextRef() !== null) {
                 setRangeFontUnderlineStyleUpdate({
                     id: editableTextRef()!.id,
-                    type: "switch",
+                    type: "toggle",
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.underline === undefined) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    underline: !prev.underline,
+                };
+            });
+        });
+    };
+
+    const nearTrueUnderline = () => {
+        batch(() => {
+            let forRange = false, allTrue = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                if (prev.style.underline === undefined) {
+                    return prev;
+                }
+                if (prev.style.underline) {
+                    allTrue = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        underline: !prev.style.underline,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontUnderlineStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "nearTrue",
+                    allTrue,
                 });
             }
             setLocalStyle(prev => {
@@ -438,7 +561,48 @@ export function useSetStyle() {
             if (forRange && editableTextRef() !== null) {
                 setRangeFontStrikeThroughStyleUpdate({
                     id: editableTextRef()!.id,
-                    type: "switch",
+                    type: "toggle",
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.strikeThrough === undefined) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    strikeThrough: !prev.strikeThrough,
+                };
+            });
+        });
+    };
+
+    const nearTrueStrikeThrough = () => {
+        batch(() => {
+            let forRange = false, allTrue = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                if (prev.style.strikeThrough === undefined) {
+                    return prev;
+                }
+                if (prev.style.strikeThrough) {
+                    allTrue = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        strikeThrough: !prev.style.strikeThrough,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontStrikeThroughStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "nearTrue",
+                    allTrue,
                 });
             }
             setLocalStyle(prev => {
@@ -534,12 +698,16 @@ export function useSetStyle() {
         updateFontSize,
         setBold,
         switchBold,
+        nearTrueBold,
         setItalic,
         switchItalic,
+        nearTrueItalic,
         setUnderline,
         switchUnderline,
+        nearTrueUnderline,
         setStrikeThrough,
         switchStrikeThrough,
+        nearTrueStrikeThrough,
         setHighlightColor,
         setFontColor,
     };

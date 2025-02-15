@@ -1,7 +1,6 @@
 import { createSignal } from "solid-js";
 import { NullableFlexibleTextStyles } from "../../renderer/text/types";
 import { DefaultFlexibleTextStyles } from "../../renderer/text/const";
-import { Range } from "../../types/generic";
 
 export const [textRefMap, setTextRefMap] = createSignal<Map<string, HTMLElement>>(new Map());
 
@@ -40,21 +39,25 @@ export const [rangeFontFamilyStyleUpdate, setRangeFontFamilyStyleUpdate] = creat
 } | null>(null);
 export const [rangeFontBoldStyleUpdate, setRangeFontBoldStyleUpdate] = createSignal<{
     id: string,
-    type: "specific" | "switch",
+    type: "specific" | "toggle" | "nearTrue",
     bold?: boolean,
+    allTrue?: boolean,
 } | null>(null);
 export const [rangeFontItalicStyleUpdate, setRangeFontItalicStyleUpdate] = createSignal<{
     id: string,
-    type: "specific" | "switch",
+    type: "specific" | "toggle" | "nearTrue",
     italic?: boolean,
+    allTrue?: boolean,
 } | null>(null);
 export const [rangeFontUnderlineStyleUpdate, setRangeFontUnderlineStyleUpdate] = createSignal<{
     id: string,
-    type: "specific" | "switch",
+    type: "specific" | "toggle" | "nearTrue",
     underline?: boolean,
+    allTrue?: boolean,
 } | null>(null);
 export const [rangeFontStrikeThroughStyleUpdate, setRangeFontStrikeThroughStyleUpdate] = createSignal<{
     id: string,
-    type: "specific" | "switch",
+    type: "specific" | "toggle" | "nearTrue",
     strikeThrough?: boolean,
+    allTrue?: boolean,
 } | null>(null);
