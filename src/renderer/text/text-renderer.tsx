@@ -47,6 +47,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                             "background-color": chunk.highlightColor || "inherit",
                             "font-size": `${chunk.fontSize}px`,
                             "font-family": chunk.fontFamily || "inherit",
+                            "vertical-align": chunk.verticalAlign || "baseline",
                             ...props.spanStyle,
                           }}
                           >

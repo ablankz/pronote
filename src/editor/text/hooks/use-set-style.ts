@@ -10,6 +10,7 @@ import {
     setRangeFontSizeStyleUpdate, 
     setRangeFontStrikeThroughStyleUpdate, 
     setRangeFontUnderlineStyleUpdate, 
+    setRangeFontVerticalAlignStyleUpdate, 
     setRangeHighlightColorStyleUpdate 
 } from "../store";
 
@@ -691,6 +692,40 @@ export function useSetStyle() {
         });
     };
 
+    const setVerticalAlign = (verticalAlign: string) => {
+        batch(() => {
+            let forRange = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        verticalAlign: verticalAlign,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontVerticalAlignStyleUpdate({
+                    id: editableTextRef()!.id,
+                    verticalAlign,
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.verticalAlign === verticalAlign) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    verticalAlign: verticalAlign,
+                };
+            });
+        });
+    };
+
     return {
         localStyle,
         setFontFamily,
@@ -710,5 +745,6 @@ export function useSetStyle() {
         nearTrueStrikeThrough,
         setHighlightColor,
         setFontColor,
+        setVerticalAlign,
     };
 }

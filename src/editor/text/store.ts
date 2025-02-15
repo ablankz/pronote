@@ -61,3 +61,7 @@ export const [rangeFontStrikeThroughStyleUpdate, setRangeFontStrikeThroughStyleU
     strikeThrough?: boolean,
     allTrue?: boolean,
 } | null>(null);
+export const [rangeFontVerticalAlignStyleUpdate, setRangeFontVerticalAlignStyleUpdate] = createSignal<{
+    id: string,
+    align?: string,
+} | null>(null);

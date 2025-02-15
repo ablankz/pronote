@@ -1,7 +1,7 @@
 import { FlexibleText, FlexibleTextStyles } from "./types";
 
 export const FlexibleTextTypes = {
-    TEXT: "text"
+    TEXT: "text",
 } as const;
 
 export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
@@ -13,6 +13,7 @@ export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
     highlightColor: "",
     fontSize: 16,
     fontFamily: "Arial",
+    verticalAlign: "sub",
 }
 
 export const DefaultFlexibleText = (id: string): FlexibleText => {
@@ -29,5 +30,6 @@ export const DefaultFlexibleText = (id: string): FlexibleText => {
         highlightColor: DefaultFlexibleTextStyles.highlightColor,
         fontSize: DefaultFlexibleTextStyles.fontSize,
         fontFamily: DefaultFlexibleTextStyles.fontFamily,
+        verticalAlign: DefaultFlexibleTextStyles.verticalAlign,
     };
 };

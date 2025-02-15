@@ -11,6 +11,7 @@ export interface FlexibleTextStyles {
     highlightColor: string;
     fontSize: number;
     fontFamily: string;
+    verticalAlign: string;
 }
 
 export type NullableFlexibleTextStyles = Partial<FlexibleTextStyles>;
