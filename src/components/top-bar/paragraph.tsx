@@ -27,7 +27,6 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
     const {
         localStyle,
         updateFontSize,
-        setCursorForStyle,
         setFontFamily,
         setFontSize,
         switchBold,
@@ -52,7 +51,6 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 class="bg-gray-600 rounded-l" 
                 fontFamily={localStyle().fontFamily}
                 setFontFamily={setFontFamily}
-                onToggle={setCursorForStyle}
                 fontList={fontList}
                 ignoreClick={globalCursorAction()}
             />
@@ -60,7 +58,6 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 class="bg-gray-600 rounded-r border-l border-gray-400 ml-0.5" 
                 fontSize={localStyle().fontSize}
                 setFontSize={setFontSize}
-                onToggle={setCursorForStyle}
                 fontSizeList={fontSizeList}
                 fontSizeRange={{
                     min: minFontSize,
@@ -133,7 +130,6 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                     class="w-full h-full" 
                     validColor={localStyle().highlightColor || ""}
                     setValidColor={setHighlightColor}
-                    onToggle={setCursorForStyle}
                     defaultColor={defaultHighlightColor}
                     lightnessRateList={lightnessRateList}
                     representColorList={representHighlightColorList}
@@ -152,7 +148,6 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                     class="w-full h-full" 
                     validColor={localStyle().fontColor || ""}
                     setValidColor={setFontColor}
-                    onToggle={setCursorForStyle}
                     defaultColor={defaultFontColor}
                     lightnessRateList={lightnessRateList}
                     representColorList={representFontColorList}

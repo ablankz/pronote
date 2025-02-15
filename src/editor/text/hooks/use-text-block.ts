@@ -8,7 +8,6 @@ import {
     editableTextRef, 
     rangeFontColorStyleUpdate, 
     setCurrentStyle, 
-    setEditableTextCursor, 
     setEditableTextRef, 
     setTextRefMap 
 } from "../store";
@@ -273,7 +272,6 @@ export function editableTextBlock(
                     }
                     batch(() => {
                         setCaretColor(null);
-                        setEditableTextCursor(cursorPos());
                         setEditingTextBlock(editingBlock);
                         setEditingTextCursor(textIndex);
                         let isNeedUpdate = false;
@@ -393,7 +391,6 @@ export function editableTextBlock(
                             editingContents: rangeEditingContents,
                             isLast,
                         });
-                        setEditableTextCursor(cursorPos());
                         setCurrentStyle({
                             style: overStyle,
                             selectType: "range",

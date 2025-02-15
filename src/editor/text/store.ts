@@ -10,7 +10,6 @@ export const [editableTextRef, setEditableTextRef] = createSignal<{
     id: string,
     newSelected: boolean,
 } | null>(null);
-export const [editableTextCursor, setEditableTextCursor] = createSignal<number | Range | null>(null);
 
 export const [currentStyle, setCurrentStyle] = createSignal<{
     style: NullableFlexibleTextStyles,

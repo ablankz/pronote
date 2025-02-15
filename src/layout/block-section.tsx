@@ -9,7 +9,11 @@ import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
 import { AddOpenState } from "../types/state";
 import { selectedBlock, setSelectedBlock } from "../store/select";
 import { TextValidComponentsMap } from "../editor/text/id";
-import { setCurrentStyle, setEditableTextCursor, setEditableTextRef, textRefMap } from "../editor/text/store";
+import { 
+    setCurrentStyle, 
+    setEditableTextRef, 
+    textRefMap 
+} from "../editor/text/store";
 import { DefaultFlexibleTextStyles } from "../renderer/text/const";
 import { generateUniqueID } from "../utils/generate";
 
@@ -44,7 +48,6 @@ export default function BlockSection() {
         if (!selected) {
             batch(() => {
                 setEditableTextRef(null);
-                setEditableTextCursor(0);
                 setCurrentStyle({
                     style: DefaultFlexibleTextStyles,
                     selectType: "cursor",
@@ -60,7 +63,6 @@ export default function BlockSection() {
         if (!selectedRef) {
             batch(() => {
                 setEditableTextRef(null);
-                setEditableTextCursor(0);
                 setCurrentStyle({
                     style: DefaultFlexibleTextStyles,
                     selectType: "cursor",

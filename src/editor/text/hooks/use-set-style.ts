@@ -1,7 +1,6 @@
 import { batch, createEffect, createSignal } from "solid-js";
 import { 
     currentStyle, 
-    editableTextCursor, 
     editableTextRef, 
     setCurrentStyle, 
     setRangeFontBoldStyleUpdate, 
@@ -13,7 +12,6 @@ import {
     setRangeFontUnderlineStyleUpdate, 
     setRangeHighlightColorStyleUpdate 
 } from "../store";
-import { selectCursorPos } from "../utils";
 
 export function useSetStyle() {
     const [localStyle, setLocalStyle] = createSignal(currentStyle().style);
@@ -31,29 +29,6 @@ export function useSetStyle() {
                 break;
         }
     });
-
-    const setCursorForStyle = () => {
-        if (editableTextRef()) {
-            const textRef = editableTextRef()!;
-            textRef.elm.focus();
-            const cursor = editableTextCursor();
-            if (cursor === null) return;
-            let from: number, to: number;
-            switch (typeof cursor) {
-                case "number":
-                    from = cursor;
-                    to = cursor;
-                    break;
-                case "object":
-                    from = cursor.start;
-                    to = cursor.end;
-                    break;
-                default:
-                    return;
-            }
-            selectCursorPos(from, to, textRef.elm);
-        }
-    }
     
     const setFontFamily = (fontFamily: string) => {
         batch(() => {
@@ -89,7 +64,6 @@ export function useSetStyle() {
                     fontFamily: fontFamily,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -128,7 +102,6 @@ export function useSetStyle() {
                     fontSize: size,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -177,7 +150,6 @@ export function useSetStyle() {
                     fontSize: newSize,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -216,7 +188,6 @@ export function useSetStyle() {
                     bold: bold,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -254,7 +225,6 @@ export function useSetStyle() {
                     bold: !prev.bold,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -293,7 +263,6 @@ export function useSetStyle() {
                     italic: italic,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -331,7 +300,6 @@ export function useSetStyle() {
                     italic: !prev.italic,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -370,7 +338,6 @@ export function useSetStyle() {
                     underline: underline,
                 };
             });
-            setCursorForStyle()
         });
     }
 
@@ -408,7 +375,6 @@ export function useSetStyle() {
                     underline: !prev.underline,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -447,7 +413,6 @@ export function useSetStyle() {
                     strikeThrough: strikeThrough,
                 };
             });
-            setCursorForStyle()
         });
     }
 
@@ -485,7 +450,6 @@ export function useSetStyle() {
                     strikeThrough: !prev.strikeThrough,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -523,7 +487,6 @@ export function useSetStyle() {
                     highlightColor: color,
                 };
             });
-            setCursorForStyle()
         });
     };
 
@@ -551,8 +514,6 @@ export function useSetStyle() {
                     id: editableTextRef()!.id,
                     color,
                 });
-            } else {
-                setCursorForStyle()
             }
             setLocalStyle(prev => {
                 if (prev.fontColor === color) {
@@ -568,7 +529,6 @@ export function useSetStyle() {
 
     return {
         localStyle,
-        setCursorForStyle,
         setFontFamily,
         setFontSize,
         updateFontSize,
