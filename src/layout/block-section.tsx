@@ -11,6 +11,7 @@ import { selectedBlock, setSelectedBlock } from "../store/select";
 import { TextValidComponentsMap } from "../editor/text/id";
 import { setCurrentStyle, setEditableTextCursor, setEditableTextRef, textRefMap } from "../editor/text/store";
 import { DefaultFlexibleTextStyles } from "../renderer/text/const";
+import { generateUniqueID } from "../utils/generate";
 
 interface internalBlock {
     internalId: string;
@@ -117,7 +118,7 @@ export default function BlockSection() {
 
     const addComponent = (id: string, componentType: BlockComponentType) => {
         const componentBlock: ComponentBlock = {
-            id: crypto.randomUUID(),
+            id: generateUniqueID(),
             type: componentType.type,
             data: {},
             widthInitialSizeValue: componentType.widthInitialSizeValue,
@@ -133,7 +134,7 @@ export default function BlockSection() {
             const newRootBlocks = [...prev];
             const index = newRootBlocks.findIndex((el) => el.internalId === id);
             newRootBlocks.splice(index + 1, 0, {
-                internalId: crypto.randomUUID(),
+                internalId: generateUniqueID(),
                 component: componentBlock
             });
             return newRootBlocks;
@@ -150,7 +151,7 @@ export default function BlockSection() {
 
     onMount(() => {
         setRootBlocks([{ 
-            internalId: crypto.randomUUID(),
+            internalId: generateUniqueID(),
         }]);
 
         document.addEventListener("dblclick", handleClickOutside);

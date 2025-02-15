@@ -1,6 +1,6 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
 
-export function createWindowSize() {
+export function useWindowSize() {
     const [width, setWidth] = createSignal(window.innerWidth);
     const [height, setHeight] = createSignal(window.innerHeight);
 

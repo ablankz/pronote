@@ -11,12 +11,7 @@ interface ParagraphContentProps {
 
 export default function ParagraphContent(props: ParagraphContentProps) {
 
-  const sampleTextBlock: FlexibleText[] = [
-    // { id: crypto.randomUUID(), type: FlexibleTextTypes.TEXT, version: 0, text: "Hi!\n", bold: false, italic: true, underline: true, strikeThrough: false, color: "red", fontSize: 38, fontFamily: "Times New Roman" },
-    // { id: crypto.randomUUID(), type: FlexibleTextTypes.TEXT, version: 0, text: "Hello ", bold: true, italic: false, underline: false, strikeThrough: false, color: "black", fontSize: 16, fontFamily: "Arial" },
-    // { id: crypto.randomUUID(), type: FlexibleTextTypes.TEXT, version: 0, text: "World!\n", bold: false, italic: true, underline: true, strikeThrough: false, color: "red", fontSize: 28, fontFamily: "Times New Roman" },
-    // { id: crypto.randomUUID(), type: FlexibleTextTypes.TEXT, version: 0, text: "This is a test.\n", bold: false, italic: false, underline: false, strikeThrough: true, color: "blue", fontSize: 14, fontFamily: "Verdana" },
-  ];
+  const sampleTextBlock: FlexibleText[] = [];
 
   const padding = {
     top: 2,

@@ -1,6 +1,19 @@
 import { batch, createEffect, createSignal } from "solid-js";
-import { currentStyle, editableTextRef, setCurrentStyle, setRangeFontBoldStyleUpdate, setRangeFontColorStyleUpdate, setRangeFontFamilyStyleUpdate, setRangeFontItalicStyleUpdate, setRangeFontSizeStyleUpdate, setRangeFontStrikeThroughStyleUpdate, setRangeFontUnderlineStyleUpdate, setRangeHighlightColorStyleUpdate } from "../store";
-import { setCursorForStyle } from "../set-style";
+import { 
+    currentStyle, 
+    editableTextCursor, 
+    editableTextRef, 
+    setCurrentStyle, 
+    setRangeFontBoldStyleUpdate, 
+    setRangeFontColorStyleUpdate, 
+    setRangeFontFamilyStyleUpdate, 
+    setRangeFontItalicStyleUpdate, 
+    setRangeFontSizeStyleUpdate, 
+    setRangeFontStrikeThroughStyleUpdate, 
+    setRangeFontUnderlineStyleUpdate, 
+    setRangeHighlightColorStyleUpdate 
+} from "../store";
+import { selectCursorPos } from "../utils";
 
 export function useSetStyle() {
     const [localStyle, setLocalStyle] = createSignal(currentStyle().style);
@@ -8,7 +21,7 @@ export function useSetStyle() {
     createEffect(() => {
         const newStyle = currentStyle()
         switch (newStyle.from) {
-            case "topBar":
+            case "setter":
                 // no need to update the style
             case "none":
                 setLocalStyle(newStyle.style);
@@ -18,6 +31,29 @@ export function useSetStyle() {
                 break;
         }
     });
+
+    const setCursorForStyle = () => {
+        if (editableTextRef()) {
+            const textRef = editableTextRef()!;
+            const cursor = editableTextCursor();
+            // console.log("+++++++++++++++++++++++", cursor);
+            if (cursor === null) return;
+            let from: number, to: number;
+            switch (typeof cursor) {
+                case "number":
+                    from = cursor;
+                    to = cursor;
+                    break;
+                case "object":
+                    from = cursor.start;
+                    to = cursor.end;
+                    break;
+                default:
+                    return;
+            }
+            selectCursorPos(from, to, textRef.elm);
+        }
+    }
     
     const setFontFamily = (fontFamily: string) => {
         batch(() => {
@@ -35,7 +71,7 @@ export function useSetStyle() {
                         fontFamily: fontFamily,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -73,7 +109,7 @@ export function useSetStyle() {
                         fontSize: size,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -117,7 +153,7 @@ export function useSetStyle() {
                         fontSize: newSize,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -161,7 +197,7 @@ export function useSetStyle() {
                         bold: bold,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -200,7 +236,7 @@ export function useSetStyle() {
                         bold: !prev.style.bold,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -238,7 +274,7 @@ export function useSetStyle() {
                         italic: italic,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -277,7 +313,7 @@ export function useSetStyle() {
                         italic: !prev.style.italic,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -315,7 +351,7 @@ export function useSetStyle() {
                         underline: underline,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -354,7 +390,7 @@ export function useSetStyle() {
                         underline: !prev.style.underline,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -392,7 +428,7 @@ export function useSetStyle() {
                         strikeThrough: strikeThrough,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -431,7 +467,7 @@ export function useSetStyle() {
                         strikeThrough: !prev.style.strikeThrough,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -469,7 +505,7 @@ export function useSetStyle() {
                         highlightColor: color,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -507,7 +543,7 @@ export function useSetStyle() {
                         fontColor: color,
                     },
                     selectType: prev.selectType,
-                    from: "topBar",
+                    from: "setter",
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -531,6 +567,7 @@ export function useSetStyle() {
 
     return {
         localStyle,
+        setCursorForStyle,
         setFontFamily,
         setFontSize,
         updateFontSize,

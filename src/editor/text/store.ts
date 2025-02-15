@@ -3,10 +3,10 @@ import { NullableFlexibleTextStyles } from "../../renderer/text/types";
 import { DefaultFlexibleTextStyles } from "../../renderer/text/const";
 import { Range } from "../../types/generic";
 
-export const [textRefMap, setTextRefMap] = createSignal<Map<string, HTMLDivElement>>(new Map());
+export const [textRefMap, setTextRefMap] = createSignal<Map<string, HTMLElement>>(new Map());
 
 export const [editableTextRef, setEditableTextRef] = createSignal<{
-    elm: HTMLDivElement,
+    elm: HTMLElement,
     id: string,
     newSelected: boolean,
 } | null>(null);
@@ -15,7 +15,7 @@ export const [editableTextCursor, setEditableTextCursor] = createSignal<number |
 export const [currentStyle, setCurrentStyle] = createSignal<{
     style: NullableFlexibleTextStyles,
     selectType: "cursor" | "range" | "none",
-    from: "topBar" | "none" | string, // textZoneId
+    from: "setter" | "none" | string, // textZoneId
 }>({
     style: DefaultFlexibleTextStyles,
     selectType: "cursor",

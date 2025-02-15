@@ -1,4 +1,4 @@
-import { ColorEqualOptions, LightnessColor } from "../../operator/color/types";
+import { ColorEqualOptions, LightnessColor } from "../operator/color/types";
 
 export const fontList = [
   "Arial", "Verdana", "Times New Roman", "Courier New", "Georgia",

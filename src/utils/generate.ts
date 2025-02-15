@@ -12,3 +12,7 @@ export function generateColor(name: string) {
   const index = name.charCodeAt(0) % colors.length;
   return colors[index];
 }
+
+export function generateUniqueID() {
+  return crypto.randomUUID();
+}

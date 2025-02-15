@@ -1,6 +1,5 @@
 import { AArrowDown, AArrowUp, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
 import StyleButton from "./style-button";
-import { setCursorForStyle } from "../../editor/text/set-style";
 import { 
     colorEqualsOptions, 
     defaultFontColor, 
@@ -11,7 +10,7 @@ import {
     minFontSize, 
     representFontColorList, 
     representHighlightColorList 
-} from "../style/const";
+} from "../../consts/style";
 import { globalCursorAction } from "../../store/action";
 import ColorDropdown from "../../operator/color/color-dropdown";
 import { FontColorDropdownButton, HighlightColorDropdownButton } from "../../operator/color/component/dropdown-button";
@@ -28,6 +27,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
     const {
         localStyle,
         updateFontSize,
+        setCursorForStyle,
         setFontFamily,
         setFontSize,
         switchBold,
