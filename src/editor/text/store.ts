@@ -65,3 +65,8 @@ export const [rangeFontVerticalAlignStyleUpdate, setRangeFontVerticalAlignStyleU
     id: string,
     align?: string,
 } | null>(null);
+export const [rangeFontScaleStyleUpdate, setRangeFontScaleStyleUpdate] = createSignal<{
+    id: string,
+    type: "specific" | "update",
+    scale?: number,
+} | null>(null);

@@ -7,6 +7,7 @@ import {
     setRangeFontColorStyleUpdate, 
     setRangeFontFamilyStyleUpdate, 
     setRangeFontItalicStyleUpdate, 
+    setRangeFontScaleStyleUpdate, 
     setRangeFontSizeStyleUpdate, 
     setRangeFontStrikeThroughStyleUpdate, 
     setRangeFontUnderlineStyleUpdate, 
@@ -694,6 +695,7 @@ export function useSetStyle() {
 
     const setVerticalAlign = (verticalAlign: string) => {
         batch(() => {
+            console.log("verticalAlign", verticalAlign);
             let forRange = false;
             setCurrentStyle(prev => {
                 if (prev.selectType === "range") {
@@ -726,6 +728,89 @@ export function useSetStyle() {
         });
     };
 
+    const setFontScale = (scale: number) => {
+        batch(() => {
+            let forRange = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        fontScale: scale,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontScaleStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "specific",
+                    scale,
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.fontScale === scale) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    fontScale: scale,
+                };
+            });
+        });
+    };
+
+    const updateFontScale = (scale: number, validator?: (scale: number) => number|null) => {
+        batch(() => {
+            let forRange = false;
+            setCurrentStyle(prev => {
+                if (prev.selectType === "range") {
+                    forRange = true;
+                }
+                if (prev.style.fontScale === undefined) {
+                    return prev;
+                }
+                const afterScale = prev.style.fontScale + scale;
+                const newScale = validator ? validator(afterScale) : afterScale;
+                if (newScale === null) {
+                    return prev;
+                }
+                return {
+                    style: {
+                        ...prev.style,
+                        fontScale: newScale,
+                    },
+                    selectType: prev.selectType,
+                    from: "setter",
+                }
+            });
+            if (forRange && editableTextRef() !== null) {
+                setRangeFontScaleStyleUpdate({
+                    id: editableTextRef()!.id,
+                    type: "update",
+                    scale,
+                });
+            }
+            setLocalStyle(prev => {
+                if (prev.fontScale === undefined) {
+                    return prev;
+                }
+                const newFontScale = prev.fontScale + scale;
+                const newScale = validator ? validator(newFontScale) : newFontScale;
+                if (newScale === null) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    fontScale: newScale,
+                };
+            });
+        });
+    };
+
     return {
         localStyle,
         setFontFamily,
@@ -746,5 +831,7 @@ export function useSetStyle() {
         setHighlightColor,
         setFontColor,
         setVerticalAlign,
+        setFontScale,
+        updateFontScale,
     };
 }

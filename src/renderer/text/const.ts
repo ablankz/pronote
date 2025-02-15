@@ -13,7 +13,8 @@ export const DefaultFlexibleTextStyles: FlexibleTextStyles = {
     highlightColor: "",
     fontSize: 16,
     fontFamily: "Arial",
-    verticalAlign: "sub",
+    verticalAlign: "baseline",
+    fontScale: 1,
 }
 
 export const DefaultFlexibleText = (id: string): FlexibleText => {
@@ -31,5 +32,6 @@ export const DefaultFlexibleText = (id: string): FlexibleText => {
         fontSize: DefaultFlexibleTextStyles.fontSize,
         fontFamily: DefaultFlexibleTextStyles.fontFamily,
         verticalAlign: DefaultFlexibleTextStyles.verticalAlign,
+        fontScale: DefaultFlexibleTextStyles.fontScale,
     };
 };

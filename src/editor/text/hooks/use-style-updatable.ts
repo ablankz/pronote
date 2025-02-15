@@ -10,7 +10,9 @@ import {
     rangeFontSizeStyleUpdate, 
     rangeFontStrikeThroughStyleUpdate, 
     rangeFontUnderlineStyleUpdate, 
-    rangeHighlightColorStyleUpdate, 
+    rangeFontVerticalAlignStyleUpdate, 
+    rangeHighlightColorStyleUpdate,
+    rangeFontScaleStyleUpdate, 
 } from "../store";
 import { RangeWithCurrent } from "../../../types/generic";
 import { equalFlexibleTextStyles, nullableToDefaultFlexibleTextStyles } from "../../../renderer/text/utils";
@@ -339,6 +341,58 @@ export function useStyleUpdatable(
                             return {
                                 ...block,
                                 fontSize: block.fontSize + rangeFontSizeStyleUpdate()!.size!,
+                            };
+                        };
+                        break;
+                }
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontVerticalAlignStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontVerticalAlignStyleUpdate()?.id !== textZoneId()
+                    || rangeFontVerticalAlignStyleUpdate()?.align === undefined
+                ) return;
+                const newBlockFactory = (block: FlexibleText) => {
+                    console.log("rangeFontVerticalAlignStyleUpdate", rangeFontVerticalAlignStyleUpdate());
+                    return {
+                        ...block,
+                        verticalAlign: rangeFontVerticalAlignStyleUpdate()!.align!,
+                    };
+                };
+                rangeUpdate(newBlockFactory);
+            });
+        }
+    });
+
+    createEffect(() => {
+        if (rangeFontScaleStyleUpdate() !== null) {
+            untrack(() => {
+                if (
+                    rangeSelected() === null 
+                    || rangeFontScaleStyleUpdate()?.id !== textZoneId()
+                    || rangeFontScaleStyleUpdate()?.type === undefined
+                ) return;
+                let newBlockFactory: (block: FlexibleText) => FlexibleText;
+                switch (rangeFontScaleStyleUpdate()!.type) {
+                    case "specific":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                fontScale: rangeFontScaleStyleUpdate()!.scale!,
+                            };
+                        };
+                        break;
+                    case "update":
+                        newBlockFactory = (block: FlexibleText) => {
+                            return {
+                                ...block,
+                                fontScale: block.fontScale + rangeFontScaleStyleUpdate()!.scale!,
                             };
                         };
                         break;

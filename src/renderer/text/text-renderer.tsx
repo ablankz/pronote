@@ -45,7 +45,7 @@ const FlexibleTextRenderer : Component<FlexibleTextRendererProps> = (props) => {
                             "text-decoration": `${chunk.underline ? "underline" : ""} ${chunk.strikeThrough ? "line-through" : ""}`,
                             "color": chunk.fontColor || "inherit",
                             "background-color": chunk.highlightColor || "inherit",
-                            "font-size": `${chunk.fontSize}px`,
+                            "font-size": `${chunk.fontSize * chunk.fontScale}px`,
                             "font-family": chunk.fontFamily || "inherit",
                             "vertical-align": chunk.verticalAlign || "baseline",
                             ...props.spanStyle,

@@ -12,6 +12,7 @@ export interface FlexibleTextStyles {
     fontSize: number;
     fontFamily: string;
     verticalAlign: string;
+    fontScale: number;
 }
 
 export type NullableFlexibleTextStyles = Partial<FlexibleTextStyles>;

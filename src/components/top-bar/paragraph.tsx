@@ -1,4 +1,4 @@
-import { AArrowDown, AArrowUp, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
+import { AArrowDown, AArrowUp, AlignCenter, AlignEndVertical, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
 import StyleButton from "./style-button";
 import { 
     colorEqualsOptions, 
@@ -17,6 +17,7 @@ import { FontColorDropdownButton, HighlightColorDropdownButton } from "../../ope
 import FontFamilyDropdown from "../../operator/font-family/font-family-dropdown";
 import FontSizeDropdown from "../../operator/font-size/font-size-dropdown";
 import { useSetStyle } from "../../editor/text/hooks/use-set-style";
+import { batch } from "solid-js";
 
 interface TopBarParagraphProps {
     class?: string;
@@ -35,6 +36,8 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
         nearTrueStrikeThrough,
         setHighlightColor,
         setFontColor,
+        setVerticalAlign,
+        setFontScale,
     } = useSetStyle();
 
     const fontSizeValidator = (size: number) => (size <= minFontSize) ? minFontSize : size;
@@ -117,6 +120,21 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                 <StyleButton
                     Icon={<Strikethrough size={20} />}
                     onClick={nearTrueStrikeThrough}
+                    class="mx-1 rounded w-7 h-7 flex items-center justify-center"
+                    classList={{
+                        "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
+                        "bg-gray-500 border border-gray-400": localStyle().strikeThrough || false,
+                    }}
+                />
+
+                <StyleButton
+                    Icon={<AlignEndVertical size={20} />}
+                    onClick={() => {
+                        batch(() => {
+                            setVerticalAlign("sub");
+                            setFontScale(0.75);
+                        });  
+                    }}
                     class="mx-1 rounded w-7 h-7 flex items-center justify-center"
                     classList={{
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),

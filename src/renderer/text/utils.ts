@@ -18,6 +18,7 @@ export function nullableToDefaultFlexibleTextStyles(
         fontSize: nullable?.fontSize ?? DefaultFlexibleTextStyles.fontSize,
         fontFamily: nullable?.fontFamily ?? DefaultFlexibleTextStyles.fontFamily,
         verticalAlign: nullable?.verticalAlign ?? DefaultFlexibleTextStyles.verticalAlign,
+        fontScale: nullable?.fontScale ?? DefaultFlexibleTextStyles.fontScale,
     };
 }
 
@@ -30,7 +31,8 @@ export function equalFlexibleTextStyles(a: FlexibleTextStyles, b: FlexibleTextSt
         a.highlightColor === b.highlightColor &&
         a.fontSize === b.fontSize &&
         a.fontFamily === b.fontFamily &&
-        a.verticalAlign === b.verticalAlign;
+        a.verticalAlign === b.verticalAlign &&
+        a.fontScale === b.fontScale;
 }
 
 export function equalOverrideFlexibleTextStyles(
@@ -47,6 +49,7 @@ export function equalOverrideFlexibleTextStyles(
         fontSize: a.fontSize === b.fontSize ? a.fontSize : undefined,
         fontFamily: a.fontFamily === b.fontFamily ? a.fontFamily : undefined,
         verticalAlign: a.verticalAlign === b.verticalAlign ? a.verticalAlign : undefined,
+        fontScale: a.fontScale === b.fontScale ? a.fontScale : undefined,
     };
 }
 
@@ -61,5 +64,6 @@ export function extractStyleFromFlexibleText(flexibleText: FlexibleText): Flexib
         fontSize: flexibleText.fontSize,
         fontFamily: flexibleText.fontFamily,
         verticalAlign: flexibleText.verticalAlign,
+        fontScale: flexibleText.fontScale,
     };
 }
