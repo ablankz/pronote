@@ -1,4 +1,4 @@
-import { AArrowDown, AArrowUp, AlignCenter, AlignEndVertical, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
+import { AArrowDown, AArrowUp, AlignEndVertical, Bold, Italic, Strikethrough, Underline } from "lucide-solid";
 import StyleButton from "./style-button";
 import { 
     colorEqualsOptions, 
@@ -38,7 +38,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
         setFontColor,
         setVerticalAlign,
         setFontScale,
-    } = useSetStyle();
+    } = useSetStyle("topBar");
 
     const fontSizeValidator = (size: number) => (size <= minFontSize) ? minFontSize : size;
 
@@ -127,7 +127,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                     }}
                 />
 
-                <StyleButton
+                {/* <StyleButton
                     Icon={<AlignEndVertical size={20} />}
                     onClick={() => {
                         batch(() => {
@@ -140,7 +140,7 @@ export default function TopBarParagraph(props: TopBarParagraphProps) {
                         "cursor-pointer hover:bg-gray-500": !globalCursorAction(),
                         "bg-gray-500 border border-gray-400": localStyle().strikeThrough || false,
                     }}
-                />
+                /> */}
             </div>
 
             <div class="flex items-center ml-2 bg-gray-600 rounded border border-gray-400">

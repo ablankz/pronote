@@ -13,7 +13,7 @@ export const [editableTextRef, setEditableTextRef] = createSignal<{
 export const [currentStyle, setCurrentStyle] = createSignal<{
     style: NullableFlexibleTextStyles,
     selectType: "cursor" | "range" | "none",
-    from: "setter" | "none" | string, // textZoneId
+    from: "none" | string, // textZoneId
 }>({
     style: DefaultFlexibleTextStyles,
     selectType: "cursor",

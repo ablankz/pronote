@@ -15,13 +15,15 @@ import {
     setRangeHighlightColorStyleUpdate 
 } from "../store";
 
-export function useSetStyle() {
+export function useSetStyle(
+    setterId: string,
+) {
     const [localStyle, setLocalStyle] = createSignal(currentStyle().style);
 
     createEffect(() => {
         const newStyle = currentStyle()
         switch (newStyle.from) {
-            case "setter":
+            case setterId:
                 // no need to update the style
             case "none":
                 setLocalStyle(newStyle.style);
@@ -48,7 +50,7 @@ export function useSetStyle() {
                         fontFamily: fontFamily,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -85,7 +87,7 @@ export function useSetStyle() {
                         fontSize: size,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -128,7 +130,7 @@ export function useSetStyle() {
                         fontSize: newSize,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -171,7 +173,7 @@ export function useSetStyle() {
                         bold: bold,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -209,7 +211,7 @@ export function useSetStyle() {
                         bold: !prev.style.bold,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -249,7 +251,7 @@ export function useSetStyle() {
                         bold: !prev.style.bold,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -287,7 +289,7 @@ export function useSetStyle() {
                         italic: italic,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -325,7 +327,7 @@ export function useSetStyle() {
                         italic: !prev.style.italic,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -365,7 +367,7 @@ export function useSetStyle() {
                         italic: !prev.style.italic,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -403,7 +405,7 @@ export function useSetStyle() {
                         underline: underline,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -441,7 +443,7 @@ export function useSetStyle() {
                         underline: !prev.style.underline,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -481,7 +483,7 @@ export function useSetStyle() {
                         underline: !prev.style.underline,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -519,7 +521,7 @@ export function useSetStyle() {
                         strikeThrough: strikeThrough,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -557,7 +559,7 @@ export function useSetStyle() {
                         strikeThrough: !prev.style.strikeThrough,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -597,7 +599,7 @@ export function useSetStyle() {
                         strikeThrough: !prev.style.strikeThrough,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -635,7 +637,7 @@ export function useSetStyle() {
                         highlightColor: color,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -672,7 +674,7 @@ export function useSetStyle() {
                         fontColor: color,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -707,7 +709,7 @@ export function useSetStyle() {
                         verticalAlign: verticalAlign,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -741,7 +743,7 @@ export function useSetStyle() {
                         fontScale: scale,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
@@ -784,7 +786,7 @@ export function useSetStyle() {
                         fontScale: newScale,
                     },
                     selectType: prev.selectType,
-                    from: "setter",
+                    from: setterId,
                 }
             });
             if (forRange && editableTextRef() !== null) {
