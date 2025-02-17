@@ -6,7 +6,7 @@ import { convertToPercentage } from "../../utils/size";
 import { setSelectedBlock } from "../../store/select";
 import { globalCursorAction, setDetailOpen, setGlobalCursorAction } from "../../store/action";
 import BlockContent from "./content";
-import { ComponentBlock } from "../../types/block";
+import { ComponentBlock } from "../../renderer/types";
 import { SizeValue } from "../../types/size";
 import { maxPercentage, minPercentage, minPx, percentagePrecision, pxPrecision } from "../../consts/size";
 

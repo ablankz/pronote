@@ -2,7 +2,7 @@ import { X } from "lucide-solid";
 import { For } from "solid-js";
 import Scrollable from "../scrollable";
 import { globalCursorAction } from "../../store/action";
-import { BlockComponentType } from "../../types/block";
+import { BlockComponentType } from "../../renderer/types";
 
 interface AddComponentModalProps {
     handleAddComponent: (type: BlockComponentType) => void;

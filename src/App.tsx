@@ -5,6 +5,8 @@ import Sidebar from "./layout/side-bar";
 import Header from "./layout/header";
 import BlockSection from "./layout/block-section";
 import DetailBar from "./layout/detail-bar";
+import { Hostname } from "./schema/hostname";
+import { Path } from "./schema/path";
 
 interface Item {
   id: number;
@@ -15,6 +17,24 @@ interface Item {
 export default function App() {
 
   const [elements, setElements] = createSignal<Item[]>([]);
+
+//   console.log(PathUtils.cleanPath("/a/b/c/../d"));         // "/a/b/d"
+// console.log(PathUtils.cleanPath("a/b/./c"));            // "a/b/c"
+// console.log(PathUtils.cleanPath("/../a/b"));            // "/a/b"
+// console.log(PathUtils.cleanPath("a///b/c/./../d"));     // "a/b/d"
+// console.log(PathUtils.cleanPath("/a/b/c/../../d/e"));   // "/a/d/e"
+// console.log(PathUtils.cleanPath("a/b/c/../../../x/y")); // "x/y"
+// console.log(PathUtils.cleanPath("/a/./b/./c/"));        // "/a/b/c"
+// console.log(PathUtils.cleanPath("././a/b/./c/.."));     // "a/b"
+
+  // const p = new Path("././a/b/./c/../d/e", {});
+  // console.log(p.down("/${id}").resolve({id: "123"}));
+  // console.log(new Path("/a/b/c/def/test.png", {}).match("/a/b/**/*.png"));
+  // console.log(new Path("/a/b/aa/c/def/aa/test.png", {}).match("/a/b/**/aa/*.png"));
+  // console.log(new Hostname("127.*.*.1", {}).match("127.0.1.1", "this"));
+  // console.log(new Hostname("127.0.0.1", {}).match("127.0.**"));
+  // console.log(new Hostname("www.example.com", {}).match("*.example.co*"));
+  // console.log(new Hostname("2001:0db8:85a3:0000:0000:8a2e:0370:7334", {}).match("2001:*b8:85a3:**:8a2e:0370:*"));
 
   const saveToLocalStorage = () => {
     localStorage.setItem("design", JSON.stringify(elements()));

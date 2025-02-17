@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { ComponentBlock } from "../types/block";
+import { ComponentBlock } from "../renderer/types";
 
 export interface SelectedBlockValue {
     component: ComponentBlock;

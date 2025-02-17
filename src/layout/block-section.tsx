@@ -5,7 +5,7 @@ import BlockComponent from "../components/block/component";
 import BlockPlus from "../components/block/plus";
 import ComponentAdder from "../components/block/component-adder";
 import { globalCursorAction, setDetailOpen } from "../store/action";
-import { BlockComponentType, BlockTypes, ComponentBlock } from "../types/block";
+import { BlockComponentType, BlockTypes, ComponentBlock } from "../renderer/types";
 import { AddOpenState } from "../types/state";
 import { selectedBlock, setSelectedBlock } from "../store/select";
 import { TextValidComponentsMap } from "../editor/text/id";

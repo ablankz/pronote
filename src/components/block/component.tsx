@@ -1,5 +1,5 @@
 import { selectedBlock } from "../../store/select";
-import { ComponentBlock } from "../../types/block";
+import { ComponentBlock } from "../../renderer/types";
 import Block from "./block";
 
 interface BlockComponentProps {

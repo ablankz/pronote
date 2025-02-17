@@ -1,5 +1,5 @@
 import { JSXElement } from "solid-js";
-import { SizeValue } from "./size";
+import { SizeValue } from "../types/size";
 
 export const BlockTypes = {
     // BASIC

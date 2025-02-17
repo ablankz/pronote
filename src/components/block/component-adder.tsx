@@ -1,7 +1,7 @@
 import { createEffect, createMemo, Setter, Show } from "solid-js";
 import AddComponentModal from "./add-component-modal";
 import { AddOpenState } from "../../types/state";
-import { BlockComponentType, BlockTypeCategories, BlockTypes } from "../../types/block";
+import { BlockComponentType, BlockTypeCategories, BlockTypes } from "../../renderer/types";
 import { 
     Activity,
     BookOpen, 

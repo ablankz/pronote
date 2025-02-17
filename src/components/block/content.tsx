@@ -1,5 +1,5 @@
 import { Match, Switch } from "solid-js";
-import { BlockTypes, ComponentBlock } from "../../types/block";
+import { BlockTypes, ComponentBlock } from "../../renderer/types";
 import ParagraphContent from "./content/paragraph-content";
 
 interface BlockContentProps {
