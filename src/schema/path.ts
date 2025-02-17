@@ -4,19 +4,25 @@ export type PathFormatType =
 
 export interface PathSchema {
     format?: PathFormatType;
+    delimiter?: string;
     maxLen?: number;
+    doubleWildcardPriority?: "head" | "tail";
 }
 
 export class Path {
     private original: string;
     private value: string;
     private type: PathFormatType;
+    private doubleWildcardPriority: "head" | "tail";
+    private delimiter: string;
 
     constructor(path: string, private schema: PathSchema) {
         this.original = path;
+        this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
+        this.delimiter = schema.delimiter || "/";
 
         if (schema.format === undefined) {
-            if (path.startsWith("/")) {
+            if (path.startsWith(this.delimiter)) {
                 this.type = "absolute";
             } else {
                 this.type = "relative";
@@ -24,13 +30,13 @@ export class Path {
         } else {
             switch (schema.format) {
                 case "absolute":
-                    if (!path.startsWith("/")) {
+                    if (!path.startsWith(this.delimiter)) {
                         throw new Error(`Invalid absolute path: ${path}`);
                     }
                     this.type = schema.format;
                     break;
                 case "relative":
-                    if (path.startsWith("/")) {
+                    if (path.startsWith(this.delimiter)) {
                         throw new Error(`Invalid relative path: ${path}`);
                     }
                     this.type = schema.format;
@@ -43,12 +49,11 @@ export class Path {
             throw new Error(`Path exceeds maximum length: ${path}`);
         }
         const openBrackets = path.match(/\$\{/g);
-        console.log(openBrackets);
         const closeBrackets = path.match(/\}/g);
         if (openBrackets && closeBrackets && openBrackets.length !== closeBrackets.length) {
             throw new Error(`Unbalanced brackets: ${path}`);
         }
-        this.value = Path.cleanPath(path);
+        this.value = Path.cleanPath(path, this.delimiter);
     }
 
     static resolvePath(pathStr: string, variables: Record<string, string>): string {
@@ -60,8 +65,8 @@ export class Path {
         });
     }
 
-    static cleanPath(path: string): string {
-        const parts = path.split("/");
+    static cleanPath(path: string, delimiter: string = "/"): string {
+        const parts = path.split(delimiter);
         const stack: string[] = [];
 
         for (const part of parts) {
@@ -74,7 +79,7 @@ export class Path {
             }
         }
 
-        return (path.startsWith("/") ? "/" : "") + stack.join("/");
+        return (path.startsWith(delimiter) ? delimiter : "") + stack.join(delimiter);
     }
 
     resolve(variables: Record<string, string>): Path {
@@ -82,12 +87,12 @@ export class Path {
     }
 
     up(count: number = 1): Path {
-        const additional = Array.from({ length: count }, () => "..").join("/");
-        return new Path(this.value + "/" + additional, this.schema);
+        const additional = Array.from({ length: count }, () => "..").join(this.delimiter);
+        return new Path(this.value + this.delimiter + additional, this.schema);
     }
 
     down(dir: string): Path {
-        return new Path(this.value + "/" + dir, this.schema);
+        return new Path(this.value + this.delimiter + dir, this.schema);
     }
 
     getType(): PathFormatType {
@@ -103,8 +108,8 @@ export class Path {
     }
 
     match(path: string, base: "this" | "outer" = "outer"): boolean {
-        const parts = base === "this" ? this.value.split("/") : path.split("/");
-        const splitValue = base === "this" ? path.split("/") : this.value.split("/");
+        const parts = base === "this" ? this.value.split(this.delimiter) : path.split(this.delimiter);
+        const splitValue = base === "this" ? path.split(this.delimiter) : this.value.split(this.delimiter);
 
         let j = 0;
         for (let i = 0; i < parts.length; i++) {
@@ -124,24 +129,50 @@ export class Path {
                         .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
                         .replace(/\*/g, ".*");
                     const regex = new RegExp(`^${regexStr}$`);
-                    let k = splitValue.length - 1;
-                    while (k >= j) {
-                        if (regex.test(splitValue[k])) {
-                            found = true;
-                            j = k;
+                    let k;
+                    switch (this.doubleWildcardPriority) {
+                        case "head":
+                            while (j < splitValue.length) {
+                                if (regex.test(splitValue[j])) {
+                                    found = true;
+                                    break;
+                                }
+                                j++;
+                            }
                             break;
-                        }
-                        k--;
+                        case "tail":
+                            k = splitValue.length - 1;
+                            while (k >= j) {
+                                if (regex.test(splitValue[k])) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                                k--;
+                            }
+                            break;
                     }
                 } else {
-                    let k = splitValue.length - 1;
-                    while (k >= j) {
-                        if (splitValue[k] === next) {
-                            found = true;
-                            j = k;
+                    let k;
+                    switch (this.doubleWildcardPriority) {
+                        case "head":
+                            while (j < splitValue.length) {
+                                if (next === splitValue[j]) {
+                                    found = true;
+                                    break;
+                                }
+                                j++;
+                            }
                             break;
-                        }
-                        k--;
+                        case "tail":
+                            for (k = splitValue.length - 1; k >= j; k--) {
+                                if (next === splitValue[k]) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                            }
+                            break;
                     }
                 }
                 if (!found) {

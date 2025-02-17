@@ -7,14 +7,17 @@ export type HostnameFormatType =
 
 export interface HostnameSchema {
     format?: HostnameFormatType;
+    doubleWildcardPriority?: "head" | "tail";
 }
 
 export class Hostname {
     private original: string;
     private type: HostnameFormatType;
+    private doubleWildcardPriority: "head" | "tail";
 
     constructor(host: string, schema: HostnameSchema) {
         this.original = host;
+        this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
         const ipv4Regex = /^(([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/;
         const ipv6Regex = /^((([*]|[0-9a-fA-F]{1,4}):){7,7}([*]|[0-9a-fA-F]{1,4})|(([*]|[0-9a-fA-F]{1,4}):){1,7}:|(([*]|[0-9a-fA-F]{1,4}):){1,6}:([*]|[0-9a-fA-F]{1,4})|(([*]|[0-9a-fA-F]{1,4}):){1,5}(:([*]|[0-9a-fA-F]{1,4})){1,2}|(([*]|[0-9a-fA-F]{1,4}):){1,4}(:([*]|[0-9a-fA-F]{1,4})){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:([*]|[0-9a-fA-F]{1,4})){1,4}|(([*]|[0-9a-fA-F]{1,4}):){1,2}(:([*]|[0-9a-fA-F]{1,4})){1,5}|([*]|[0-9a-fA-F]{1,4}):((:([*]|[0-9a-fA-F]{1,4})){1,6})|:((:([*]|[0-9a-fA-F]{1,4})){1,7}|:)|fe80:(:([*]|[0-9a-fA-F]{0,4})){0,4}%([*]|[0-9a-zA-Z]{1,})|::(ffff(:0{1,4}){0,1}:){0,1}(([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(([*]|[0-9a-fA-F]{1,4}):){1,4}:(([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
         const fqdnRegex = /^(([a-zA-Z0-9*][a-zA-Z0-9*\-]*[a-zA-Z0-9*])|[a-zA-Z0-9*]+\.)*([a-zA-Z*]+|xn\-\-[a-zA-Z0-9*]+)\.?$/
@@ -120,25 +123,52 @@ export class Hostname {
                         .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
                         .replace(/\*/g, ".*");
                     const regex = new RegExp(`^${regexStr}$`);
-                    let k = splitValue.length - 1;
-                    while (k >= j) {
-                        if (regex.test(splitValue[k])) {
-                            found = true;
-                            j = k;
+                    let k;
+                    switch (this.doubleWildcardPriority) {
+                        case "head":
+                            k = 0;
+                            while (k <= j) {
+                                if (regex.test(splitValue[k])) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                                k++;
+                            }
                             break;
-                        }
-                        k--;
+                        case "tail":
+                            k = splitValue.length - 1;
+                            while (k >= j) {
+                                if (regex.test(splitValue[k])) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                                k--;
+                            }
+                            break;
                     }
                 } else {
-                    let k = splitValue.length - 1;
-                    while (k >= j) {
-                        if (splitValue[k] === next) {
-                            found = true;
-                            j = k;
+                    switch (this.doubleWildcardPriority) {
+                        case "head":
+                            for (let k = j; k < splitValue.length; k++) {
+                                if (next === splitValue[k]) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                            }
+                            break;
+                        case "tail":
+                            for (let k = splitValue.length - 1; k >= j; k--) {
+                                if (next === splitValue[k]) {
+                                    found = true;
+                                    j = k;
+                                    break;
+                                }
+                            }
                             break;
                         }
-                        k--;
-                    }
                 }
                 if (!found) {
                     return false;

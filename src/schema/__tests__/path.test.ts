@@ -146,5 +146,28 @@ describe("Path Class", () => {
             expect(path.match("/home/user/docs", "this")).toBe(true);
             expect(path.match("/home/docs/docs/user/docs", "this")).toBe(true);
         });
+
+        test("double wildcard priority: head", () => {
+            const hostname = new Path("a/**/c/d/**/e", { doubleWildcardPriority: "head" });
+            expect(hostname.match("a/b/c/d/ss/rr/c/e", "this")).toBe(true);
+            expect(hostname.match("a/b/c/c/d/e", "this")).toBe(false);
+        });
+
+        test("double wildcard priority: tail", () => {
+            const hostname = new Path("a/**/c/d/**/e", {});
+            expect(hostname.match("a/b/c/d/ss/rr/c/e", "this")).toBe(false);
+            expect(hostname.match("a/b/c/c/d/e", "this")).toBe(true);
+        });
+    });
+
+    describe("Path Delimiter", () => {
+        test("should use custom delimiter", () => {
+            const path = new Path("home:user:documents", { delimiter: ":" });
+            expect(path.getPath()).toBe("home:user:documents");
+            expect(path.match("home:user:*s")).toBe(true);
+            expect(path.match("**/documents")).toBe(false);
+            expect(path.match("home/user/documents")).toBe(false);
+            expect(path.up().getPath()).toBe("home:user");
+        });
     });
 });

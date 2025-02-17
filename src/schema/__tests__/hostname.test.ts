@@ -97,6 +97,18 @@ describe("Hostname Class", () => {
             expect(hostname.match("2001:db8::ff00:42:8329", "this")).toBe(true);
             expect(hostname.match("2001:abcd::1", "this")).toBe(false);
         });
+
+        test("double wildcard priority: head", () => {
+            const hostname = new Hostname("a.**.c.d.**.e", { format: "fqdn", doubleWildcardPriority: "head" });
+            expect(hostname.match("a.b.c.d.ss.rr.c.e", "this")).toBe(true);
+            expect(hostname.match("a.b.c.c.d.e", "this")).toBe(false);
+        });
+
+        test("double wildcard priority: tail", () => {
+            const hostname = new Hostname("a.**.c.d.**.e", { format: "fqdn" });
+            expect(hostname.match("a.b.c.d.ss.rr.c.e", "this")).toBe(false);
+            expect(hostname.match("a.b.c.c.d.e", "this")).toBe(true);
+        });
     });
 
     describe("Edge Cases", () => {
