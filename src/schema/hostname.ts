@@ -1,3 +1,6 @@
+import { generateUniqueID } from "../utils/generate";
+import { DataSchema, OperationData } from "./types";
+
 export type HostnameFormatType =
     | "fqdn"        // Fully Qualified Domain Name, e.g. www.example.com
     | "shortname"   // localhost, server01, etc.
@@ -10,12 +13,29 @@ export interface HostnameSchema {
     doubleWildcardPriority?: "head" | "tail";
 }
 
-export class Hostname {
+export const HostnameOperations = {
+    REGENERATE: "regenerate",
+    UPDATE: "update",
+} as const;
+
+export type HostnameOperation = typeof HostnameOperations[keyof typeof HostnameOperations];
+
+export interface HostnameOperationData extends OperationData {
+    operation: HostnameOperation;
+    regenerate?: {
+        schema: HostnameSchema;
+    };
+    update?: {
+        host: string;
+    };
+}
+
+export class Hostname implements DataSchema<HostnameOperationData, Hostname> {
     private original: string;
     private type: HostnameFormatType;
     private doubleWildcardPriority: "head" | "tail";
 
-    constructor(host: string, schema: HostnameSchema) {
+    constructor(host: string, private schema: HostnameSchema, private id: string = "") {
         this.original = host;
         this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
         const ipv4Regex = /^(([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/;
@@ -24,6 +44,10 @@ export class Hostname {
         const shortnameRegex = /^[a-zA-Z0-9*-]+$/;        
         const customRegex = new RegExp(".*");
         const containsWildcard = host.includes("**");
+
+        if (id === "") {
+            this.id = generateUniqueID();
+        }
 
         if (schema.format === undefined) {
             if (ipv4Regex.test(host)) {
@@ -75,6 +99,29 @@ export class Hostname {
                     throw new Error(`Invalid hostname format: ${schema.format}`);
             }
         }
+    }
+
+    operate(data: HostnameOperationData): Hostname {
+        switch (data.operation) {
+            case HostnameOperations.REGENERATE:
+                return this.regenerate(data.regenerate?.schema || {});
+            case HostnameOperations.UPDATE:
+                return this.update(data.update?.host || "");
+            default:
+                throw new Error(`Invalid operation: ${data.operation}`);
+        }
+    }
+
+    getID(): string {
+        return this.id;
+    }
+
+    regenerate(schema: HostnameSchema): Hostname {
+        return new Hostname(this.original, schema, this.id);
+    }
+
+    update(host: string): Hostname {
+        return new Hostname(host, this.schema, this.id);
     }
 
     getHostname(): string {
@@ -196,5 +243,9 @@ export class Hostname {
 
     getType(): HostnameFormatType {
         return this.type;
+    }
+
+    toString(): string {
+        return this.original;
     }
 }

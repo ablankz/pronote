@@ -31,12 +31,12 @@ export type JSONSchemaType =
     | "record"
     | "map"
     | "stack"
-    | "queue";
+    | "queue"
+    | "enum";
 
 export interface JSONSchemaProperty {
     type: JSONSchemaType | JSONSchemaType[];
     description?: string;
-    enum?: (string | number | boolean | null)[];
     default?: string | number | boolean | null;
     minLength?: number; // if type is "string", "array"
     maxLength?: number; // if type is "string", "array"
@@ -55,7 +55,6 @@ export interface JSONSchemaDefinition {
     type: JSONSchemaType | JSONSchemaType[];
     title?: string;
     description?: string;
-    enum?: (string | number | boolean | null)[];
     default?: string | number | boolean | null;
     minLength?: number; // if type is "string", "array"
     maxLength?: number; // if type is "string", "array"
@@ -91,73 +90,10 @@ export class JSONSchemaStore {
     }
 }
 
-// const mapTestSchemaStore = new JSONSchemaStore();
-// const testSchema: JSONSchemaDefinition = {
-//     $id: "test",
-//     type: "object",
-//     properties: {
-//         "mapData": {
-//             type: "map",
-//             mapItems: {
-//                 key: {
-//                     type: "number"
-//                 },
-//                 value: {
-//                     type: "object",
-//                     properties: {
-//                         "needData": {
-//                             type: "boolean"
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-// mapTestSchemaStore.addSchema("test", testSchema)
+export interface OperationData {}
 
-// Sample Usage
-// const schemaStore = new JSONSchemaStore();
-
-// const userSchema: JSONSchemaDefinition = {
-//     $id: "User",
-//     type: "object",
-//     title: "User",
-//     description: "ユーザー情報のスキーマ",
-//     properties: {
-//         id: {
-//             type: "string",
-//             description: "ユーザーの一意なID",
-//             format: "uuid",
-//         },
-//         name: {
-//             type: "string",
-//             description: "ユーザー名",
-//             minLength: 3,
-//             maxLength: 50,
-//         },
-//         age: {
-//             type: "integer",
-//             description: "年齢",
-//             minimum: 0,
-//             maximum: 120,
-//         },
-//         isActive: {
-//             type: "boolean",
-//             description: "アクティブなユーザーかどうか",
-//         },
-//         tags: {
-//             type: "array",
-//             description: "ユーザーのタグ",
-//             items: {
-//                 type: "string",
-//             },
-//         },
-//     },
-//     required: ["id", "name", "age"],
-// };
-
-// schemaStore.addSchema("User", userSchema);
-
-// console.log(schemaStore.getSchema("User")); // スキーマを取得
-// console.log(schemaStore.listSchemas()); // 登録されたスキーマのIDリスト
+export interface DataSchema<T extends OperationData, U extends DataSchema<T, U>> {
+    getID(): string;
+    toString(): string;
+    operate(data: T): U;
+}

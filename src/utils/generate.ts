@@ -1,3 +1,5 @@
+import { v7 as uuidv7 } from "uuid";
+
 export function generateInitials(name: string) {
     return name
         .split(" ")
@@ -15,4 +17,8 @@ export function generateColor(name: string) {
 
 export function generateUniqueID() {
   return crypto.randomUUID();
+}
+
+export function generateSortableUniqueID(): string {
+  return uuidv7();
 }

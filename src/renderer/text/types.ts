@@ -17,6 +17,12 @@ export interface FlexibleTextStyles {
 
 export type NullableFlexibleTextStyles = Partial<FlexibleTextStyles>;
 
+export interface FlexibleTextData {
+    type: FlexibleTextType;
+    text?: string;
+    varFrom?: string;
+}
+
 export interface FlexibleText extends FlexibleTextStyles {
     type: FlexibleTextType;
     id: string;

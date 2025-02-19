@@ -5,8 +5,11 @@ import Sidebar from "./layout/side-bar";
 import Header from "./layout/header";
 import BlockSection from "./layout/block-section";
 import DetailBar from "./layout/detail-bar";
-import { Hostname } from "./schema/hostname";
-import { Path } from "./schema/path";
+import { StringSBTValue } from "./schema/string/string";
+import { SchemaBasedTransformationState } from "./schema/sbt/state";
+import { SBTOwner } from "./schema/sbt/owner";
+import { SBTDiscardOldOperations } from "./schema/sbt/doo";
+import { StringOperator } from "./schema/string/operate";
 
 interface Item {
   id: number;
@@ -18,23 +21,132 @@ export default function App() {
 
   const [elements, setElements] = createSignal<Item[]>([]);
 
-//   console.log(PathUtils.cleanPath("/a/b/c/../d"));         // "/a/b/d"
-// console.log(PathUtils.cleanPath("a/b/./c"));            // "a/b/c"
-// console.log(PathUtils.cleanPath("/../a/b"));            // "/a/b"
-// console.log(PathUtils.cleanPath("a///b/c/./../d"));     // "a/b/d"
-// console.log(PathUtils.cleanPath("/a/b/c/../../d/e"));   // "/a/d/e"
-// console.log(PathUtils.cleanPath("a/b/c/../../../x/y")); // "x/y"
-// console.log(PathUtils.cleanPath("/a/./b/./c/"));        // "/a/b/c"
-// console.log(PathUtils.cleanPath("././a/b/./c/.."));     // "a/b"
+  const host1 = new SBTOwner("1", "host1");
+  const host2 = new SBTOwner("2", "host2");
 
-  // const p = new Path("././a/b/./c/../d/e", {});
-  // console.log(p.down("/${id}").resolve({id: "123"}));
-  // console.log(new Path("/a/b/c/def/test.png", {}).match("/a/b/**/*.png"));
-  // console.log(new Path("/a/b/aa/c/def/aa/test.png", {}).match("/a/b/**/aa/*.png"));
-  // console.log(new Hostname("127.*.*.1", {}).match("127.0.1.1", "this"));
-  // console.log(new Hostname("127.0.0.1", {}).match("127.0.**"));
-  // console.log(new Hostname("www.example.com", {}).match("*.example.co*"));
-  // console.log(new Hostname("2001:0db8:85a3:0000:0000:8a2e:0370:7334", {}).match("2001:*b8:85a3:**:8a2e:0370:*"));
+  const str = new StringSBTValue("Hello, world!");
+  const strVal = new SchemaBasedTransformationState(str);
+  const strVal_1 = new SBTDiscardOldOperations(strVal, host1);
+  const strVal_2 = new SBTDiscardOldOperations(strVal, host2);
+
+  strVal_1.setMaxOperationSize(5);
+
+  console.log("step1", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  strVal_1.operate(StringOperator.set("hello"));
+  strVal_1.operate(StringOperator.toUpper());
+  strVal_1.operate(StringOperator.slice(2));
+  strVal_1.operate(StringOperator.concat(" world"));
+  strVal_1.operate(StringOperator.replace("world", "everyone"));
+  strVal_1.operate(StringOperator.concat("!!!"));
+
+  console.log("step2", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  strVal_1.reverse(6);
+
+  console.log("step3", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  strVal_1.recover(6);
+
+  console.log("step4", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  strVal_1.getOperations().forEach(op => {
+    console.log(op.toString());
+  });
+
+  // strVal_1.batchOperate([
+  //   StringOperator.concat(" world"),
+  //   StringOperator.replace("world", "everyone"),
+  //   StringOperator.concat("!!!"),
+  // ]);
+
+  // console.log("step3", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // console.log("1 operations");
+  // strVal_1.getOperations().forEach(op => {
+  //   console.log(op.toString());
+  // });
+
+  // strVal_1.reverse();
+
+  // console.log("step4", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // console.log("1 operations");
+  // strVal_1.getOperations().forEach(op => {
+  //   console.log(op.toString());
+  // });
+
+  // strVal_1.recover();
+
+  // console.log("step5", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // console.log("1 operations");
+  // strVal_1.getOperations().forEach(op => {
+  //   console.log(op.toString());
+  // });
+
+  // strVal_2.operate(StringOperator.replace("world", "everyone"));
+
+  // console.log("step3", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // strVal_1.operate(StringOperator.concat("!!!"));
+
+  // console.log("step4", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // strVal_1.reverse();
+
+  // console.log("step5", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // strVal_1.merge(strVal_2);
+
+  // console.log("step6", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+  // strVal_2.merge(strVal_1);
+
+  // console.log("step7", `${strVal_1}`, `${strVal_2}`, strVal_1 < strVal_2);
+
+
+
+  // console.log("2 operations");
+  // strVal_2.getOperations().forEach(op => {
+  //   console.log(op.toString());
+  // });
+
+  // const op1 = new SampleOperation();
+  // const op2 = new SampleOperation();
+  // console.log(op1 < op2);
+  // console.log(op1 > op2);
+  // console.log(op1 >= op2);
+  // op1.setID(op2.getId());
+  // console.log(`op1: ${op1}, op2: ${op2}`);
+  // console.log(op1 < op2);
+  // console.log(op1 > op2);
+  // console.log(op1 >= op2);
+  // console.log(op1.equals(op2));
+
+  // const host1 = new StringRGA("hello");
+  // const server = new StringRGA("hello");
+
+  // host1.applyLocalEdit("!!!hello world");
+
+  // server.applyLocalEdit("Hello, everyone", Date.now() + 1000);
+
+  // host1.applyLocalEdit("Hello, world!", Date.now() + 2000);
+
+  // host1.mergeRemoteEdit({
+  //   text: server.toString(),
+  //   timestamp: server.getLastLocalChangeAt(),
+  // }, Date.now() + 3000);
+
+  // console.log(host1, server);
+
+  // console.log(rga1, rga2);
+
+  // rga1.insert(2, "a");
+  // rga1.insert(3, "b");
+  // rga1.delete(4);
+  // rga2.insert(5, "Yah!");
+  // rga1.merge(rga2);
 
   const saveToLocalStorage = () => {
     localStorage.setItem("design", JSON.stringify(elements()));

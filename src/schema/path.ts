@@ -1,3 +1,6 @@
+import { generateUniqueID } from "../utils/generate";
+import { DataSchema, OperationData } from "./types";
+
 export type PathFormatType = 
     | "absolute"
     | "relative";
@@ -9,17 +12,46 @@ export interface PathSchema {
     doubleWildcardPriority?: "head" | "tail";
 }
 
-export class Path {
+export const PathOperations = {
+    REGENERATE: "regenerate",
+    UPDATE: "update",
+    UP: "up",
+    DOWN: "down",
+} as const;
+
+export type PathOperation = typeof PathOperations[keyof typeof PathOperations];
+
+export interface PathOperationData extends OperationData {
+    operation: PathOperation;
+    regenerate?: {
+        schema: PathSchema;
+    };
+    update?: {
+        path: string;
+    };
+    up?: {
+        count: number;
+    };
+    down?: {
+        dir: string;
+    };
+}
+
+export class Path implements DataSchema<PathOperationData, Path> {
     private original: string;
     private value: string;
     private type: PathFormatType;
     private doubleWildcardPriority: "head" | "tail";
     private delimiter: string;
 
-    constructor(path: string, private schema: PathSchema) {
+    constructor(path: string, private schema: PathSchema, private id: string = "") {
         this.original = path;
         this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
         this.delimiter = schema.delimiter || "/";
+
+        if (id === "") {
+            this.id = generateUniqueID();
+        }
 
         if (schema.format === undefined) {
             if (path.startsWith(this.delimiter)) {
@@ -56,6 +88,33 @@ export class Path {
         this.value = Path.cleanPath(path, this.delimiter);
     }
 
+    getID(): string {
+        return this.id;
+    }
+
+    regenerate(schema: PathSchema): Path {
+        return new Path(this.original, schema, this.id);
+    }
+
+    update(path: string): Path {
+        return new Path(path, this.schema, this.id);
+    }
+
+    operate(data: PathOperationData): Path {
+        switch (data.operation) {
+            case PathOperations.REGENERATE:
+                return this.regenerate(data.regenerate?.schema || {});
+            case PathOperations.UPDATE:
+                return this.update(data.update?.path || "");
+            case PathOperations.UP:
+                return this.up(data.up?.count);
+            case PathOperations.DOWN:
+                return this.down(data.down?.dir || "");
+            default:
+                throw new Error(`Invalid operation: ${data.operation}`);
+        }
+    }
+
     static resolvePath(pathStr: string, variables: Record<string, string>): string {
         return pathStr.replace(/\$\{([^}]+)\}/g, (_, key) => {
             if (variables[key] === undefined) {
@@ -83,16 +142,16 @@ export class Path {
     }
 
     resolve(variables: Record<string, string>): Path {
-        return new Path(Path.resolvePath(this.value, variables), this.schema);
+        return new Path(Path.resolvePath(this.value, variables), this.schema, this.id);
     }
 
     up(count: number = 1): Path {
         const additional = Array.from({ length: count }, () => "..").join(this.delimiter);
-        return new Path(this.value + this.delimiter + additional, this.schema);
+        return new Path(this.value + this.delimiter + additional, this.schema, this.id);
     }
 
     down(dir: string): Path {
-        return new Path(this.value + this.delimiter + dir, this.schema);
+        return new Path(this.value + this.delimiter + dir, this.schema, this.id);
     }
 
     getType(): PathFormatType {
@@ -197,5 +256,9 @@ export class Path {
         }
 
         return j === splitValue.length;
+    }
+
+    toString(): string {
+        return this.value;
     }
 }
