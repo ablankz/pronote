@@ -10,7 +10,7 @@ export type HostnameFormatType =
 
 export interface HostnameSchema {
     format?: HostnameFormatType;
-    doubleWildcardPriority?: "head" | "tail";
+    wildcardOverlapPriority?: "head" | "tail";
 }
 
 export const HostnameOperations = {
@@ -37,7 +37,7 @@ export class Hostname implements DataSchema<HostnameOperationData, Hostname> {
 
     constructor(host: string, private schema: HostnameSchema, private id: string = "") {
         this.original = host;
-        this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
+        this.doubleWildcardPriority = schema.wildcardOverlapPriority || "tail";
         const ipv4Regex = /^(([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}([*]|25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/;
         const ipv6Regex = /^((([*]|[0-9a-fA-F]{1,4}):){7,7}([*]|[0-9a-fA-F]{1,4})|(([*]|[0-9a-fA-F]{1,4}):){1,7}:|(([*]|[0-9a-fA-F]{1,4}):){1,6}:([*]|[0-9a-fA-F]{1,4})|(([*]|[0-9a-fA-F]{1,4}):){1,5}(:([*]|[0-9a-fA-F]{1,4})){1,2}|(([*]|[0-9a-fA-F]{1,4}):){1,4}(:([*]|[0-9a-fA-F]{1,4})){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:([*]|[0-9a-fA-F]{1,4})){1,4}|(([*]|[0-9a-fA-F]{1,4}):){1,2}(:([*]|[0-9a-fA-F]{1,4})){1,5}|([*]|[0-9a-fA-F]{1,4}):((:([*]|[0-9a-fA-F]{1,4})){1,6})|:((:([*]|[0-9a-fA-F]{1,4})){1,7}|:)|fe80:(:([*]|[0-9a-fA-F]{0,4})){0,4}%([*]|[0-9a-zA-Z]{1,})|::(ffff(:0{1,4}){0,1}:){0,1}(([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(([*]|[0-9a-fA-F]{1,4}):){1,4}:(([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}([*]|25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
         const fqdnRegex = /^(([a-zA-Z0-9*][a-zA-Z0-9*\-]*[a-zA-Z0-9*])|[a-zA-Z0-9*]+\.)*([a-zA-Z*]+|xn\-\-[a-zA-Z0-9*]+)\.?$/

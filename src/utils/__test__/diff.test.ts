@@ -1,6 +1,6 @@
 import DiffMatchPatch, { Diff, PatchObject } from "../diff";
 
-function assertEquivalent<T>(expected: T, actual?: T, msg?: string): void {
+function assertEquivalent<T>(expected: T, actual?: T, msg?: string|T): void {
     if (actual === undefined) {
         actual = expected;
         expected = msg as T;

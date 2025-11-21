@@ -1,4 +1,4 @@
-export type JSONSchemaType =
+export type SchemaType =
     // only one type
     // string format types
     | "string" // single line text
@@ -34,8 +34,8 @@ export type JSONSchemaType =
     | "queue"
     | "enum";
 
-export interface JSONSchemaProperty {
-    type: JSONSchemaType | JSONSchemaType[];
+export interface SchemaProperty {
+    type: SchemaType | SchemaType[];
     description?: string;
     default?: string | number | boolean | null;
     minLength?: number; // if type is "string", "array"
@@ -43,16 +43,16 @@ export interface JSONSchemaProperty {
     minimum?: number; // if type is "number", "integer"
     maximum?: number; // if type is "number", "integer"
     pattern?: string; // if type is "string"
-    items?: JSONSchemaDefinition; // if type is "array", "set", "stack", "queue", "record"
-    mapItems?: { key: JSONSchemaDefinition; value: JSONSchemaDefinition }; // if type is "map"
-    properties?: Record<string, JSONSchemaDefinition>; // if type is "object"
+    items?: SchemaDefinition; // if type is "array", "set", "stack", "queue", "record"
+    mapItems?: { key: SchemaDefinition; value: SchemaDefinition }; // if type is "map"
+    properties?: Record<string, SchemaDefinition>; // if type is "object"
     required?: string[];
 }
 
-export interface JSONSchemaDefinition {
+export interface SchemaDefinition {
     $schema?: string; // e.g. "http://json-schema.org/draft-07/schema#"
     $id?: string;
-    type: JSONSchemaType | JSONSchemaType[];
+    type: SchemaType | SchemaType[];
     title?: string;
     description?: string;
     default?: string | number | boolean | null;
@@ -61,23 +61,23 @@ export interface JSONSchemaDefinition {
     minimum?: number; // if type is "number", "integer"
     maximum?: number; // if type is "number", "integer"
     pattern?: string; // if type is "string"
-    items?: JSONSchemaDefinition;
-    mapItems?: { key: JSONSchemaDefinition; value: JSONSchemaDefinition }; // if type is "map"
-    properties?: Record<string, JSONSchemaProperty>;
+    items?: SchemaDefinition;
+    mapItems?: { key: SchemaDefinition; value: SchemaDefinition }; // if type is "map"
+    properties?: Record<string, SchemaProperty>;
     required?: string[];
 }
 
-export class JSONSchemaStore {
-    private schemas: Map<string, JSONSchemaDefinition> = new Map();
+export class SchemaStore {
+    private schemas: Map<string, SchemaDefinition> = new Map();
 
-    addSchema(id: string, schema: JSONSchemaDefinition): void {
+    addSchema(id: string, schema: SchemaDefinition): void {
         if (this.schemas.has(id)) {
             throw new Error(`Schema with ID "${id}" already exists.`);
         }
         this.schemas.set(id, schema);
     }
 
-    getSchema(id: string): JSONSchemaDefinition | null {
+    getSchema(id: string): SchemaDefinition | null {
         return this.schemas.get(id) || null;
     }
 

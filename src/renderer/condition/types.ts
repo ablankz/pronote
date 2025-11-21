@@ -1,6 +1,9 @@
 export type ConditionType = 'and' | 'or';
 
-export type Condition = () => boolean;
+/**
+ * @todo state param needs to be added
+ */
+export type ConditionFunc = () => boolean;
 
 export type ConditionValue<T> = {
     default: T;
@@ -9,5 +12,5 @@ export type ConditionValue<T> = {
 
 export type ConditionBranch<T> = ConditionValue<T> & {
     type: ConditionType;
-    conditions: Condition[];
+    conditions: ConditionFunc[];
 }

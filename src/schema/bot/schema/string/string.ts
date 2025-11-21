@@ -1,6 +1,13 @@
-import DiffMatchPatch from "../../utils/diff";
-import { SchemaBasedTransformationValue } from "../sbt/value";
+import DiffMatchPatch from "../../../../utils/diff";
+import { BranchOperationalTransformationValue } from "../../value";
 import { StringOperateTypes, StringOperation } from "./operate";
+
+export const StringBOTMergeStrategies = {
+    STRING_PATCH_APPLY: "STRING_PATCH_APPLY",
+    STRING_BEST_EFFORT: "STRING_BEST_EFFORT",
+    STRING_LAST_WRITE_WINS: "STRING_LAST_WRITE_WINS",
+} as const;
+export type StringBOTMergeStrategy = typeof StringBOTMergeStrategies[keyof typeof StringBOTMergeStrategies];
 
 export interface StringSchema {
     maxLen?: number;
@@ -8,7 +15,7 @@ export interface StringSchema {
     regex?: string;
 }
 
-export class StringSBTValue extends SchemaBasedTransformationValue<StringSBTValue> {
+export class StringSBTValue extends BranchOperationalTransformationValue<StringSBTValue> {
     private dmp: DiffMatchPatch = new DiffMatchPatch();
 
     constructor(

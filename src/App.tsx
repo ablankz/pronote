@@ -7,7 +7,7 @@ import BlockSection from "./layout/block-section";
 import DetailBar from "./layout/detail-bar";
 import { StringSBTValue } from "./schema/string/string";
 import { SchemaBasedTransformationState } from "./schema/sbt/state";
-import { SBTOwner } from "./schema/sbt/owner";
+import { SBTOperationalOwner, SBTOwner } from "./schema/sbt/owner";
 import { SBTDiscardOldOperations } from "./schema/sbt/doo";
 import { StringOperator } from "./schema/string/operate";
 
@@ -21,7 +21,7 @@ export default function App() {
 
   const [elements, setElements] = createSignal<Item[]>([]);
 
-  const host1 = new SBTOwner("1", "host1");
+  const host1 = new SBTOperationalOwner("1", "host1", "operational1");
   const host2 = new SBTOwner("2", "host2");
 
   const str = new StringSBTValue("Hello, world!");

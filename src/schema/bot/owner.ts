@@ -1,4 +1,4 @@
-export class SBTOwner {
+export class BOTOwner {
     constructor(
         protected id: string,
         protected name: string,
@@ -14,7 +14,7 @@ export class SBTOwner {
     }
 }
 
-export class SBTOperationalOwner extends SBTOwner {
+export class BOTOperationalOwner extends BOTOwner {
     constructor(
         protected id: string,
         protected name: string,

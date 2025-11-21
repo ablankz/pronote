@@ -9,7 +9,7 @@ export interface PathSchema {
     format?: PathFormatType;
     delimiter?: string;
     maxLen?: number;
-    doubleWildcardPriority?: "head" | "tail";
+    wildcardOverlapPriority?: "head" | "tail";
 }
 
 export const PathOperations = {
@@ -46,7 +46,7 @@ export class Path implements DataSchema<PathOperationData, Path> {
 
     constructor(path: string, private schema: PathSchema, private id: string = "") {
         this.original = path;
-        this.doubleWildcardPriority = schema.doubleWildcardPriority || "tail";
+        this.doubleWildcardPriority = schema.wildcardOverlapPriority || "tail";
         this.delimiter = schema.delimiter || "/";
 
         if (id === "") {

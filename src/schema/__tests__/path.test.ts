@@ -148,7 +148,7 @@ describe("Path Class", () => {
         });
 
         test("double wildcard priority: head", () => {
-            const hostname = new Path("a/**/c/d/**/e", { doubleWildcardPriority: "head" });
+            const hostname = new Path("a/**/c/d/**/e", { wildcardOverlapPriority: "head" });
             expect(hostname.match("a/b/c/d/ss/rr/c/e", "this")).toBe(true);
             expect(hostname.match("a/b/c/c/d/e", "this")).toBe(false);
         });

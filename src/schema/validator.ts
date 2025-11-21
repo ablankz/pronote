@@ -1,10 +1,10 @@
-import { JSONSchemaDefinition, JSONSchemaType } from "./types";
+import { SchemaDefinition, SchemaType } from "./types";
 
 export class JSONSchemaValidator {
-    validate(data: unknown, schema: JSONSchemaDefinition, path: string = "$"): string[] {
+    validate(data: unknown, schema: SchemaDefinition, path: string = "$"): string[] {
         let errors: string[] = [];
 
-        const validateType = (value: unknown, expectedTypes: JSONSchemaType | JSONSchemaType[], path: string) => {
+        const validateType = (value: unknown, expectedTypes: SchemaType | SchemaType[], path: string) => {
             const types = Array.isArray(expectedTypes) ? expectedTypes : [expectedTypes];
 
             for (const type of types) {

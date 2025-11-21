@@ -1,4 +1,4 @@
-import { SchemaBasedTransformationOperation } from "../sbt/operation";
+import { BranchOperationalTransformationOperation } from "../../operation";
 import { StringSBTValue } from "./string";
 
 export const StringOperateTypes = {
@@ -45,7 +45,7 @@ export type StringSliceOperationType = {
     length: number;
 };
 
-export class StringOperation extends SchemaBasedTransformationOperation<StringSBTValue> {
+export class StringOperation extends BranchOperationalTransformationOperation<StringSBTValue> {
     private setOperation?: StringSetOperationType;
     private patchOperation?: StringPatchOperationType;
     private concatOperation?: StringConcatOperationType;

@@ -99,7 +99,7 @@ describe("Hostname Class", () => {
         });
 
         test("double wildcard priority: head", () => {
-            const hostname = new Hostname("a.**.c.d.**.e", { format: "fqdn", doubleWildcardPriority: "head" });
+            const hostname = new Hostname("a.**.c.d.**.e", { format: "fqdn", wildcardOverlapPriority: "head" });
             expect(hostname.match("a.b.c.d.ss.rr.c.e", "this")).toBe(true);
             expect(hostname.match("a.b.c.c.d.e", "this")).toBe(false);
         });

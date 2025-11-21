@@ -1,0 +1,75 @@
+{
+    "version": "1.0.0",
+    "components": {
+        "component1": {
+            "name": "component1",
+            "type": "component",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        },
+        "component2": {
+            "name": "component2",
+            "type": "component",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        }
+    },
+    "events": {
+        "event1": {
+            "name": "event1",
+            "type": "event",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        },
+        "event2": {
+            "name": "event2",
+            "type": "event",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        }
+    },
+    "actions": {
+        "action1": {
+            "name": "action1",
+            "type": "action",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        },
+        "action2": {
+            "name": "action2",
+            "type": "action",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        }
+    },
+    "state_schema": {
+        "state1": {
+            "name": "state1",
+            "type": "state",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        },
+        "state2": {
+            "name": "state2",
+            "type": "state",
+            "properties": {
+                "prop1": "value1",
+                "prop2": "value2"
+            }
+        }
+    }
+}

@@ -8,6 +8,14 @@ export interface InputNumWithValidateOptions {
 
 const defaultPrecision = 0;
 
+/**
+ * input number with validation
+ * 
+ * @param rawValue 
+ * @param options 
+ * @returns if null, it means the input is invalid, 
+ * if NaN, it means the input is No error as an input value, but cannot be treated as a number.
+ */
 export const inputNumWithValidate = (
     rawValue: string,
     options: InputNumWithValidateOptions = {}
